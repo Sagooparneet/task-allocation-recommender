@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="login-container">
+
+    <h1>Login</h1>
+
+    <p>
+        Sign in to the Intelligent Task Allocation System.
+    </p>
+
+    <form method="POST">
+
+        <label>
+            Email
+        </label>
+
+        <input
+            type="email"
+            name="email"
+            required
+        >
+
+        <label>
+            Password
+        </label>
+
+        <input
+            type="password"
+            name="password"
+            required
+        >
+
+        <button type="submit">
+            Login
+        </button>
+
+    </form>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,114 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f4f6f8;
+}
+
+header {
+    background: #1f2937;
+    color: white;
+    padding: 15px 30px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h2 {
+    margin: 0;
+}
+
+nav {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+}
+
+main {
+    padding: 30px;
+}
+
+.login-container {
+    max-width: 400px;
+    margin: 80px auto;
+
+    background: white;
+
+    padding: 30px;
+
+    border-radius: 8px;
+
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.login-container h1 {
+    margin-top: 0;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+
+    margin-top: 5px;
+
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+
+    padding: 12px;
+
+    margin-top: 20px;
+
+    border: none;
+    border-radius: 5px;
+
+    background: #2563eb;
+    color: white;
+
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.dashboard {
+    background: white;
+
+    padding: 30px;
+
+    border-radius: 8px;
+}
+
+.message {
+    padding: 10px;
+
+    margin-bottom: 15px;
+
+    border-radius: 5px;
+}
+
+.success {
+    background: #d1fae5;
+}
+
+.danger {
+    background: #fee2e2;
+}
+
+.info {
+    background: #dbeafe;
+}
