@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="dashboard">
+
+    <a
+        class="back-link"
+        href="{{ url_for('supervisor.dashboard') }}"
+    >
+        ← Back to Dashboard
+    </a>
+
+
+    <h1>
+        Recommended Agents
+    </h1>
+
+
+    <div class="task-details">
+
+        <h2>
+            {{ task.task_type }}
+        </h2>
+
+        <p>
+            <strong>Location:</strong>
+            {{ task.location }}
+        </p>
+
+        <p>
+            <strong>Priority:</strong>
+            {{ task.priority }}
+        </p>
+
+        <p>
+            <strong>Status:</strong>
+            {{ task.status }}
+        </p>
+
+        <p>
+            <strong>Description:</strong>
+            {{ task.description }}
+        </p>
+
+    </div>
+
+
+    <h2>
+        Agent Recommendations
+    </h2>
+
+
+    {% if recommendations %}
+
+        <div class="recommendation-list">
+
+            {% for recommendation in recommendations %}
+
+                <div class="recommendation-card">
+
+                    <h3>
+                        {{ loop.index }}.
+                        {{ recommendation.agent_name }}
+                    </h3>
+
+                    <p>
+                        <strong>Mock Score:</strong>
+
+                        {{
+                            "%.0f"|format(
+                                recommendation.score * 100
+                            )
+                        }}%
+                    </p>
+
+                    <p>
+                        <strong>Explanation:</strong>
+                        {{ recommendation.explanation }}
+                    </p>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <p>
+            No available agents were found.
+        </p>
+
+    {% endif %}
+
+
+    <div class="mock-warning">
+
+        <strong>Development Note:</strong>
+
+        These recommendations currently use mock
+        scores. The hybrid recommendation model has
+        not yet been integrated.
+
+    </div>
+
+</div>
+
+{% endblock %}

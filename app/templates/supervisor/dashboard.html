@@ -4,17 +4,86 @@
 
 <div class="dashboard">
 
-    <h1>
-        Supervisor Dashboard
-    </h1>
+    <h1>Supervisor Dashboard</h1>
 
     <p>
         Welcome {{ current_user.name }}.
     </p>
 
-    <p>
-        Supervisor functions will be added here.
-    </p>
+    <h2>Onboarding Tasks</h2>
+
+    {% if tasks %}
+
+        <table class="task-table">
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Task Type</th>
+                    <th>Location</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for task in tasks %}
+
+                <tr>
+
+                    <td>
+                        {{ task.id }}
+                    </td>
+
+                    <td>
+                        {{ task.task_type }}
+                    </td>
+
+                    <td>
+                        {{ task.location }}
+                    </td>
+
+                    <td>
+                        {{ task.priority }}
+                    </td>
+
+                    <td>
+                        {{ task.status }}
+                    </td>
+
+                    <td>
+
+                        <a
+                            class="action-link"
+                            href="{{ url_for(
+                                'supervisor.recommendations',
+                                task_id=task.id
+                            ) }}"
+                        >
+                            View Recommendations
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% else %}
+
+        <p>
+            No onboarding tasks are available.
+        </p>
+
+    {% endif %}
 
 </div>
 

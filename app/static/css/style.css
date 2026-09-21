@@ -112,3 +112,57 @@ button:hover {
 .info {
     background: #dbeafe;
 }
+.task-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.task-table th,
+.task-table td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+.task-table th {
+    background: #f3f4f6;
+}
+
+.action-link {
+    text-decoration: none;
+    background: #2563eb;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+}
+
+.action-link:hover {
+    background: #1d4ed8;
+}
+
+.task-details {
+    background: #f9fafb;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+}
+
+.recommendation-card {
+    background: #f9fafb;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.mock-warning {
+    margin-top: 25px;
+    padding: 15px;
+    background: #fff7ed;
+    border-radius: 6px;
+}
+
+.back-link {
+    text-decoration: none;
+}
