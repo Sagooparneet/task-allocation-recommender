@@ -22,8 +22,9 @@
                     <th>Task</th>
                     <th>Location</th>
                     <th>Priority</th>
-                    <th>Task Status</th>
+                    <th>Status</th>
                     <th>Assigned On</th>
+                    <th>Action</th>
                 </tr>
 
             </thead>
@@ -52,6 +53,40 @@
 
                         <td>
                             {{ assignment.assigned_at.strftime("%d %b %Y %H:%M") }}
+                        </td>
+
+                        <td>
+
+                            {% if assignment.status != "Completed" %}
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for(
+                                        'agent.complete_assignment',
+                                        assignment_id=assignment.id
+                                    ) }}"
+                                >
+
+                                    <button
+                                        type="submit"
+                                        class="complete-button"
+                                        onclick="return confirm(
+                                            'Are you sure you want to mark this task as completed?'
+                                        );"
+                                    >
+                                        Mark Completed
+                                    </button>
+
+                                </form>
+
+                            {% else %}
+
+                                <span class="completed-label">
+                                    Completed
+                                </span>
+
+                            {% endif %}
+
                         </td>
 
                     </tr>
