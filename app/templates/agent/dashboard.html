@@ -4,17 +4,71 @@
 
 <div class="dashboard">
 
-    <h1>
-        Onboarding Agent Dashboard
-    </h1>
+    <h1>Onboarding Agent Dashboard</h1>
 
     <p>
         Welcome {{ current_user.name }}.
     </p>
 
-    <p>
-        Agent functions will be added here.
-    </p>
+    <h2>My Assigned Tasks</h2>
+
+    {% if assignments %}
+
+        <table class="task-table">
+
+            <thead>
+
+                <tr>
+                    <th>Task</th>
+                    <th>Location</th>
+                    <th>Priority</th>
+                    <th>Task Status</th>
+                    <th>Assigned On</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for assignment in assignments %}
+
+                    <tr>
+
+                        <td>
+                            {{ assignment.task.task_type }}
+                        </td>
+
+                        <td>
+                            {{ assignment.task.location }}
+                        </td>
+
+                        <td>
+                            {{ assignment.task.priority }}
+                        </td>
+
+                        <td>
+                            {{ assignment.task.status }}
+                        </td>
+
+                        <td>
+                            {{ assignment.assigned_at.strftime("%d %b %Y %H:%M") }}
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% else %}
+
+        <p>
+            No tasks have been assigned to you yet.
+        </p>
+
+    {% endif %}
 
 </div>
 
