@@ -217,3 +217,21 @@ button:hover {
     width: auto;
     margin-right: 8px;
 }
+.complete-button {
+    width: auto;
+    padding: 9px 14px;
+    margin: 0;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.complete-button:hover {
+    background: #1d4ed8;
+}
+
+.completed-label {
+    font-weight: bold;
+}
