@@ -10,6 +10,13 @@
         Welcome {{ current_user.name }}.
     </p>
 
+    <a
+        class="action-link"
+        href="{{ url_for('supervisor.create_task') }}"
+    >
+        + Create Task
+    </a>
+
     <h2>Onboarding Tasks</h2>
 
     {% if tasks %}
@@ -33,43 +40,43 @@
 
                 {% for task in tasks %}
 
-                <tr>
+                    <tr>
 
-                    <td>
-                        {{ task.id }}
-                    </td>
+                        <td>
+                            {{ task.id }}
+                        </td>
 
-                    <td>
-                        {{ task.task_type }}
-                    </td>
+                        <td>
+                            {{ task.task_type }}
+                        </td>
 
-                    <td>
-                        {{ task.location }}
-                    </td>
+                        <td>
+                            {{ task.location }}
+                        </td>
 
-                    <td>
-                        {{ task.priority }}
-                    </td>
+                        <td>
+                            {{ task.priority }}
+                        </td>
 
-                    <td>
-                        {{ task.status }}
-                    </td>
+                        <td>
+                            {{ task.status }}
+                        </td>
 
-                    <td>
+                        <td>
 
-                        <a
-                            class="action-link"
-                            href="{{ url_for(
-                                'supervisor.recommendations',
-                                task_id=task.id
-                            ) }}"
-                        >
-                            View Recommendations
-                        </a>
+                            <a
+                                class="action-link"
+                                href="{{ url_for(
+                                    'supervisor.recommendations',
+                                    task_id=task.id
+                                ) }}"
+                            >
+                                View Recommendations
+                            </a>
 
-                    </td>
+                        </td>
 
-                </tr>
+                    </tr>
 
                 {% endfor %}
 

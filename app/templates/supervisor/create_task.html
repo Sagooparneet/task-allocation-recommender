@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="dashboard">
+
+    <a
+        class="back-link"
+        href="{{ url_for('supervisor.dashboard') }}"
+    >
+        ← Back to Dashboard
+    </a>
+
+    <h1>Create Onboarding Task</h1>
+
+    <form
+        method="POST"
+        class="task-form"
+    >
+
+        <label>Task Type</label>
+
+        <input
+            type="text"
+            name="task_type"
+            placeholder="e.g. KYC Verification"
+            required
+        >
+
+
+        <label>Description</label>
+
+        <textarea
+            name="description"
+            rows="4"
+            placeholder="Enter task description"
+        ></textarea>
+
+
+        <label>Location</label>
+
+        <input
+            type="text"
+            name="location"
+            placeholder="e.g. Nairobi"
+            required
+        >
+
+
+        <label>Priority</label>
+
+        <select name="priority">
+
+            <option value="Low">
+                Low
+            </option>
+
+            <option
+                value="Medium"
+                selected
+            >
+                Medium
+            </option>
+
+            <option value="High">
+                High
+            </option>
+
+        </select>
+
+
+        <label>Deadline</label>
+
+        <input
+            type="datetime-local"
+            name="deadline"
+        >
+
+
+        <label>Required Skills</label>
+
+        <div class="skill-options">
+
+            {% for skill in skills %}
+
+                <label class="skill-option">
+
+                    <input
+                        type="checkbox"
+                        name="required_skills"
+                        value="{{ skill.id }}"
+                    >
+
+                    {{ skill.name }}
+
+                </label>
+
+            {% endfor %}
+
+        </div>
+
+
+        <button type="submit">
+            Create Task
+        </button>
+
+    </form>
+
+</div>
+
+{% endblock %}

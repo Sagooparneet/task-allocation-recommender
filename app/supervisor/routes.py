@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import (
     Blueprint,
     render_template,
@@ -10,10 +12,13 @@ from flask import (
 from flask_login import login_required, current_user
 
 from app.extensions import db
+
 from app.models import (
     Task,
     OnboardingAgent,
-    TaskAssignment
+    TaskAssignment,
+    Skill,
+    TaskSkill
 )
 
 from app.services.recommendation_service import MockRecommendationService
@@ -42,6 +47,135 @@ def dashboard():
     return render_template(
         "supervisor/dashboard.html",
         tasks=tasks
+    )
+
+
+@supervisor_bp.route(
+    "/task/create",
+    methods=["GET", "POST"]
+)
+@login_required
+def create_task():
+
+    if current_user.role != "supervisor":
+        return redirect(url_for("home"))
+
+    skills = Skill.query.order_by(Skill.name).all()
+
+    if request.method == "POST":
+
+        task_type = request.form.get(
+            "task_type",
+            ""
+        ).strip()
+
+        description = request.form.get(
+            "description",
+            ""
+        ).strip()
+
+        location = request.form.get(
+            "location",
+            ""
+        ).strip()
+
+        priority = request.form.get(
+            "priority",
+            "Medium"
+        )
+
+        deadline_value = request.form.get(
+            "deadline"
+        )
+
+        selected_skill_ids = request.form.getlist(
+            "required_skills"
+        )
+
+        if not task_type or not location:
+
+            flash(
+                "Task type and location are required.",
+                "danger"
+            )
+
+            return render_template(
+                "supervisor/create_task.html",
+                skills=skills
+            )
+
+        if not selected_skill_ids:
+
+            flash(
+                "Please select at least one required skill.",
+                "danger"
+            )
+
+            return render_template(
+                "supervisor/create_task.html",
+                skills=skills
+            )
+
+        deadline = None
+
+        if deadline_value:
+
+            try:
+                deadline = datetime.strptime(
+                    deadline_value,
+                    "%Y-%m-%dT%H:%M"
+                )
+
+            except ValueError:
+
+                flash(
+                    "Please enter a valid deadline.",
+                    "danger"
+                )
+
+                return render_template(
+                    "supervisor/create_task.html",
+                    skills=skills
+                )
+
+        task = Task(
+            task_type=task_type,
+            description=description,
+            location=location,
+            priority=priority,
+            deadline=deadline,
+            status="Pending",
+            supervisor_id=current_user.id
+        )
+
+        db.session.add(task)
+
+        # Generates task ID before TaskSkill records are created
+        db.session.flush()
+
+        for skill_id in selected_skill_ids:
+
+            task_skill = TaskSkill(
+                task_id=task.id,
+                skill_id=int(skill_id)
+            )
+
+            db.session.add(task_skill)
+
+        db.session.commit()
+
+        flash(
+            f"{task.task_type} was created successfully.",
+            "success"
+        )
+
+        return redirect(
+            url_for("supervisor.dashboard")
+        )
+
+    return render_template(
+        "supervisor/create_task.html",
+        skills=skills
     )
 
 
@@ -81,7 +215,6 @@ def assign_task(task_id):
 
     task = Task.query.get_or_404(task_id)
 
-    # Prevent the same task from being assigned twice
     existing_assignment = TaskAssignment.query.filter_by(
         task_id=task.id
     ).first()
