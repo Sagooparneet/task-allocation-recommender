@@ -21,7 +21,7 @@ from app.models import (
     TaskSkill
 )
 
-from app.services.recommendation_service import MockRecommendationService
+from app.services.recommendation_service import HybridRecommendationService
 
 
 supervisor_bp = Blueprint(
@@ -190,10 +190,11 @@ def recommendations(task_id):
 
     task = Task.query.get_or_404(task_id)
 
-    service = MockRecommendationService()
+    service = HybridRecommendationService()
 
     recommended_agents = service.get_recommendations(
-        task_id
+        task_id,
+        limit=5
     )
 
     return render_template(
