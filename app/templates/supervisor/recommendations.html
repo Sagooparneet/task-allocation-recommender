@@ -153,15 +153,13 @@
 
 
                     <!-- SCORE BAR -->
-                    <div class="match-progress">
-
-                        <div
-                            class="match-progress-fill"
-                            style="width: {{ recommendation.match_percentage }}%;"
-                        >
-                        </div>
-
-                    </div>
+                    <progress
+                        class="match-progress-bar"
+                        value="{{ recommendation.match_percentage }}"
+                        max="100"
+                    >
+                        {{ recommendation.match_percentage }}%
+                    </progress>
 
 
                     <!-- SIMPLE SUPERVISOR INFORMATION -->

@@ -415,20 +415,30 @@ button:hover {
     font-size: 0.85rem;
 }
 
-.match-progress {
+.match-progress-bar {
+    width: 100%;
     height: 8px;
-    background: #f2f4f7;
-    border-radius: 20px;
     margin: 20px 0;
+    border: none;
+    border-radius: 20px;
     overflow: hidden;
+    appearance: none;
 }
 
-.match-progress-fill {
-    height: 100%;
+.match-progress-bar::-webkit-progress-bar {
+    background: #f2f4f7;
+    border-radius: 20px;
+}
+
+.match-progress-bar::-webkit-progress-value {
     background: #344054;
     border-radius: 20px;
 }
 
+.match-progress-bar::-moz-progress-bar {
+    background: #344054;
+    border-radius: 20px;
+}
 
 /* SIMPLE AGENT INFO */
 
