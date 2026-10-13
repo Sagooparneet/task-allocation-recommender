@@ -44,9 +44,45 @@ def dashboard():
         .all()
     )
 
+    total_tasks = len(tasks)
+
+    pending_tasks = sum(
+        1 for task in tasks
+        if task.status == "Pending"
+    )
+
+    completed_tasks = sum(
+        1 for task in tasks
+        if task.status == "Completed"
+    )
+
+    available_agents = (
+        OnboardingAgent.query
+        .filter_by(availability=True)
+        .count()
+    )
+
+    recent_tasks = tasks[:5]
+
+    agents = (
+        OnboardingAgent.query
+        .order_by(
+            OnboardingAgent.workload.asc(),
+            OnboardingAgent.performance_score.desc()
+        )
+        .limit(5)
+        .all()
+    )
+
     return render_template(
         "supervisor/dashboard.html",
-        tasks=tasks
+        tasks=tasks,
+        total_tasks=total_tasks,
+        pending_tasks=pending_tasks,
+        completed_tasks=completed_tasks,
+        available_agents=available_agents,
+        recent_tasks=recent_tasks,
+        agents=agents
     )
 
 
@@ -60,37 +96,111 @@ def create_task():
     if current_user.role != "supervisor":
         return redirect(url_for("home"))
 
-    skills = Skill.query.order_by(Skill.name).all()
+    # -------------------------
+    # FORM OPTIONS
+    # -------------------------
+
+    skills = Skill.query.order_by(
+        Skill.name
+    ).all()
+
+    task_types = [
+        "KYC Verification",
+        "SIM Registration",
+        "M-PESA Onboarding",
+        "Account Activation"
+    ]
+
+    locations = [
+        row[0]
+        for row in (
+            db.session.query(
+                OnboardingAgent.location
+            )
+            .filter(
+                OnboardingAgent.location.isnot(None),
+                OnboardingAgent.location != ""
+            )
+            .distinct()
+            .order_by(
+                OnboardingAgent.location
+            )
+            .all()
+        )
+    ]
+
+
+    # -------------------------
+    # FORM SUBMISSION
+    # -------------------------
 
     if request.method == "POST":
 
-        task_type = request.form.get(
+        selected_task_type = request.form.get(
             "task_type",
             ""
         ).strip()
+
+        custom_task_type = request.form.get(
+            "custom_task_type",
+            ""
+        ).strip()
+
+        if selected_task_type == "__other__":
+            task_type = custom_task_type
+        else:
+            task_type = selected_task_type
+
 
         description = request.form.get(
             "description",
             ""
         ).strip()
 
+
         location = request.form.get(
             "location",
             ""
         ).strip()
+
 
         priority = request.form.get(
             "priority",
             "Medium"
         )
 
+
         deadline_value = request.form.get(
             "deadline"
         )
 
+
         selected_skill_ids = request.form.getlist(
             "required_skills"
         )
+
+
+        # -------------------------
+        # VALIDATION
+        # -------------------------
+
+        if (
+            selected_task_type == "__other__"
+            and not custom_task_type
+        ):
+
+            flash(
+                "Please enter the new task type.",
+                "danger"
+            )
+
+            return render_template(
+                "supervisor/create_task.html",
+                skills=skills,
+                locations=locations,
+                task_types=task_types
+            )
+
 
         if not task_type or not location:
 
@@ -101,8 +211,11 @@ def create_task():
 
             return render_template(
                 "supervisor/create_task.html",
-                skills=skills
+                skills=skills,
+                locations=locations,
+                task_types=task_types
             )
+
 
         if not selected_skill_ids:
 
@@ -113,14 +226,22 @@ def create_task():
 
             return render_template(
                 "supervisor/create_task.html",
-                skills=skills
+                skills=skills,
+                locations=locations,
+                task_types=task_types
             )
+
+
+        # -------------------------
+        # DEADLINE
+        # -------------------------
 
         deadline = None
 
         if deadline_value:
 
             try:
+
                 deadline = datetime.strptime(
                     deadline_value,
                     "%Y-%m-%dT%H:%M"
@@ -135,8 +256,15 @@ def create_task():
 
                 return render_template(
                     "supervisor/create_task.html",
-                    skills=skills
+                    skills=skills,
+                    locations=locations,
+                    task_types=task_types
                 )
+
+
+        # -------------------------
+        # CREATE TASK
+        # -------------------------
 
         task = Task(
             task_type=task_type,
@@ -153,6 +281,11 @@ def create_task():
         # Generates task ID before TaskSkill records are created
         db.session.flush()
 
+
+        # -------------------------
+        # ADD REQUIRED SKILLS
+        # -------------------------
+
         for skill_id in selected_skill_ids:
 
             task_skill = TaskSkill(
@@ -162,7 +295,9 @@ def create_task():
 
             db.session.add(task_skill)
 
+
         db.session.commit()
+
 
         flash(
             f"{task.task_type} was created successfully.",
@@ -173,12 +308,17 @@ def create_task():
             url_for("supervisor.dashboard")
         )
 
+
+    # -------------------------
+    # INITIAL PAGE LOAD
+    # -------------------------
+
     return render_template(
         "supervisor/create_task.html",
-        skills=skills
+        skills=skills,
+        locations=locations,
+        task_types=task_types
     )
-
-
 @supervisor_bp.route(
     "/task/<int:task_id>/recommendations"
 )
