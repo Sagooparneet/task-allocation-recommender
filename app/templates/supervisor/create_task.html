@@ -1,111 +1,356 @@
 {% extends "base.html" %}
 
+{% block title %}
+Create New Task | IntelliTask
+{% endblock %}
+
+
 {% block content %}
 
-<div class="dashboard">
+<div class="create-task-page">
 
-    <a
-        class="back-link"
-        href="{{ url_for('supervisor.dashboard') }}"
-    >
-        ← Back to Dashboard
-    </a>
+    <!-- PAGE HEADER -->
 
-    <h1>Create Onboarding Task</h1>
+    <div class="create-task-header">
 
-    <form
-        method="POST"
-        class="task-form"
-    >
+        <div>
 
-        <label>Task Type</label>
-
-        <input
-            type="text"
-            name="task_type"
-            placeholder="e.g. KYC Verification"
-            required
-        >
-
-
-        <label>Description</label>
-
-        <textarea
-            name="description"
-            rows="4"
-            placeholder="Enter task description"
-        ></textarea>
-
-
-        <label>Location</label>
-
-        <input
-            type="text"
-            name="location"
-            placeholder="e.g. Nairobi"
-            required
-        >
-
-
-        <label>Priority</label>
-
-        <select name="priority">
-
-            <option value="Low">
-                Low
-            </option>
-
-            <option
-                value="Medium"
-                selected
+            <a
+                href="{{ url_for('supervisor.dashboard') }}"
+                class="page-back-link"
             >
-                Medium
-            </option>
+                ← Back to Dashboard
+            </a>
 
-            <option value="High">
-                High
-            </option>
+            <h1>
+                Create New Task
+            </h1>
 
-        </select>
-
-
-        <label>Deadline</label>
-
-        <input
-            type="datetime-local"
-            name="deadline"
-        >
-
-
-        <label>Required Skills</label>
-
-        <div class="skill-options">
-
-            {% for skill in skills %}
-
-                <label class="skill-option">
-
-                    <input
-                        type="checkbox"
-                        name="required_skills"
-                        value="{{ skill.id }}"
-                    >
-
-                    {{ skill.name }}
-
-                </label>
-
-            {% endfor %}
+            <p>
+                Enter the onboarding task details and required
+                skills before generating agent recommendations.
+            </p>
 
         </div>
 
+    </div>
 
-        <button type="submit">
-            Create Task
-        </button>
 
-    </form>
+    <!-- FORM CARD -->
+
+    <div class="create-task-card">
+
+        <form
+            method="POST"
+            class="create-task-form"
+        >
+
+            <!-- TASK TYPE -->
+
+            <div class="form-group">
+
+                <label for="task_type">
+                    Task Type
+                    <span class="required-mark">*</span>
+                </label>
+
+                <p class="field-help">
+                    Select the type of onboarding work to be completed.
+                </p>
+
+                <select
+                    id="task_type"
+                    name="task_type"
+                    required
+                    onchange="toggleCustomTaskType()"
+                >
+                    <option value="" selected disabled>
+                        Select task type
+                    </option>
+
+                    {% for task_type in task_types %}
+
+                        <option value="{{ task_type }}">
+                            {{ task_type }}
+                        </option>
+
+                    {% endfor %}
+
+                    <option value="__other__">
+                        Other / New Task Type
+                    </option>
+
+                </select>
+
+
+                <div
+                    id="custom-task-type-container"
+                    class="custom-task-type-container"
+                    hidden
+                >
+
+                    <label for="custom_task_type">
+                        New Task Type
+                        <span class="required-mark">*</span>
+                    </label>
+
+                    <p class="field-help">
+                        Enter the name of the new onboarding task type.
+                    </p>
+
+                    <input
+                        type="text"
+                        id="custom_task_type"
+                        name="custom_task_type"
+                        placeholder="e.g. Business Account Verification"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- DESCRIPTION -->
+
+            <div class="form-group">
+
+                <label for="description">
+                    Task Description
+                </label>
+
+                <p class="field-help">
+                    Give the agent enough information to understand the task.
+                </p>
+
+                <textarea
+                    id="description"
+                    name="description"
+                    rows="5"
+                    placeholder="Describe the task requirements..."
+                ></textarea>
+
+            </div>
+
+
+            <!-- REQUIRED SKILLS -->
+
+            <div class="form-group">
+
+                <label>
+                    Required Skills
+                    <span class="required-mark">*</span>
+                </label>
+
+                <p class="field-help">
+                    Select one or more skills required to complete this task.
+                </p>
+
+                {% if skills %}
+
+                    <div class="skill-selection-grid">
+
+                        {% for skill in skills %}
+
+                            <label class="skill-select-card">
+
+                                <input
+                                    type="checkbox"
+                                    name="required_skills"
+                                    value="{{ skill.id }}"
+                                >
+
+                                <span class="skill-check">
+                                    ✓
+                                </span>
+
+                                <span>
+                                    {{ skill.name }}
+                                </span>
+
+                            </label>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="form-empty-message">
+                        No skills are currently available.
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- LOCATION + PRIORITY -->
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label for="location">
+                        Location
+                        <span class="required-mark">*</span>
+                    </label>
+
+                    <p class="field-help">
+                        Where will the task be performed?
+                    </p>
+
+                    <select
+                        id="location"
+                        name="location"
+                        required
+                    >
+                        <option value="" selected disabled>
+                            Select task location
+                        </option>
+
+                        {% for location in locations %}
+
+                            <option value="{{ location }}">
+                                {{ location }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="priority">
+                        Priority
+                    </label>
+
+                    <p class="field-help">
+                        Set the urgency of this task.
+                    </p>
+
+                    <select
+                        id="priority"
+                        name="priority"
+                    >
+                        <option value="Low">
+                            Low
+                        </option>
+
+                        <option
+                            value="Medium"
+                            selected
+                        >
+                            Medium
+                        </option>
+
+                        <option value="High">
+                            High
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- DEADLINE -->
+
+            <div class="form-group">
+
+                <label for="deadline">
+                    Deadline
+                </label>
+
+                <p class="field-help">
+                    Optional target date and time for completion.
+                </p>
+
+                <input
+                    type="datetime-local"
+                    id="deadline"
+                    name="deadline"
+                >
+
+            </div>
+
+
+            <!-- ACTIONS -->
+
+            <div class="task-form-actions">
+
+                <a
+                    href="{{ url_for('supervisor.dashboard') }}"
+                    class="secondary-button"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="create-task-submit"
+                >
+                    Create Task
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <!-- INFO NOTE -->
+
+    <div class="task-form-note">
+
+        <strong>
+            What happens next?
+        </strong>
+
+        <p>
+            After the task is created, IntelliTask can rank available
+            onboarding agents using skills, location, workload,
+            performance and historical recommendation evidence.
+        </p>
+
+    </div>
 
 </div>
+
+
+<script>
+function toggleCustomTaskType() {
+
+    const taskType =
+        document.getElementById("task_type");
+
+    const container =
+        document.getElementById(
+            "custom-task-type-container"
+        );
+
+    const customInput =
+        document.getElementById(
+            "custom_task_type"
+        );
+
+    if (taskType.value === "__other__") {
+
+        container.hidden = false;
+        customInput.required = true;
+
+    } else {
+
+        container.hidden = true;
+        customInput.required = false;
+        customInput.value = "";
+
+    }
+}
+</script>
 
 {% endblock %}

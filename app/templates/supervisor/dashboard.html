@@ -1,96 +1,388 @@
 {% extends "base.html" %}
 
+{% block title %}
+Supervisor Dashboard | IntelliTask
+{% endblock %}
+
+
 {% block content %}
 
-<div class="dashboard">
+<div class="supervisor-dashboard">
 
-    <h1>Supervisor Dashboard</h1>
+    <!-- PAGE HEADER -->
 
-    <p>
-        Welcome {{ current_user.name }}.
-    </p>
+    <div class="dashboard-header">
 
-    <a
-        class="action-link"
-        href="{{ url_for('supervisor.create_task') }}"
-    >
-        + Create Task
-    </a>
+        <div>
 
-    <h2>Onboarding Tasks</h2>
+            <h1>
+                Dashboard
+            </h1>
 
-    {% if tasks %}
+            <p>
+                Welcome back, {{ current_user.name }}.
+                Here is your task allocation overview.
+            </p>
 
-        <table class="task-table">
+        </div>
 
-            <thead>
+        <a
+            href="{{ url_for('supervisor.create_task') }}"
+            class="primary-button"
+        >
+            + Create New Task
+        </a>
 
-                <tr>
-                    <th>ID</th>
-                    <th>Task Type</th>
-                    <th>Location</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
+    </div>
 
-            </thead>
 
-            <tbody>
+    <!-- SUMMARY CARDS -->
 
-                {% for task in tasks %}
+    <div class="summary-grid">
 
-                    <tr>
+        <div class="summary-card">
 
-                        <td>
-                            {{ task.id }}
-                        </td>
+            <span class="summary-label">
+                Total Tasks
+            </span>
 
-                        <td>
-                            {{ task.task_type }}
-                        </td>
+            <strong>
+                {{ total_tasks }}
+            </strong>
 
-                        <td>
-                            {{ task.location }}
-                        </td>
+            <span class="summary-note">
+                All registered tasks
+            </span>
 
-                        <td>
-                            {{ task.priority }}
-                        </td>
+        </div>
 
-                        <td>
-                            {{ task.status }}
-                        </td>
 
-                        <td>
+        <div class="summary-card">
 
-                            <a
-                                class="action-link"
-                                href="{{ url_for(
-                                    'supervisor.recommendations',
-                                    task_id=task.id
-                                ) }}"
-                            >
-                                View Recommendations
-                            </a>
+            <span class="summary-label">
+                Pending Tasks
+            </span>
 
-                        </td>
+            <strong>
+                {{ pending_tasks }}
+            </strong>
 
-                    </tr>
+            <span class="summary-note">
+                Awaiting assignment
+            </span>
 
-                {% endfor %}
+        </div>
 
-            </tbody>
 
-        </table>
+        <div class="summary-card">
 
-    {% else %}
+            <span class="summary-label">
+                Completed Tasks
+            </span>
 
-        <p>
-            No onboarding tasks are available.
-        </p>
+            <strong>
+                {{ completed_tasks }}
+            </strong>
 
-    {% endif %}
+            <span class="summary-note">
+                Successfully completed
+            </span>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <span class="summary-label">
+                Available Agents
+            </span>
+
+            <strong>
+                {{ available_agents }}
+            </strong>
+
+            <span class="summary-note">
+                Ready for allocation
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- RECENT TASKS -->
+
+    <section class="dashboard-section">
+
+        <div class="section-header">
+
+            <div>
+
+                <h2>
+                    Recent Tasks
+                </h2>
+
+                <p>
+                    Latest onboarding tasks in the system.
+                </p>
+
+            </div>
+
+            <a
+                href="{{ url_for('supervisor.create_task') }}"
+                class="text-link"
+            >
+                Create Task
+            </a>
+
+        </div>
+
+
+        {% if recent_tasks %}
+
+            <div class="dashboard-table-wrapper">
+
+                <table class="dashboard-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Task</th>
+                            <th>Location</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for task in recent_tasks %}
+
+                            <tr>
+
+                                <td>
+
+                                    <div class="task-name-cell">
+
+                                        <strong>
+                                            {{ task.task_type }}
+                                        </strong>
+
+                                        <span>
+                                            Task #{{ task.id }}
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+
+                                <td>
+                                    {{ task.location }}
+                                </td>
+
+
+                                <td>
+
+                                    <span
+                                        class="priority-badge
+                                        priority-{{ task.priority | lower }}"
+                                    >
+                                        {{ task.priority }}
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+
+                                    <span
+                                        class="task-status
+                                        status-{{ task.status | lower | replace(' ', '-') }}"
+                                    >
+                                        {{ task.status }}
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+
+                                    <a
+                                        class="table-action"
+                                        href="{{ url_for(
+                                            'supervisor.recommendations',
+                                            task_id=task.id
+                                        ) }}"
+                                    >
+                                        View
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+        {% else %}
+
+            <div class="dashboard-empty-state">
+
+                <h3>
+                    No tasks yet
+                </h3>
+
+                <p>
+                    Create your first onboarding task to begin allocation.
+                </p>
+
+                <a
+                    href="{{ url_for('supervisor.create_task') }}"
+                    class="primary-button"
+                >
+                    Create Task
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- AGENT WORKLOAD -->
+
+    <section class="dashboard-section">
+
+        <div class="section-header">
+
+            <div>
+
+                <h2>
+                    Agent Workload Summary
+                </h2>
+
+                <p>
+                    Current workload and availability of onboarding agents.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% if agents %}
+
+            <div class="dashboard-table-wrapper">
+
+                <table class="dashboard-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Agent</th>
+                            <th>Specialization</th>
+                            <th>Location</th>
+                            <th>Current Workload</th>
+                            <th>Availability</th>
+                            <th>Performance</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for agent in agents %}
+
+                            <tr>
+
+                                <td>
+
+                                    <div class="agent-cell">
+
+                                        <div class="table-avatar">
+                                            {{ agent.name[:1] | upper }}
+                                        </div>
+
+                                        <strong>
+                                            {{ agent.name }}
+                                        </strong>
+
+                                    </div>
+
+                                </td>
+
+
+                                <td>
+                                    {{ agent.specialization }}
+                                </td>
+
+
+                                <td>
+                                    {{ agent.location }}
+                                </td>
+
+
+                                <td>
+                                    {{ agent.workload }} active tasks
+                                </td>
+
+
+                                <td>
+
+                                    {% if agent.availability %}
+
+                                        <span class="availability available">
+                                            Available
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="availability unavailable">
+                                            Unavailable
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+                                    {{ agent.performance_score | round(0) | int }}%
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div class="dashboard-empty-state">
+
+                <p>
+                    No onboarding agents are currently registered.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+    </section>
 
 </div>
 
