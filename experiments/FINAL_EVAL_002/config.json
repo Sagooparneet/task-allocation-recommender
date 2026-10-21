@@ -32,5 +32,11 @@
         "primary_skill_required": true,
         "same_location_priority": true,
         "ranking_formula": "performance_score + 2*experience_years - 2*workload"
+    },
+    "statistical_evaluation": {
+        "bootstrap_iterations": 1000,
+        "confidence_level": 0.95,
+        "random_seed": 42,
+        "paired_comparison": "Knowledge Graph vs Hybrid"
     }
 }
