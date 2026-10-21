@@ -1,4 +1,5 @@
 from app.extensions import db
+
 from app.models import (
     Supervisor,
     OnboardingAgent,
@@ -7,10 +8,12 @@ from app.models import (
     TaskSkill,
     TaskAssignment
 )
+
 from app.services.recommendation_service import HybridRecommendationService
 
 
 def login_supervisor(client):
+
     return client.post(
         "/auth/login",
         data={
@@ -22,6 +25,7 @@ def login_supervisor(client):
 
 
 def login_agent(client, email="grace@test.com"):
+
     return client.post(
         "/auth/login",
         data={
@@ -33,6 +37,7 @@ def login_agent(client, email="grace@test.com"):
 
 
 def create_test_task(app):
+
     with app.app_context():
 
         supervisor = Supervisor.query.filter_by(
@@ -72,9 +77,11 @@ def test_valid_task_creation(app, client):
     login_supervisor(client)
 
     with app.app_context():
+
         skill = Skill.query.filter_by(
             name="KYC Verification"
         ).first()
+
         skill_id = skill.id
 
     response = client.post(
@@ -113,6 +120,7 @@ def test_missing_required_task_fields(app, client):
     login_supervisor(client)
 
     with app.app_context():
+
         skill = Skill.query.first()
         skill_id = skill.id
 
@@ -151,6 +159,7 @@ def test_invalid_deadline(app, client):
     login_supervisor(client)
 
     with app.app_context():
+
         skill = Skill.query.first()
         skill_id = skill.id
 
@@ -203,10 +212,13 @@ def test_successful_task_assignment(app, client):
     login_supervisor(client)
 
     with app.app_context():
+
         agent = OnboardingAgent.query.filter_by(
             email="grace@test.com"
         ).first()
+
         agent_id = agent.id
+        initial_workload = agent.workload or 0
 
     response = client.post(
         f"/supervisor/task/{task_id}/assign",
@@ -220,15 +232,26 @@ def test_successful_task_assignment(app, client):
 
     with app.app_context():
 
-        task = db.session.get(Task, task_id)
+        task = db.session.get(
+            Task,
+            task_id
+        )
 
         assignment = TaskAssignment.query.filter_by(
             task_id=task_id
         ).first()
 
+        agent = db.session.get(
+            OnboardingAgent,
+            agent_id
+        )
+
         assert assignment is not None
         assert assignment.status == "Assigned"
         assert task.status == "Assigned"
+
+        # Workload should increase after assignment
+        assert agent.workload == initial_workload + 1
 
 
 def test_duplicate_assignment_prevented(app, client):
@@ -238,9 +261,11 @@ def test_duplicate_assignment_prevented(app, client):
     login_supervisor(client)
 
     with app.app_context():
+
         agent = OnboardingAgent.query.filter_by(
             email="grace@test.com"
         ).first()
+
         agent_id = agent.id
 
     client.post(
@@ -330,6 +355,11 @@ def test_agent_can_complete_assigned_task(app, client):
 
         task.status = "Assigned"
 
+        initial_workload = agent.workload or 0
+
+        # Simulate an active assignment
+        agent.workload = initial_workload + 1
+
         assignment = TaskAssignment(
             task_id=task.id,
             agent_id=agent.id,
@@ -341,6 +371,7 @@ def test_agent_can_complete_assigned_task(app, client):
         db.session.commit()
 
         assignment_id = assignment.id
+        agent_id = agent.id
 
     login_agent(client)
 
@@ -363,8 +394,73 @@ def test_agent_can_complete_assigned_task(app, client):
             task_id
         )
 
+        agent = db.session.get(
+            OnboardingAgent,
+            agent_id
+        )
+
         assert assignment.status == "Completed"
         assert task.status == "Completed"
+
+        # Workload should decrease after completion
+        assert agent.workload == initial_workload
+
+
+def test_workload_cannot_go_below_zero(app, client):
+
+    task_id = create_test_task(app)
+
+    with app.app_context():
+
+        supervisor = Supervisor.query.filter_by(
+            email="supervisor@test.com"
+        ).first()
+
+        agent = OnboardingAgent.query.filter_by(
+            email="grace@test.com"
+        ).first()
+
+        task = db.session.get(
+            Task,
+            task_id
+        )
+
+        task.status = "Assigned"
+
+        # Test the lower workload boundary
+        agent.workload = 0
+
+        assignment = TaskAssignment(
+            task_id=task.id,
+            agent_id=agent.id,
+            supervisor_id=supervisor.id,
+            status="Assigned"
+        )
+
+        db.session.add(assignment)
+        db.session.commit()
+
+        assignment_id = assignment.id
+        agent_id = agent.id
+
+    login_agent(client)
+
+    response = client.post(
+        f"/agent/assignment/{assignment_id}/complete",
+        follow_redirects=True
+    )
+
+    assert response.status_code == 200
+
+    with app.app_context():
+
+        agent = db.session.get(
+            OnboardingAgent,
+            agent_id
+        )
+
+        assert agent.workload == 0
+
 
 def test_agent_cannot_access_supervisor_dashboard(client):
 

@@ -435,6 +435,9 @@ def assign_task(task_id):
 
     task.status = "Assigned"
 
+    # Increase the agent's active workload
+    agent.workload = (agent.workload or 0) + 1
+
     db.session.add(assignment)
     db.session.commit()
 

@@ -9,7 +9,7 @@ from flask import (
 from flask_login import login_required, current_user
 
 from app.extensions import db
-from app.models import TaskAssignment
+from app.models import TaskAssignment, OnboardingAgent
 
 
 agent_bp = Blueprint(
@@ -91,6 +91,19 @@ def complete_assignment(assignment_id):
 
     assignment.status = "Completed"
     assignment.task.status = "Completed"
+
+    # Get the assigned agent
+    agent = db.session.get(
+        OnboardingAgent,
+        assignment.agent_id
+    )
+
+    # Reduce workload without allowing it to go below zero
+    if agent:
+        agent.workload = max(
+            0,
+            (agent.workload or 0) - 1
+        )
 
     db.session.commit()
 
