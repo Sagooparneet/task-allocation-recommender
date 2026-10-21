@@ -1,0 +1,36 @@
+{
+    "run_id": "FINAL_EVAL_002",
+    "dataset_version": "synthetic_v1",
+    "random_seed": 42,
+    "models": [
+        "Rule Baseline",
+        "Content-Based",
+        "Collaborative Filtering",
+        "Knowledge Graph",
+        "Hybrid"
+    ],
+    "hybrid_weights": {
+        "cbf": 0.3,
+        "cf": 0.3,
+        "kg": 0.4
+    },
+    "hybrid_weights_selected_using": "validation dataset",
+    "test_dataset_used_for_tuning": false,
+    "evaluation_data": "reserved test dataset",
+    "metrics": [
+        "Precision@K",
+        "Recall@K",
+        "Hit Rate@K",
+        "MAP@K"
+    ],
+    "k_values": [
+        1,
+        3,
+        5
+    ],
+    "rule_baseline": {
+        "primary_skill_required": true,
+        "same_location_priority": true,
+        "ranking_formula": "performance_score + 2*experience_years - 2*workload"
+    }
+}
