@@ -10,3 +10,21 @@ data/industry/
 # Jira raw dataset
 data/jira_onboarding_v2/raw/*
 !data/jira_onboarding_v2/raw/.gitkeep
+
+# Local application database, backups, and database-specific mappings
+instance/
+
+# Python environments and generated caches
+.venv/
+.pytest_cache/
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+.coverage
+htmlcov/
+
+# Local credentials
+.env.*
+!.env.example
+
+# Local logs
+*.log

@@ -1,4 +1,12 @@
+import secrets
+
+from flask import abort, current_app, session
+from sqlalchemy import update, exists, func
+from sqlalchemy.exc import SQLAlchemyError
+
+from app.services.netease_recommendation_service import NetEaseRecommendationService
 from datetime import datetime
+from app.services.netease_dataset_profiles import load_dataset_profiles
 
 from flask import (
     Blueprint,
@@ -64,15 +72,14 @@ def dashboard():
 
     recent_tasks = tasks[:5]
 
-    agents = (
-        OnboardingAgent.query
-        .order_by(
-            OnboardingAgent.workload.asc(),
-            OnboardingAgent.performance_score.desc()
-        )
-        .limit(5)
-        .all()
-    )
+    dataset_profiles = load_dataset_profiles()
+
+    # Preview the first five workers by original numeric worker ID.
+    # This is a dataset overview, not a recommendation ranking.
+    agents = [
+        dataset_profiles[worker_id]
+        for worker_id in sorted(dataset_profiles, key=int)[:5]
+    ]
 
     return render_template(
         "supervisor/dashboard.html",
@@ -319,134 +326,115 @@ def create_task():
         locations=locations,
         task_types=task_types
     )
-@supervisor_bp.route(
-    "/task/<int:task_id>/recommendations"
-)
+
+
+@supervisor_bp.route("/task/<int:task_id>/recommendations")
 @login_required
 def recommendations(task_id):
-
     if current_user.role != "supervisor":
         return redirect(url_for("home"))
 
     task = Task.query.get_or_404(task_id)
+    if task.supervisor_id != current_user.id:
+        abort(403)
 
-    service = HybridRecommendationService()
+    recommendation_error = None
+    try:
+        recommended_agents = HybridRecommendationService().get_recommendations(task_id, limit=5)
+    except ValueError as exc:
+        recommended_agents = []
+        recommendation_error = str(exc)
+    except OSError:
+        recommended_agents = []
+        recommendation_error = "The model or demonstration mapping files could not be loaded."
 
-    recommended_agents = service.get_recommendations(
-        task_id,
-        limit=5
-    )
+    if "assignment_csrf_token" not in session:
+        session["assignment_csrf_token"] = secrets.token_urlsafe(32)
 
+    already_assigned = TaskAssignment.query.filter_by(task_id=task.id).first() is not None
     return render_template(
         "supervisor/recommendations.html",
         task=task,
-        recommendations=recommended_agents
+        recommendations=recommended_agents,
+        recommendation_error=recommendation_error,
+        assignment_csrf_token=session["assignment_csrf_token"],
+        assignments_enabled=(task.status == "Pending" and not already_assigned and recommendation_error is None)
     )
 
 
-@supervisor_bp.route(
-    "/task/<int:task_id>/assign",
-    methods=["POST"]
-)
+@supervisor_bp.route("/task/<int:task_id>/assign", methods=["POST"])
 @login_required
 def assign_task(task_id):
-
     if current_user.role != "supervisor":
         return redirect(url_for("home"))
 
     task = Task.query.get_or_404(task_id)
+    if task.supervisor_id != current_user.id:
+        abort(403)
 
-    existing_assignment = TaskAssignment.query.filter_by(
-        task_id=task.id
-    ).first()
+    expected = session.get("assignment_csrf_token", "")
+    supplied = request.form.get("assignment_csrf_token", "")
+    if not expected or not secrets.compare_digest(supplied, expected):
+        flash("The assignment form expired or is invalid. Refresh recommendations and try again.", "warning")
+        return redirect(url_for("supervisor.recommendations", task_id=task.id))
 
-    if existing_assignment:
+    if task.status != "Pending" or TaskAssignment.query.filter_by(task_id=task.id).first():
+        flash("This task is no longer pending or already has an assignment.", "warning")
+        return redirect(url_for("supervisor.recommendations", task_id=task.id))
 
-        flash(
-            "This task has already been assigned.",
-            "warning"
+    agent_id = request.form.get("agent_id", type=int)
+    try:
+        _, _, candidates = NetEaseRecommendationService().get_eligible_candidates(task.id)
+    except (ValueError, OSError):
+        flash("Eligibility could not be checked. Review the task's capability mapping before assigning.", "warning")
+        return redirect(url_for("supervisor.recommendations", task_id=task.id))
+
+    selected = next((agent for agent in candidates.values() if agent.id == agent_id), None)
+    if selected is None:
+        flash("This agent is no longer available or does not meet all mapped task requirements.", "warning")
+        return redirect(url_for("supervisor.recommendations", task_id=task.id))
+
+    selected_name, selected_task_type = selected.name, task.task_type
+    supervisor_id = current_user.id
+    try:
+        # Conditional update prevents duplicate assignment through competing requests.
+        claim = db.session.execute(
+            update(Task).where(
+                Task.id == task_id,
+                Task.supervisor_id == supervisor_id,
+                Task.status == "Pending",
+                ~exists().where(TaskAssignment.task_id == task_id)
+            ).values(status="Assigned").execution_options(synchronize_session=False)
         )
+        if claim.rowcount != 1:
+            db.session.rollback()
+            flash("Another request changed or assigned this task. Please refresh.", "warning")
+            return redirect(url_for("supervisor.recommendations", task_id=task_id))
 
-        return redirect(
-            url_for(
-                "supervisor.recommendations",
-                task_id=task.id
-            )
+        agent_update = db.session.execute(
+            update(OnboardingAgent).where(
+                OnboardingAgent.id == agent_id,
+                OnboardingAgent.availability.is_(True)
+            ).values(workload=func.coalesce(OnboardingAgent.workload, 0) + 1)
+            .execution_options(synchronize_session=False)
         )
+        if agent_update.rowcount != 1:
+            db.session.rollback()
+            flash("The agent's availability changed. Please refresh recommendations.", "warning")
+            return redirect(url_for("supervisor.recommendations", task_id=task_id))
 
-    agent_id = request.form.get(
-        "agent_id",
-        type=int
-    )
+        db.session.add(TaskAssignment(
+            task_id=task_id,
+            agent_id=agent_id,
+            supervisor_id=supervisor_id,
+            status="Assigned"
+        ))
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        current_app.logger.exception("Task assignment transaction failed")
+        flash("The assignment could not be saved. Refresh and try again.", "danger")
+        return redirect(url_for("supervisor.recommendations", task_id=task_id))
 
-    if not agent_id:
-
-        flash(
-            "Please select an agent.",
-            "danger"
-        )
-
-        return redirect(
-            url_for(
-                "supervisor.recommendations",
-                task_id=task.id
-            )
-        )
-
-    agent = db.session.get(
-        OnboardingAgent,
-        agent_id
-    )
-
-    if not agent:
-
-        flash(
-            "The selected agent could not be found.",
-            "danger"
-        )
-
-        return redirect(
-            url_for(
-                "supervisor.recommendations",
-                task_id=task.id
-            )
-        )
-
-    if not agent.availability:
-
-        flash(
-            "The selected agent is currently unavailable.",
-            "warning"
-        )
-
-        return redirect(
-            url_for(
-                "supervisor.recommendations",
-                task_id=task.id
-            )
-        )
-
-    assignment = TaskAssignment(
-        task_id=task.id,
-        agent_id=agent.id,
-        supervisor_id=current_user.id,
-        status="Assigned"
-    )
-
-    task.status = "Assigned"
-
-    # Increase the agent's active workload
-    agent.workload = (agent.workload or 0) + 1
-
-    db.session.add(assignment)
-    db.session.commit()
-
-    flash(
-        f"{task.task_type} was assigned to "
-        f"{agent.name} successfully.",
-        "success"
-    )
-
-    return redirect(
-        url_for("supervisor.dashboard")
-    )
+    flash(f"{selected_task_type} was assigned to {selected_name} successfully.", "success")
+    return redirect(url_for("supervisor.dashboard"))

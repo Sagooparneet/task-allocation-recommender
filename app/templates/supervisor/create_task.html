@@ -196,27 +196,16 @@ Create New Task | IntelliTask
                     </label>
 
                     <p class="field-help">
-                        Where will the task be performed?
+                        Where will this website task be performed? Enter your own location or Online. This is not a NetEase dataset attribute.
                     </p>
 
-                    <select
-                        id="location"
-                        name="location"
-                        required
-                    >
-                        <option value="" selected disabled>
-                            Select task location
-                        </option>
-
+                    <input id="location" name="location" list="known-locations"
+                        required placeholder="Enter a location or Online">
+                    <datalist id="known-locations">
                         {% for location in locations %}
-
-                            <option value="{{ location }}">
-                                {{ location }}
-                            </option>
-
+                        <option value="{{ location }}"></option>
                         {% endfor %}
-
-                    </select>
+                    </datalist>
 
                 </div>
 
@@ -313,8 +302,7 @@ Create New Task | IntelliTask
 
         <p>
             After the task is created, IntelliTask can rank available
-            onboarding agents using skills, location, workload,
-            performance and historical recommendation evidence.
+            workers using mapped capabilities and recorded NetEase training history. Location and workload do not contribute to the current ranking.
         </p>
 
     </div>

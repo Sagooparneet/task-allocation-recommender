@@ -1,0 +1,19 @@
+{
+  "schema_version": 2,
+  "weights": [
+    0.1,
+    0.5,
+    0.4
+  ],
+  "selected_on": "validation MAP@3",
+  "constraint": "each component weight >= 0.1, fixed before test evaluation",
+  "operations_in_benchmark": false,
+  "capabilities": [
+    "50",
+    "53",
+    "56",
+    "69"
+  ],
+  "dataset": "NetEaseCrowd existing proxy subset",
+  "graph": "training-only NetworkX path features"
+}

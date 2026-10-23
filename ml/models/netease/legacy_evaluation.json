@@ -1,0 +1,182 @@
+{
+  "metadata": {
+    "dataset": "NetEaseCrowd real observed outcomes",
+    "synthetic": false,
+    "source": "https://github.com/fuxiAIlab/NetEaseCrowd-Dataset",
+    "paper": "https://arxiv.org/abs/2403.08826",
+    "source_revision": "2c3d461d8cfac70623da86110282876f6555121c",
+    "license": "CC-BY-SA-4.0",
+    "domain": "crowdsourcing annotation, not Kenyan onboarding",
+    "evaluation_scope": "rank only the workers actually observed on each held-out task",
+    "context_fields": "neutral placeholders; not source-measured eligibility/location/workload",
+    "outcome_definition": "source answer equals source truth",
+    "task_sampling": "SHA256(taskId) first 16 hex digits modulo 10 equals zero",
+    "training_cutoff_exclusive_ms": 1673488973759,
+    "validation_cutoff_exclusive_ms": 1673496674562,
+    "capabilities_mapping": "source capability IDs preserved; not renamed to onboarding skills",
+    "weights_source": "validation MAP only; 66 nonnegative weight combinations"
+  },
+  "weights": [
+    0.0,
+    0.3,
+    0.7
+  ],
+  "source_partition_rows": 1203264,
+  "sampled_tasks": 17987,
+  "sampled_pairs": 121201,
+  "agents": 1653,
+  "capabilities": [
+    "50",
+    "53",
+    "56",
+    "69"
+  ],
+  "duplicate_pairs_removed": 0,
+  "split_counts": {
+    "train": 12473,
+    "validation": 2018,
+    "test": 2699,
+    "purged": 797
+  },
+  "split_pair_counts": {
+    "train": 85647,
+    "validation": 12316,
+    "test": 17137,
+    "purged": 6101
+  },
+  "test_candidate_count_distribution": {
+    "7": 311,
+    "9": 1140,
+    "5": 478,
+    "3": 770
+  },
+  "test_cold_start": {
+    "observed_pairs": 17137,
+    "cold_start_pairs": 4924
+  },
+  "metrics": {
+    "hybrid": {
+      "precision_at_k": 0.7942447820180314,
+      "recall_at_k": 0.6290416203532172,
+      "map": 0.8429408672818269,
+      "top1_success": 0.8028899592441645,
+      "top1_wilson_95_interval": [
+        0.7874554577712883,
+        0.8174634542359859
+      ],
+      "evaluated_tasks": 2699,
+      "empty_candidate_tasks": 0,
+      "zero_positive_tasks": 6,
+      "k": 3
+    },
+    "content": {
+      "precision_at_k": 0.7270594047177967,
+      "recall_at_k": 0.581295541558602,
+      "map": 0.7925248107764781,
+      "top1_success": 0.740644683216006,
+      "top1_wilson_95_interval": [
+        0.7237757529389206,
+        0.7568295477934641
+      ],
+      "evaluated_tasks": 2699,
+      "empty_candidate_tasks": 0,
+      "zero_positive_tasks": 6,
+      "k": 3
+    },
+    "collaborative": {
+      "precision_at_k": 0.775719402247746,
+      "recall_at_k": 0.614869704828949,
+      "map": 0.8317760472720643,
+      "top1_success": 0.8028899592441645,
+      "top1_wilson_95_interval": [
+        0.7874554577712883,
+        0.8174634542359859
+      ],
+      "evaluated_tasks": 2699,
+      "empty_candidate_tasks": 0,
+      "zero_positive_tasks": 6,
+      "k": 3
+    },
+    "quality_only": {
+      "precision_at_k": 0.7957268123996541,
+      "recall_at_k": 0.629615907126096,
+      "map": 0.8442291971747325,
+      "top1_success": 0.8051130048165988,
+      "top1_wilson_95_interval": [
+        0.7897394084281726,
+        0.8196192754103475
+      ],
+      "evaluated_tasks": 2699,
+      "empty_candidate_tasks": 0,
+      "zero_positive_tasks": 6,
+      "k": 3
+    },
+    "constant_load_tiebreak": {
+      "precision_at_k": 0.7270594047177967,
+      "recall_at_k": 0.581295541558602,
+      "map": 0.7925248107764781,
+      "top1_success": 0.740644683216006,
+      "top1_wilson_95_interval": [
+        0.7237757529389206,
+        0.7568295477934641
+      ],
+      "evaluated_tasks": 2699,
+      "empty_candidate_tasks": 0,
+      "zero_positive_tasks": 6,
+      "k": 3
+    },
+    "uniform_random_expected": {
+      "top1_success": 0.7225921417103336,
+      "precision_at_k": 0.7225921417103337
+    }
+  },
+  "source_files": [
+    {
+      "filename": "LICENSE",
+      "url": "https://raw.githubusercontent.com/fuxiAIlab/NetEaseCrowd-Dataset/2c3d461d8cfac70623da86110282876f6555121c/LICENSE",
+      "sha256": "1f5de47ca3fbb93b6aa399da383832f24431aba69641360b49da7530c4a367e6",
+      "bytes": 20131
+    },
+    {
+      "filename": "CITATION.bib",
+      "url": "https://raw.githubusercontent.com/fuxiAIlab/NetEaseCrowd-Dataset/2c3d461d8cfac70623da86110282876f6555121c/CITATION.bib",
+      "sha256": "ff6267bdc11a9aec5a6ee2f44d52a46119d114b397790fa2a91fd2f4bd4edd80",
+      "bytes": 495
+    },
+    {
+      "filename": "README.md",
+      "url": "https://raw.githubusercontent.com/fuxiAIlab/NetEaseCrowd-Dataset/2c3d461d8cfac70623da86110282876f6555121c/README.md",
+      "sha256": "e3fcf40a6c96c20535fe9717d43e6235b797229fc23c48a9eca75ce348068664",
+      "bytes": 16040
+    },
+    {
+      "filename": "NetEaseCrowd_part_1.csv",
+      "url": "https://raw.githubusercontent.com/fuxiAIlab/NetEaseCrowd-Dataset/2c3d461d8cfac70623da86110282876f6555121c/data/NetEaseCrowd_part_1.csv",
+      "sha256": "6522bf2194e014ba5c33df7101457efdb47d516cffde8f0b6fc98e200c5cd5a6",
+      "bytes": 20175369
+    },
+    {
+      "filename": "NetEaseCrowd_part_6.csv",
+      "url": "https://raw.githubusercontent.com/fuxiAIlab/NetEaseCrowd-Dataset/2c3d461d8cfac70623da86110282876f6555121c/data/NetEaseCrowd_part_6.csv",
+      "sha256": "cc5b71e258b0d4367e44b6b712e2c0b1b0457cc81a6c4882fc54cfa0d1417a2c",
+      "bytes": 20510345
+    },
+    {
+      "filename": "NetEaseCrowd_part_11.csv",
+      "url": "https://raw.githubusercontent.com/fuxiAIlab/NetEaseCrowd-Dataset/2c3d461d8cfac70623da86110282876f6555121c/data/NetEaseCrowd_part_11.csv",
+      "sha256": "f931a44de1ed71514a36c9bc616505c34917d660831a3b81e061f48607254916",
+      "bytes": 20318227
+    }
+  ],
+  "limitations": [
+    "Real annotation correctness is a proxy outcome, not real onboarding success.",
+    "Observed-participant replay is conditional on historical assignment and does not estimate a causal gain or performance across unobserved workers.",
+    "Only official partitions 1, 6 and 11 are used by default; a label-independent hashed task sample is selected.",
+    "Tasks spanning temporal cutoffs are purged. No task or outcome crosses the retained split boundaries.",
+    "Source truth is used only to derive correctness labels; task answers and truth are never inference features.",
+    "Location, certification, verification, capacity and availability are absent; neutral values are used, not claimed as real.",
+    "Content scores are constant in this proxy setup. Workload is constant, so the load-rule baseline reduces to an ID tie-break.",
+    "Wilson intervals assume independent tasks; repeated workers and tasksets may make them optimistic.",
+    "Scores are ranking values, not calibrated success probabilities."
+  ]
+}

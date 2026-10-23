@@ -24,7 +24,7 @@ def login_supervisor(client):
     )
 
 
-def login_agent(client, email="grace@test.com"):
+def login_agent(client, email="netease-6376@demo.invalid"):
 
     return client.post(
         "/auth/login",
@@ -184,7 +184,7 @@ def test_unavailable_agents_excluded_from_recommendations(app):
     with app.app_context():
 
         unavailable_agent = OnboardingAgent.query.filter_by(
-            email="unavailable@test.com"
+            email="netease-13495@demo.invalid"
         ).first()
 
         service = HybridRecommendationService()
@@ -214,7 +214,7 @@ def test_successful_task_assignment(app, client):
     with app.app_context():
 
         agent = OnboardingAgent.query.filter_by(
-            email="grace@test.com"
+            email="netease-6376@demo.invalid"
         ).first()
 
         agent_id = agent.id
@@ -223,7 +223,8 @@ def test_successful_task_assignment(app, client):
     response = client.post(
         f"/supervisor/task/{task_id}/assign",
         data={
-            "agent_id": agent_id
+            "agent_id": agent_id,
+            "assignment_csrf_token": assignment_token(client, task_id)
         },
         follow_redirects=True
     )
@@ -263,7 +264,7 @@ def test_duplicate_assignment_prevented(app, client):
     with app.app_context():
 
         agent = OnboardingAgent.query.filter_by(
-            email="grace@test.com"
+            email="netease-6376@demo.invalid"
         ).first()
 
         agent_id = agent.id
@@ -271,7 +272,8 @@ def test_duplicate_assignment_prevented(app, client):
     client.post(
         f"/supervisor/task/{task_id}/assign",
         data={
-            "agent_id": agent_id
+            "agent_id": agent_id,
+            "assignment_csrf_token": assignment_token(client, task_id)
         },
         follow_redirects=True
     )
@@ -279,12 +281,13 @@ def test_duplicate_assignment_prevented(app, client):
     response = client.post(
         f"/supervisor/task/{task_id}/assign",
         data={
-            "agent_id": agent_id
+            "agent_id": agent_id,
+            "assignment_csrf_token": assignment_token(client, task_id)
         },
         follow_redirects=True
     )
 
-    assert b"This task has already been assigned" in response.data
+    assert b"This task is no longer pending or already has an assignment" in response.data
 
     with app.app_context():
 
@@ -304,7 +307,7 @@ def test_unavailable_agent_cannot_be_assigned(app, client):
     with app.app_context():
 
         agent = OnboardingAgent.query.filter_by(
-            email="unavailable@test.com"
+            email="netease-13495@demo.invalid"
         ).first()
 
         agent_id = agent.id
@@ -312,12 +315,13 @@ def test_unavailable_agent_cannot_be_assigned(app, client):
     response = client.post(
         f"/supervisor/task/{task_id}/assign",
         data={
-            "agent_id": agent_id
+            "agent_id": agent_id,
+            "assignment_csrf_token": assignment_token(client, task_id)
         },
         follow_redirects=True
     )
 
-    assert b"The selected agent is currently unavailable" in response.data
+    assert b"This agent is no longer available or does not meet all mapped task requirements" in response.data
 
     with app.app_context():
 
@@ -345,7 +349,7 @@ def test_agent_can_complete_assigned_task(app, client):
         ).first()
 
         agent = OnboardingAgent.query.filter_by(
-            email="grace@test.com"
+            email="netease-6376@demo.invalid"
         ).first()
 
         task = db.session.get(
@@ -417,7 +421,7 @@ def test_workload_cannot_go_below_zero(app, client):
         ).first()
 
         agent = OnboardingAgent.query.filter_by(
-            email="grace@test.com"
+            email="netease-6376@demo.invalid"
         ).first()
 
         task = db.session.get(
@@ -506,10 +510,9 @@ def test_recommendation_output_is_valid(app):
             assert 0 <= recommendation["cf_score"] <= 1
             assert 0 <= recommendation["kg_score"] <= 1
 
-            if recommendation["score"] >= 0.60:
-                assert recommendation["decision"] == "Suitable"
-            else:
-                assert recommendation["decision"] == "Supervisor review"
+            assert recommendation["decision"] == "Supervisor review required"
+            assert recommendation["source_worker_id"] == "6376"
+            assert recommendation["model_weights"] == [0.1, 0.5, 0.4]
 
             scores.append(
                 recommendation["score"]
@@ -532,7 +535,7 @@ def test_agent_cannot_complete_another_agents_task(app, client):
         ).first()
 
         grace = OnboardingAgent.query.filter_by(
-            email="grace@test.com"
+            email="netease-6376@demo.invalid"
         ).first()
 
         task = db.session.get(
@@ -556,7 +559,7 @@ def test_agent_cannot_complete_another_agents_task(app, client):
 
     login_agent(
         client,
-        email="unavailable@test.com"
+        email="netease-13495@demo.invalid"
     )
 
     response = client.post(
@@ -580,3 +583,52 @@ def test_agent_cannot_complete_another_agents_task(app, client):
 
         assert assignment.status == "Assigned"
         assert task.status == "Assigned"
+
+def assignment_token(client, task_id):
+    response = client.get(f"/supervisor/task/{task_id}/recommendations")
+    assert response.status_code == 200
+    with client.session_transaction() as session:
+        return session["assignment_csrf_token"]
+
+
+def test_assignment_requires_token(app, client):
+    task_id = create_test_task(app)
+    login_supervisor(client)
+    with app.app_context():
+        worker = OnboardingAgent.query.filter_by(email="netease-6376@demo.invalid").one()
+        worker_id, workload = worker.id, worker.workload
+    client.post(f"/supervisor/task/{task_id}/assign", data={"agent_id": worker_id})
+    with app.app_context():
+        assert TaskAssignment.query.count() == 0
+        assert db.session.get(Task, task_id).status == "Pending"
+        assert db.session.get(OnboardingAgent, worker_id).workload == workload
+
+
+def test_other_supervisor_cannot_access_or_assign(app, client):
+    task_id = create_test_task(app)
+    with app.app_context():
+        other = Supervisor(name="Other", email="other@test.com")
+        other.set_password("password123")
+        db.session.add(other)
+        db.session.commit()
+    client.post("/auth/login", data={"email": "other@test.com", "password": "password123"})
+    assert client.get(f"/supervisor/task/{task_id}/recommendations").status_code == 403
+    assert client.post(f"/supervisor/task/{task_id}/assign", data={"agent_id": 1}).status_code == 403
+    with app.app_context():
+        assert TaskAssignment.query.count() == 0
+
+
+def test_direct_source_capability_recommendation_reaches_page(app, client):
+    task_id = create_test_task(app)
+    with app.app_context():
+        task = db.session.get(Task, task_id)
+        task.task_type = "NetEase capability 56"
+        link = TaskSkill.query.filter_by(task_id=task_id).one()
+        link.skill_id = Skill.query.filter_by(name="NetEase capability 56").one().id
+        db.session.commit()
+        result = HybridRecommendationService().get_recommendations(task_id)[0]
+    login_supervisor(client)
+    response = client.get(f"/supervisor/task/{task_id}/recommendations")
+    assert response.status_code == 200
+    assert result["source_worker_id"].encode() in response.data
+    assert b'assignment_csrf_token' in response.data

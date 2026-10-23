@@ -259,127 +259,83 @@ Supervisor Dashboard | IntelliTask
     </section>
 
 
-    <!-- AGENT WORKLOAD -->
+    <!-- NETEASE DATASET PROFILES -->
 
     <section class="dashboard-section">
 
         <div class="section-header">
-
             <div>
-
-                <h2>
-                    Agent Workload Summary
-                </h2>
-
+                <h2>NetEase Worker Training History</h2>
                 <p>
-                    Current workload and availability of onboarding agents.
+                    First five workers by source worker ID.
+                    Capabilities and results come from training records.
+                    This table is not a recommendation ranking.
                 </p>
-
             </div>
-
         </div>
 
-
         {% if agents %}
-
             <div class="dashboard-table-wrapper">
-
                 <table class="dashboard-table">
-
                     <thead>
-
                         <tr>
-                            <th>Agent</th>
-                            <th>Specialization</th>
-                            <th>Location</th>
-                            <th>Current Workload</th>
-                            <th>Availability</th>
-                            <th>Performance</th>
+                            <th>Source Worker</th>
+                            <th>Observed Capability Codes</th>
+                            <th>Training Tasks</th>
+                            <th>Successful Responses / Total</th>
+                            <th>Training Success Rate</th>
                         </tr>
-
                     </thead>
 
                     <tbody>
-
                         {% for agent in agents %}
-
                             <tr>
-
                                 <td>
-
-                                    <div class="agent-cell">
-
-                                        <div class="table-avatar">
-                                            {{ agent.name[:1] | upper }}
-                                        </div>
-
-                                        <strong>
-                                            {{ agent.name }}
-                                        </strong>
-
-                                    </div>
-
+                                    <strong>
+                                        {{ agent.display_name }}
+                                    </strong>
                                 </td>
 
-
                                 <td>
-                                    {{ agent.specialization }}
-                                </td>
-
-
-                                <td>
-                                    {{ agent.location }}
-                                </td>
-
-
-                                <td>
-                                    {{ agent.workload }} active tasks
-                                </td>
-
-
-                                <td>
-
-                                    {% if agent.availability %}
-
-                                        <span class="availability available">
-                                            Available
-                                        </span>
-
+                                    {% if agent.capabilities %}
+                                        {{ agent.capabilities | join(', ') }}
                                     {% else %}
-
-                                        <span class="availability unavailable">
-                                            Unavailable
-                                        </span>
-
+                                        No training history
                                     {% endif %}
-
                                 </td>
-
 
                                 <td>
-                                    {{ agent.performance_score | round(0) | int }}%
+                                    {{ agent.training_task_count }}
                                 </td>
 
+                                <td>
+                                    {{ agent.successful_responses }}
+                                    /
+                                    {{ agent.training_responses }}
+                                </td>
+
+                                <td>
+                                    {% if agent.training_success_rate is not none %}
+                                        {{ "%.2f" | format(agent.training_success_rate) }}%
+                                    {% else %}
+                                        No training history
+                                    {% endif %}
+                                </td>
                             </tr>
-
                         {% endfor %}
-
                     </tbody>
-
                 </table>
-
             </div>
 
+            <p>
+                Success means the recorded answer matched the ground truth.
+                These historical worker rates are not model accuracy
+                or predictions of future success.
+            </p>
         {% else %}
-
             <div class="dashboard-empty-state">
-
-                <p>
-                    No onboarding agents are currently registered.
-                </p>
-
+                <p>No dataset profiles are available.</p>
             </div>
-
         {% endif %}
 
     </section>

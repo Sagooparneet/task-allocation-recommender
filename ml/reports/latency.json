@@ -1,0 +1,6 @@
+{
+  "cold_ms": 147.13360008317977,
+  "warm_mean_ms": 0.049433333333581686,
+  "queries": 30,
+  "scope": "local observed-candidate inference; not web end-to-end latency"
+}
