@@ -1,532 +1,171 @@
-# Intelligent Task Allocation System
+# IntelliTask
 
-## Explainable Knowledge Graph-Driven Hybrid Recommender for Intelligent Task Allocation in Distributed Onboarding Operations
+**An Explainable Knowledge Graph-Driven Hybrid Recommender for Intelligent Task Allocation in Distributed Onboarding Operations.**
 
-This project develops an intelligent task allocation system for distributed onboarding operations. The system recommends suitable onboarding agents for tasks using a hybrid recommendation approach that combines Content-Based Filtering, Collaborative Filtering and Knowledge Graph reasoning.
+IntelliTask is a Flask prototype in which supervisors create tasks, review recommendations, and assign workers. Workers sign in to view assignments and mark them complete. Recommendations use saved models built from real NetEaseCrowd observations.
 
-The application also provides explanations for recommendations so that supervisors can understand why an agent was recommended before making the final assignment decision.
+NetEaseCrowd is a proxy research dataset for this project. Its worker histories do not establish real onboarding qualifications or accuracy on KYC, SIM registration, or M-PESA tasks.
 
----
-
-## Main System Roles
-
-The system contains three user roles:
-
-- Supervisor — creates tasks, views recommendations and assigns agents.
-- Onboarding Agent — views assigned tasks and marks completed tasks.
-- Administrator — accesses the administrator area of the system.
-
----
-
-## Current Core Workflow
-
-The implemented workflow is:
+## Current integration
 
 ```text
-Supervisor Login
-      ↓
-Create Task
-      ↓
-Select Required Skills
-      ↓
-Generate Agent Recommendations
-      ↓
-Hybrid Recommender
-(CBF + CF + Knowledge Graph)
-      ↓
-Rank Available Agents
-      ↓
-Generate Explanations
-      ↓
-Supervisor Reviews Recommendation
-      ↓
-Assign Agent
-      ↓
-Agent Views Assigned Task
-      ↓
-Agent Completes Task
-      ↓
-Supervisor Sees Completed Status
+Supervisor opens a task
+  -> Flask recommendation route
+  -> HybridRecommendationService
+  -> NetEaseRecommendationService
+  -> explicit skill-to-capability mapping and eligible worker selection
+  -> ml.src.recommender.recommend_agents
+  -> saved content, collaborative, and knowledge-graph features
+  -> ranked workers and explanations rendered in the webpage
+  -> supervisor chooses a worker
+  -> assignment and workload saved together
+  -> worker views and completes the assignment
 ```
 
----
+The active hybrid uses **10% content, 50% collaborative, and 40% knowledge graph**. It loads saved artifacts rather than retraining during page requests. Knowledge-graph features and explanation evidence are precomputed from the saved training graph.
 
-## Recommendation Architecture
+The service checks source-worker bindings, recorded capabilities, and website availability. The assignment route checks task ownership, the form token, current eligibility, and duplicate assignment conditions. Workload is displayed but is not a component of the active website ranking. Completing a website task does not automatically retrain the model.
 
-The recommendation system combines three recommendation components.
+The supervisor's dataset overview reads training records directly. It is a worker-history preview, not a task-specific recommendation ranking.
 
-### Content-Based Filtering
+## Data and provenance
 
-Content-Based Filtering compares the requirements of a task with agent profile information.
+Source: [official NetEaseCrowd dataset repository](https://github.com/fuxiAIlab/NetEaseCrowd-Dataset).
 
-The Flask application currently considers:
+The retained experiment uses source partitions 1, 6, and 11, containing 1,203,264 raw observations. The selected sample contains **121,201 observations, 17,987 tasks, and 1,653 workers**. This is a subset of the public dataset, not the complete dataset.
 
-```text
-Skill Match        = 50%
-Specialization     = 20%
-Location           = 10%
-Performance        = 10%
-Workload           = 10%
-```
-
-The live Flask implementation uses the information currently available in the application database.
-
----
-
-### Collaborative Filtering
-
-Collaborative Filtering uses historical completed task information to identify patterns between agents and task types.
-
-The research experiment uses historical interaction information.
-
-The live Flask application uses completed task-type history available in the application database. Where there is insufficient historical information, a neutral score of `0.50` is used instead of inventing historical evidence.
-
----
-
-### Knowledge Graph
-
-The Knowledge Graph represents relationships between entities such as:
-
-```text
-Agents
-Tasks
-Skills
-Locations
-Completed Tasks
-```
-
-The Flask implementation uses these relationships to calculate a Knowledge Graph suitability score.
-
-The Knowledge Graph component considers:
-
-```text
-Skill relationships          = 50%
-Location relationship        = 15%
-Historical task type         = 20%
-Historical performance       = 15%
-```
-
----
-
-## Hybrid Recommendation
-
-The final hybrid recommendation score combines the three model components using fixed weights:
-
-```text
-Hybrid Score =
-(0.30 × Content-Based Score)
-+
-(0.30 × Collaborative Filtering Score)
-+
-(0.40 × Knowledge Graph Score)
-```
-
-The weights are:
-
-| Component | Weight |
-|---|---:|
-| Content-Based Filtering | 30% |
-| Collaborative Filtering | 30% |
-| Knowledge Graph | 40% |
-
-These weights were selected using the validation dataset and were fixed before final testing.
-
-The final test dataset was not used to retune the model.
-
----
-
-## Recommendation Suitability Threshold
-
-The application uses a suitability threshold of:
-
-```text
-60%
-```
-
-A recommendation scoring at least 60% is labelled:
-
-```text
-Suitable
-```
-
-A recommendation below 60% is labelled:
-
-```text
-Supervisor review
-```
-
-The system is designed as a decision-support system rather than a fully automatic assignment system.
-
-Therefore, a supervisor may still manually assign an agent below the threshold using the `Assign Anyway` option after reviewing the recommendation explanation.
-
----
-
-## Explainability
-
-Each recommendation provides an overall match score and human-readable reasons that may include:
-
-```text
-Required skill match
-Specialization match
-Location match
-Manageable workload
-Performance information
-Historical recommendation evidence
-Previous experience with similar task types
-```
-
-Detailed component scores can also be viewed by the supervisor for additional transparency.
-
----
-
-# Data Preparation
-
-The current development dataset contains synthetic onboarding-related data created for development and experimental testing.
-
-The synthetic data includes:
-
-```text
-100 onboarding agents
-8 onboarding-related skills
-2,000 tasks
-1,304 completed historical interactions
-```
-
-Example skills include:
-
-```text
-KYC Verification
-SIM Registration
-M-PESA Onboarding
-Account Activation
-Customer Service
-Identity Document Verification
-Digital Registration
-Mobile Financial Services
-```
-
-Synthetic data is used to develop and verify the recommendation pipeline while waiting for industry data.
-
-It must not be interpreted as final evidence of performance in a real operational environment.
-
----
-
-## Dataset Split
-
-Historical interactions were separated into:
-
-| Dataset | Percentage | Approximate Records |
+| Split | Tasks | Observations |
 |---|---:|---:|
-| Training | 70% | 912 |
-| Validation | 15% | 196 |
-| Test | 15% | 196 |
+| Training | 12,473 | 85,647 |
+| Validation | 2,018 | 12,316 |
+| Test | 2,699 | 17,137 |
+| Purged at temporal boundaries | 797 | 6,101 |
 
-The training dataset is used to develop the recommendation components.
+A successful recorded response means the worker's answer equals the dataset ground truth. Historical features and the graph use training outcomes only. Source files, license, and hash manifest are retained in `ml/data/raw/netease/`; processed records and splits are in `ml/data/netease/`. Preserve the source attribution and license when redistributing the dataset.
 
-The validation dataset is used for development decisions and hybrid weight selection.
+### Dataset history versus website activity
 
-The test dataset is reserved for final evaluation and is not used for tuning the model.
+- Original worker IDs, capability codes, task IDs, and recorded outcomes come from NetEaseCrowd.
+- Some imported accounts and saved display artifacts still contain synthetic names and Kenyan locations. These are demonstration attributes, not source identities or model evidence. The dataset overview displays original worker IDs.
+- Website accounts, availability, current workload, and assignments are local application records.
+- `ml/config/onboarding_capability_mapping.json` currently maps **KYC Verification to capability 56 for demonstration only**. The dataset does not establish that capability 56 means KYC. Other unmapped requirements return an explanatory message instead of recommendations.
+- Database IDs are mapped explicitly to source-worker IDs in the local `instance/netease_agent_bindings.json`. This file belongs to its database and must not be copied onto an unrelated database.
 
-A fixed random seed of:
+## Evaluation
 
-```text
-42
-```
+The benchmark ranks the observed participants for each held-out source task. Top-1 success measures whether the first-ranked participant answered that source task correctly. It does not measure website reliability, outcomes for unobserved workers, or onboarding accuracy.
 
-is used during data preparation for reproducibility.
-
----
-
-# Machine Learning and Recommendation Experiments
-
-The main notebook sequence is:
-
-```text
-notebooks/
-│
-├── 01_data_preparation.ipynb
-├── 02_content_based_baseline.ipynb
-├── 03_collaborative_filtering.ipynb
-├── 04_knowledge_graph.ipynb
-├── 05_hybrid_recommender.ipynb
-└── 06_model_evaluation.ipynb
-```
-
-The notebooks should be executed in this order.
-
----
-
-## Experiment Runs
-
-The current experiment identifiers are:
-
-```text
-CBF_RUN_001
-CF_RUN_001
-KG_RUN_001
-HYBRID_RUN_001
-FINAL_EVAL_001
-```
-
-Experiment outputs are stored under:
-
-```text
-experiments/
-```
-
-The experiment evidence includes items such as model configurations, evaluation metrics, predictions and plots.
-
----
-
-# Evaluation
-
-The models are evaluated using recommendation ranking metrics such as:
-
-```text
-Hit Rate@K
-MAP@K
-```
-
-The final unseen test results at Top-5 were:
-
-| Model | Hit Rate@5 | MAP@5 |
+| Model | Top-1 success | MAP@3 |
 |---|---:|---:|
-| Content-Based Filtering | 0.214286 | 0.134354 |
-| Collaborative Filtering | 0.076531 | 0.043707 |
-| Knowledge Graph | 0.341837 | 0.172534 |
-| Hybrid Recommender | 0.306122 | 0.155357 |
+| Content only | 69.248% | 62.635% |
+| Collaborative only | 80.289% | 72.579% |
+| Knowledge graph only | 80.289% | 72.474% |
+| Historical quality baseline | **80.511%** | **74.511%** |
+| Preserved legacy hybrid | 80.289% | 74.331% |
+| Current knowledge-graph hybrid | 79.881% | 72.093% |
 
-The Knowledge Graph achieved the highest Top-5 result on the current synthetic test dataset.
+The current hybrid does not outperform the historical-quality baseline. Its weights were selected using validation MAP@3 under a positive-weight constraint for all three components. The test split had already been inspected during earlier project work, so this architecture comparison is retrospective, not a new blind evaluation.
 
-The Hybrid Recommender is still used in the application because the research design combines multiple complementary sources of evidence rather than relying on only one recommendation method.
+See [the evaluation report](ml/reports/VERIFIED_RESULTS.md), [machine-readable results](ml/reports/final_evaluation.json), and notebook 06 for details. Older ML package notes about integration being pending describe the earlier delivery stage; the integration status above describes the current Flask application.
 
-These results are development results based on synthetic data and should not be interpreted as final industry performance.
+## Project structure
 
----
-
-# How to Run the Application
-
-## 1. Clone the Repository
-
-```bash
-git clone https://github.com/Sagooparneet/task-allocation-recommender.git
+```text
+app/                 Flask routes, services, models, templates, and styles
+ml/config/           Explicit demonstration capability mapping
+ml/data/             Source data, processed observations, and provenance
+ml/models/netease/   Saved models, features, graph, and source profiles
+ml/notebooks/        Six research notebooks with saved outputs
+ml/src/              Training, evaluation, explanations, and inference
+ml/salesmesh_ml/     Retained implementation needed for baseline comparisons
+ml/reports/          Metrics and figures
+ml/tests/            ML package tests
+scripts/             Import preview, migration, and demo login utilities
+tests/               Flask application tests
+instance/            Local database, backups, and bindings (not committed)
+config.py
+requirements.txt
+run.py
+seed.py
 ```
 
-Move into the project folder:
+The older top-level Jira and synthetic experiment folders have been removed from the active working tree and preserved separately by the project owner. They are not inputs to the current NetEase integration.
 
-```bash
+## Fresh installation (Windows PowerShell)
+
+Use Python 3.13 (the version used for the verified application run). Clone the branch containing this integration:
+
+```powershell
+git clone --branch main https://github.com/Sagooparneet/task-allocation-recommender.git
 cd task-allocation-recommender
-```
-
----
-
-## 2. Create a Virtual Environment
-
-```bash
 python -m venv venv
-```
-
----
-
-## 3. Activate the Virtual Environment
-
-For Windows PowerShell:
-
-```powershell
 venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python seed.py --instance-dir instance/netease_setup_test --check-only
+python seed.py --instance-dir instance/netease_setup_test
+python run_netease_test.py
 ```
 
-If PowerShell blocks the activation script:
+The setup prompts for a supervisor name, email, and password of at least 12 characters. Password input is hidden and only its hash is stored. Open `http://127.0.0.1:5001/auth/login` and use that account. The supervisor name/email are user-provided application account information, not NetEase attributes.
+
+Setup creates 1,653 worker accounts labelled by original source ID, four capability skills, and one supervisor. It creates no tasks or assignments and no administrator account. Workers without training history have an unknown success rate. Source profiles have no invented locations or personal names. Worker logins are disabled until explicitly configured for a local demonstration.
+
+The destination folder must not exist. Setup refuses to overwrite an existing installation. If interrupted, preserve the partial folder for inspection and use a new destination only after investigating the error. Do not delete or reset your working database to rerun setup.
+
+The runner uses `instance/netease_setup_test` explicitly, a separate session cookie, port 5001, and debug disabled. Its random session secret changes on restart, requiring users to sign in again. Do not reuse a binding file with a different database. `setup_complete.json` marks successful initialisation.
+
+### Try a recommendation
+
+1. Sign in as the supervisor and choose Create Task.
+2. Choose Other / New Task Type and enter `NetEase capability 56`.
+3. Enter a description and a location such as `Online` for this local website task.
+4. Select only `NetEase capability 56` as the required skill.
+5. Save and open recommendations. Worker labels use original NetEase IDs.
+
+The required skill selection drives recommendation eligibility; the task title alone does not. The new installation has a local mapping from each original capability label to the same source code. It does not use the legacy KYC demonstration mapping. Website-created tasks are not additional NetEase observations.
+
+### Existing integrated installation
+
+For the original local website, activate the existing environment and run `python run.py`. It continues using `instance/task_allocation.db` and its matching bindings. Its KYC demonstration mapping remains the fallback when no installation-specific configuration exists.
+
+The scripts under `scripts/` are retained migration utilities for the original installation. In particular, `import_netease_agents.py` assumes the original seven-task migration state, and `enable_demo_agent_login.py` targets a verified database/source-ID pair from that migration. Do not run these as the fresh-installation procedure. Use `seed.py` instead.
+
+### Dependencies and deployment boundary
+
+The root `requirements.txt` lists the application and test dependencies with versions verified in the working Python 3.13 environment. It omits unrelated packages from the previous full environment export. A clean online dependency installation has not yet been independently verified.
+
+Research notebook reproduction uses its own isolated environment and `ml/requirements-notebooks.txt`. Its historical NetworkX pin differs from the application environment; do not combine both dependency sets in one environment. Saved artifact inference does not rebuild the graph.
+
+This is a local academic prototype. The original `run.py` enables debug mode, and `config.py` retains a development secret. Do not expose that runner publicly. Production deployment requires a separate configuration and security review.
+
+## Research notebooks
+
+The six notebooks are under `ml/notebooks/`:
+
+1. `01_netease_data_preparation.ipynb`
+2. `02_content_based_filtering.ipynb`
+3. `03_collaborative_filtering.ipynb`
+4. `04_knowledge_graph.ipynb`
+5. `05_hybrid_recommender.ipynb`
+6. `06_final_evaluation.ipynb`
+
+Saved outputs can be viewed without executing them. Reproduction instructions and notebook dependencies are included in the ML package. Run notebooks in numerical order in an isolated research environment; executing them can regenerate model artifacts and reports.
+
+## Tests and verification status
+
+From the project root:
 
 ```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+python -m pytest ml/tests -q
+python -m pytest tests -q
 ```
 
-Then activate the environment again:
+Verification on 23 October 2026:
 
-```powershell
-venv\Scripts\Activate.ps1
-```
+- Combined application and ML tests: **26 passed**, with 14 SQLAlchemy legacy-API warnings.
+- Fixtures use temporary databases and installation-specific worker bindings; they do not write to the running website database.
+- Tests cover login, task validation, NetEase recommendation output, availability filtering, assignment tokens, supervisor ownership, duplicate assignment, completion, and worker permissions.
+- The original website's manually exercised assignment/completion flow completed task 6 with one assignment and returned its worker workload to zero.
+- The new installation created 1,653 correctly mapped workers, one supervisor, zero tasks, and zero assignments at initialisation. The user verified login and source-ID recommendations on port 5001.
 
----
-
-## 4. Install Required Packages
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## 5. Create and Seed the Database
-
-```bash
-python seed.py
-```
-
-This creates the development SQLite database and inserts sample users, agents, tasks and skills.
-
----
-
-## 6. Run the Application
-
-```bash
-python run.py
-```
-
----
-
-## 7. Open the Application
-
-Open:
-
-```text
-http://127.0.0.1:5000
-```
-
-in a web browser.
-
----
-
-# Development Test Accounts
-
-## Supervisor
-
-```text
-Email: supervisor@example.com
-Password: password123
-```
-
-## Onboarding Agent
-
-```text
-Email: grace@example.com
-Password: password123
-```
-
-## Administrator
-
-```text
-Email: admin@example.com
-Password: password123
-```
-
-These accounts are provided only for development and demonstration.
-
----
-
-# Automated Testing
-
-The project uses `pytest` for automated application testing.
-
-The tests use a separate temporary SQLite database so that testing does not modify the normal application database.
-
-Run the full automated test suite using:
-
-```bash
-python -m pytest -v
-```
-
-Current result:
-
-```text
-16 passed
-```
-
-The tests currently cover authentication, input validation, task creation, recommendation generation, recommendation score validation, unavailable-agent exclusion, successful assignment, duplicate assignment prevention, role restrictions and task completion.
-
-SQLAlchemy legacy API warnings may currently appear during testing. These are deprecation warnings and do not represent failed tests.
-
----
-
-# Project Structure
-
-```text
-intelligent-task-allocation/
-│
-├── app/
-│   ├── admin/
-│   ├── agent/
-│   ├── auth/
-│   ├── models/
-│   ├── services/
-│   ├── static/
-│   ├── supervisor/
-│   └── templates/
-│
-├── data/
-│   ├── raw/
-│   └── processed/
-│
-├── experiments/
-│
-├── notebooks/
-│
-├── tests/
-│   ├── conftest.py
-│   ├── test_auth.py
-│   └── test_workflow.py
-│
-├── config.py
-├── requirements.txt
-├── run.py
-├── seed.py
-└── README.md
-```
-
----
-
-# Reproducibility
-
-For reproducible development:
-
-```text
-1. Clone the correct Git commit.
-2. Create a clean Python virtual environment.
-3. Install dependencies from requirements.txt.
-4. Use the prepared dataset split.
-5. Use random seed 42.
-6. Execute notebooks in numerical order.
-7. Use validation data for development decisions.
-8. Keep the test dataset reserved for final evaluation.
-9. Use the fixed Hybrid weights of 30% CBF, 30% CF and 40% KG.
-10. Run pytest to verify the Flask application workflow.
-```
-
-Important experiment information such as model weights, metrics, predictions and run identifiers should be retained together with the corresponding Git commit and dataset version.
-
----
-
-# Current Limitations
-
-The current implementation has several limitations.
-
-The model evaluation currently uses synthetic development data rather than final industry operational data.
-
-The Flask application's database contains less historical information than the research datasets. For example, it does not currently store detailed performance ratings for every completed historical assignment.
-
-Because of this, the recommendation service used by the Flask application is an adaptation of the research model rather than an exact reproduction of every notebook feature.
-
-Collaborative Filtering may also have limited historical evidence in a newly seeded application database. A neutral fallback is therefore used when sufficient history is unavailable.
-
-The current SQLite database is appropriate for prototype development but would need to be replaced or extended for a production deployment.
-
-Future evaluation should rerun the complete pipeline using cleaned industry data before making conclusions about real-world recommendation performance.
-
----
-
-# Project Status
-
-The current prototype supports the main end-to-end task allocation workflow:
-
-```text
-Task Creation
-→ Recommendation
-→ Explanation
-→ Supervisor Decision
-→ Assignment
-→ Agent Completion
-→ Status Update
-```
-
-The next stages focus on continued interface improvement, documentation, reproducibility and evaluation using industry data when it becomes available.
+These checks establish the tested prototype workflows, not full production readiness or onboarding prediction accuracy.

@@ -1,0 +1,62 @@
+{
+  "dataset": "NetEaseCrowd real observed outcomes",
+  "synthetic": false,
+  "source": "https://github.com/fuxiAIlab/NetEaseCrowd-Dataset",
+  "paper": "https://arxiv.org/abs/2403.08826",
+  "source_revision": "2c3d461d8cfac70623da86110282876f6555121c",
+  "license": "CC-BY-SA-4.0",
+  "domain": "crowdsourcing annotation, not Kenyan onboarding",
+  "evaluation_scope": "rank only the workers actually observed on each held-out task",
+  "context_fields": "neutral placeholders; not source-measured eligibility/location/workload",
+  "outcome_definition": "source answer equals source truth",
+  "task_sampling": "SHA256(taskId) first 16 hex digits modulo 10 equals zero",
+  "training_cutoff_exclusive_ms": 1673488973759,
+  "validation_cutoff_exclusive_ms": 1673496674562,
+  "capabilities_mapping": "source capability IDs preserved; not renamed to onboarding skills",
+  "weights_source": "validation MAP only; 66 nonnegative weight combinations",
+  "source_manifest": {
+    "name": "NetEaseCrowd",
+    "revision": "2c3d461d8cfac70623da86110282876f6555121c",
+    "source": "https://github.com/fuxiAIlab/NetEaseCrowd-Dataset",
+    "paper": "https://arxiv.org/abs/2403.08826",
+    "license": "CC-BY-SA-4.0",
+    "files": [
+      {
+        "filename": "LICENSE",
+        "url": "https://raw.githubusercontent.com/fuxiAIlab/NetEaseCrowd-Dataset/2c3d461d8cfac70623da86110282876f6555121c/LICENSE",
+        "sha256": "1f5de47ca3fbb93b6aa399da383832f24431aba69641360b49da7530c4a367e6",
+        "bytes": 20131
+      },
+      {
+        "filename": "CITATION.bib",
+        "url": "https://raw.githubusercontent.com/fuxiAIlab/NetEaseCrowd-Dataset/2c3d461d8cfac70623da86110282876f6555121c/CITATION.bib",
+        "sha256": "ff6267bdc11a9aec5a6ee2f44d52a46119d114b397790fa2a91fd2f4bd4edd80",
+        "bytes": 495
+      },
+      {
+        "filename": "README.md",
+        "url": "https://raw.githubusercontent.com/fuxiAIlab/NetEaseCrowd-Dataset/2c3d461d8cfac70623da86110282876f6555121c/README.md",
+        "sha256": "e3fcf40a6c96c20535fe9717d43e6235b797229fc23c48a9eca75ce348068664",
+        "bytes": 16040
+      },
+      {
+        "filename": "NetEaseCrowd_part_1.csv",
+        "url": "https://raw.githubusercontent.com/fuxiAIlab/NetEaseCrowd-Dataset/2c3d461d8cfac70623da86110282876f6555121c/data/NetEaseCrowd_part_1.csv",
+        "sha256": "6522bf2194e014ba5c33df7101457efdb47d516cffde8f0b6fc98e200c5cd5a6",
+        "bytes": 20175369
+      },
+      {
+        "filename": "NetEaseCrowd_part_6.csv",
+        "url": "https://raw.githubusercontent.com/fuxiAIlab/NetEaseCrowd-Dataset/2c3d461d8cfac70623da86110282876f6555121c/data/NetEaseCrowd_part_6.csv",
+        "sha256": "cc5b71e258b0d4367e44b6b712e2c0b1b0457cc81a6c4882fc54cfa0d1417a2c",
+        "bytes": 20510345
+      },
+      {
+        "filename": "NetEaseCrowd_part_11.csv",
+        "url": "https://raw.githubusercontent.com/fuxiAIlab/NetEaseCrowd-Dataset/2c3d461d8cfac70623da86110282876f6555121c/data/NetEaseCrowd_part_11.csv",
+        "sha256": "f931a44de1ed71514a36c9bc616505c34917d660831a3b81e061f48607254916",
+        "bytes": 20318227
+      }
+    ]
+  }
+}

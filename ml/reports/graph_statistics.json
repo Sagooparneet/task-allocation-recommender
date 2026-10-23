@@ -1,0 +1,16 @@
+{
+  "nodes": 13985,
+  "edges": 100154,
+  "node_types": {
+    "Worker": 1508,
+    "Task": 12473,
+    "Capability": 4
+  },
+  "edge_types": {
+    "COMPLETED": 85647,
+    "HAS_CAPABILITY": 2034,
+    "REQUIRES_CAPABILITY": 12473
+  },
+  "training_observations": 85647,
+  "graph_input": "training split only"
+}

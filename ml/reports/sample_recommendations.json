@@ -1,0 +1,150 @@
+[
+  {
+    "source_worker_id": "8734",
+    "agent_id": "AGENT_1445",
+    "agent_name": "Sharon Wanjohi",
+    "skills": [
+      "NetEase capability 50",
+      "NetEase capability 56"
+    ],
+    "historical_task_count": 112,
+    "historical_success_rate": 0.8125,
+    "experience_level": "Extensive recorded history",
+    "location": "Eldoret",
+    "workload": 0,
+    "capacity": 5,
+    "availability": true,
+    "provenance": {
+      "agent_name": "synthetic display identity",
+      "location": "synthetic demo",
+      "workload": "synthetic initial demo state",
+      "capacity": "synthetic demo policy",
+      "availability": "synthetic initial demo state",
+      "skills": "training participation, not certified competence",
+      "historical_task_count": "NetEase training only",
+      "historical_success_rate": "NetEase training only",
+      "experience_level": "display label derived from training count; not employment tenure"
+    },
+    "score": 0.7955219299771837,
+    "base_score": 0.7955219299771837,
+    "components": {
+      "content": 0.6616228228488242,
+      "collaborative": 0.8578135492635349,
+      "knowledge_graph": 0.7511321826513346
+    },
+    "explanation": [
+      "Training participation supports capability 56 (compatibility 0.66).",
+      "Recorded training outcomes for this capability: 37/42 successful.",
+      "Knowledge graph links this worker to capability 56 through completed training tasks.",
+      "Graph co-participation links to 172 training workers contribute a neighbor prior.",
+      "Display name and location are synthetic demonstration attributes; they do not determine benchmark scores."
+    ],
+    "graph_paths": [
+      [
+        "worker:8734",
+        "HAS_CAPABILITY",
+        "capability:56"
+      ]
+    ],
+    "mode": "benchmark",
+    "score_type": "ranking score, not success probability",
+    "context_used": false,
+    "rank": 1
+  },
+  {
+    "source_worker_id": "5658",
+    "agent_id": "AGENT_0990",
+    "agent_name": "Eric Karanja",
+    "skills": [
+      "NetEase capability 50"
+    ],
+    "historical_task_count": 82,
+    "historical_success_rate": 0.9390243902439024,
+    "experience_level": "Some recorded history",
+    "location": "Eldoret",
+    "workload": 0,
+    "capacity": 5,
+    "availability": true,
+    "provenance": {
+      "agent_name": "synthetic display identity",
+      "location": "synthetic demo",
+      "workload": "synthetic initial demo state",
+      "capacity": "synthetic demo policy",
+      "availability": "synthetic initial demo state",
+      "skills": "training participation, not certified competence",
+      "historical_task_count": "NetEase training only",
+      "historical_success_rate": "NetEase training only",
+      "experience_level": "display label derived from training count; not employment tenure"
+    },
+    "score": 0.5301814441588879,
+    "base_score": 0.5301814441588879,
+    "components": {
+      "content": 0.0,
+      "collaborative": 0.6158185035985262,
+      "knowledge_graph": 0.555680480899062
+    },
+    "explanation": [
+      "No training participation recorded for capability 56; cold-start evidence is limited.",
+      "Recorded training outcomes for this capability: 0/0 successful.",
+      "Graph co-participation links to 99 training workers contribute a neighbor prior.",
+      "Display name and location are synthetic demonstration attributes; they do not determine benchmark scores."
+    ],
+    "graph_paths": [],
+    "mode": "benchmark",
+    "score_type": "ranking score, not success probability",
+    "context_used": false,
+    "rank": 2
+  },
+  {
+    "source_worker_id": "7946",
+    "agent_id": "AGENT_1308",
+    "agent_name": "Victor Otiso",
+    "skills": [
+      "NetEase capability 50",
+      "NetEase capability 56"
+    ],
+    "historical_task_count": 84,
+    "historical_success_rate": 0.38095238095238093,
+    "experience_level": "Some recorded history",
+    "location": "Kisumu",
+    "workload": 0,
+    "capacity": 5,
+    "availability": true,
+    "provenance": {
+      "agent_name": "synthetic display identity",
+      "location": "synthetic demo",
+      "workload": "synthetic initial demo state",
+      "capacity": "synthetic demo policy",
+      "availability": "synthetic initial demo state",
+      "skills": "training participation, not certified competence",
+      "historical_task_count": "NetEase training only",
+      "historical_success_rate": "NetEase training only",
+      "experience_level": "display label derived from training count; not employment tenure"
+    },
+    "score": 0.4850191999852563,
+    "base_score": 0.4850191999852563,
+    "components": {
+      "content": 0.37847219707991026,
+      "collaborative": 0.49623537745762825,
+      "knowledge_graph": 0.4976357288711277
+    },
+    "explanation": [
+      "Training participation supports capability 56 (compatibility 0.38).",
+      "Recorded training outcomes for this capability: 2/5 successful.",
+      "Knowledge graph links this worker to capability 56 through completed training tasks.",
+      "Graph co-participation links to 107 training workers contribute a neighbor prior.",
+      "Display name and location are synthetic demonstration attributes; they do not determine benchmark scores."
+    ],
+    "graph_paths": [
+      [
+        "worker:7946",
+        "HAS_CAPABILITY",
+        "capability:56"
+      ]
+    ],
+    "mode": "benchmark",
+    "score_type": "ranking score, not success probability",
+    "context_used": false,
+    "rank": 3
+  }
+]

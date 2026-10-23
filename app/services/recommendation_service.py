@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from math import sqrt
+from app.services.netease_recommendation_service import NetEaseRecommendationService
 
 import networkx as nx
 
@@ -52,6 +53,12 @@ class HybridRecommendationService(RecommendationService):
     }
 
     def get_recommendations(self, task_id, limit=5):
+        return NetEaseRecommendationService().get_recommendations(
+            task_id=task_id,
+            limit=limit
+        )
+
+    def get_legacy_recommendations(self, task_id, limit=5):
 
         task = Task.query.get(task_id)
 

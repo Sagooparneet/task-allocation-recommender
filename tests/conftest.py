@@ -1,3 +1,4 @@
+import json
 import pytest
 
 from app import create_app
@@ -23,6 +24,8 @@ def app(tmp_path):
         "SQLALCHEMY_DATABASE_URI":
             f"sqlite:///{test_database}"
     })
+
+    app.instance_path = str(tmp_path)
 
     with app.app_context():
 
@@ -62,7 +65,7 @@ def app(tmp_path):
 
         agent1 = OnboardingAgent(
             name="Grace Test",
-            email="grace@test.com",
+            email="netease-6376@demo.invalid",
             specialization="KYC Verification",
             location="Nairobi",
             availability=True,
@@ -77,7 +80,7 @@ def app(tmp_path):
 
         agent2 = OnboardingAgent(
             name="Unavailable Agent",
-            email="unavailable@test.com",
+            email="netease-13495@demo.invalid",
             specialization="KYC Verification",
             location="Nairobi",
             availability=False,
@@ -145,12 +148,27 @@ def app(tmp_path):
             )
         ])
 
+        source_skill = Skill(name="NetEase capability 56")
+        db.session.add(source_skill)
+        db.session.flush()
+        for agent in (agent1, agent2):
+            db.session.add(AgentSkill(agent_id=agent.id, skill_id=source_skill.id,
+                                     proficiency_level="Observed participation"))
+        (tmp_path / "netease_agent_bindings.json").write_text(json.dumps({
+            "schema_version": 1, "status": "ready",
+            "worker_bindings": {str(agent1.id): "6376", str(agent2.id): "13495"}
+        }), encoding="utf-8")
+        (tmp_path / "onboarding_capability_mapping.json").write_text(json.dumps({
+            "schema_version": 1,
+            "skill_to_capabilities": {"KYC Verification": ["56"], "NetEase capability 56": ["56"]}
+        }), encoding="utf-8")
         db.session.commit()
 
         yield app
 
         db.session.remove()
         db.drop_all()
+        db.engine.dispose()
 
 
 @pytest.fixture()
