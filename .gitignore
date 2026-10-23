@@ -6,3 +6,7 @@ instance/*.db
 .vscode/
 # Confidential industry data
 data/industry/
+
+# Jira raw dataset
+data/jira_onboarding_v2/raw/*
+!data/jira_onboarding_v2/raw/.gitkeep
