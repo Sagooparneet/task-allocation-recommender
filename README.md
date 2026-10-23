@@ -96,7 +96,7 @@ The older top-level Jira and synthetic experiment folders have been removed from
 Use Python 3.13 (the version used for the verified application run). Clone the branch containing this integration:
 
 ```powershell
-git clone --branch codex/netease-integration https://github.com/Sagooparneet/task-allocation-recommender.git
+git clone --branch main https://github.com/Sagooparneet/task-allocation-recommender.git
 cd task-allocation-recommender
 python -m venv venv
 venv\Scripts\Activate.ps1
