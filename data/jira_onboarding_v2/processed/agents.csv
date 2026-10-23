@@ -1,0 +1,195 @@
+agent_id,top_skills,historical_task_count,experienced_task_types,location,current_workload,availability,experience_level,performance_score
+AGENT_001,Account Setup|Customer Service|Data Entry,11,Account Activation|KYC Verification,Eldoret,4,Available,Junior,0.917
+AGENT_002,Compliance|Document Review|Identity Verification,23,KYC Verification|M-PESA Onboarding,Nairobi,2,Available,Junior,0.823
+AGENT_003,Customer Service|Data Entry|Compliance,928,Customer Registration|M-PESA Onboarding,Mombasa,4,Available,Senior,0.94
+AGENT_004,Customer Service|Data Entry|Compliance,774,Customer Registration|M-PESA Onboarding,Mombasa,3,Available,Senior,0.895
+AGENT_005,Compliance|Identity Verification|Document Review,43,KYC Verification|SIM Registration,Nairobi,0,Available,Junior,0.726
+AGENT_006,Identity Verification|Data Entry|SIM Registration,122,SIM Registration|Document Verification,Kisumu,5,Unavailable,Intermediate,0.973
+AGENT_007,Identity Verification|Compliance|Document Review,21,KYC Verification|SIM Registration,Nairobi,4,Available,Junior,0.913
+AGENT_008,Data Entry|Identity Verification|SIM Registration,247,SIM Registration|Account Activation,Kisumu,4,Available,Senior,0.92
+AGENT_009,Compliance|Document Review|Identity Verification,274,KYC Verification|Document Verification,Nairobi,1,Available,Senior,0.736
+AGENT_010,Compliance|Document Review|Identity Verification,118,KYC Verification|Document Verification,Nairobi,2,Available,Intermediate,0.826
+AGENT_011,Identity Verification|Data Entry|SIM Registration,33,SIM Registration|KYC Verification,Kisumu,2,Available,Junior,0.804
+AGENT_012,Compliance|Document Review|Identity Verification,98,KYC Verification|Document Verification,Nairobi,5,Unavailable,Intermediate,0.959
+AGENT_013,Data Entry|Customer Service|Compliance,30,Customer Registration|KYC Verification,Mombasa,3,Available,Junior,0.88
+AGENT_014,Compliance|Document Review|Identity Verification,11,KYC Verification|M-PESA Onboarding,Nairobi,4,Available,Junior,0.93
+AGENT_015,Customer Service|Data Entry|Compliance,591,Customer Registration|M-PESA Onboarding,Mombasa,2,Available,Senior,0.824
+AGENT_016,Compliance|Document Review|Identity Verification,98,Document Verification|KYC Verification,Thika,1,Available,Intermediate,0.764
+AGENT_017,Compliance|Document Review|Identity Verification,66,KYC Verification|Document Verification,Nairobi,3,Available,Intermediate,0.855
+AGENT_018,Compliance|Document Review|Identity Verification,233,KYC Verification|Document Verification,Nairobi,0,Available,Senior,0.718
+AGENT_019,Compliance|Customer Service|Mobile Money,25,M-PESA Onboarding|KYC Verification,Nakuru,4,Available,Junior,0.932
+AGENT_020,Account Setup|Customer Service|Data Entry,22,Account Activation|Document Verification,Eldoret,3,Available,Junior,0.877
+AGENT_021,Customer Service|Account Setup|Data Entry,26,Account Activation|KYC Verification,Eldoret,4,Available,Junior,0.912
+AGENT_022,Compliance|Document Review|Identity Verification,223,Document Verification|M-PESA Onboarding,Thika,2,Available,Senior,0.799
+AGENT_023,Compliance|Document Review|Identity Verification,54,KYC Verification|Account Activation,Nairobi,5,Unavailable,Intermediate,0.972
+AGENT_024,Compliance|Customer Service|Mobile Money,42,M-PESA Onboarding|KYC Verification,Nakuru,4,Available,Junior,0.95
+AGENT_025,Compliance|Document Review|Identity Verification,42,KYC Verification|M-PESA Onboarding,Nairobi,4,Available,Junior,0.918
+AGENT_026,Compliance|Document Review|Identity Verification,20,KYC Verification|M-PESA Onboarding,Nairobi,1,Available,Junior,0.754
+AGENT_027,Compliance|Identity Verification|Document Review,1129,KYC Verification|M-PESA Onboarding,Nairobi,2,Available,Senior,0.831
+AGENT_028,Customer Service|Account Setup|Data Entry,56,Account Activation|KYC Verification,Eldoret,0,Available,Intermediate,0.712
+AGENT_029,Compliance|Document Review|Identity Verification,91,KYC Verification|Document Verification,Nairobi,1,Available,Intermediate,0.743
+AGENT_030,Compliance|Customer Service|Mobile Money,44,M-PESA Onboarding|KYC Verification,Nakuru,3,Available,Junior,0.891
+AGENT_031,Compliance|Document Review|Identity Verification,85,KYC Verification|Document Verification,Nairobi,3,Available,Intermediate,0.909
+AGENT_032,Compliance|Document Review|Identity Verification,73,KYC Verification|Account Activation,Nairobi,5,Unavailable,Intermediate,0.971
+AGENT_033,Customer Service|Data Entry|Compliance,768,Customer Registration|M-PESA Onboarding,Mombasa,2,Available,Senior,0.791
+AGENT_034,Compliance|Document Review|Identity Verification,37,KYC Verification|M-PESA Onboarding,Nairobi,2,Available,Junior,0.804
+AGENT_035,Identity Verification|Compliance|Document Review,90,Document Verification|KYC Verification,Thika,2,Available,Intermediate,0.831
+AGENT_036,Compliance|Document Review|Identity Verification,159,KYC Verification|Account Activation,Nairobi,1,Available,Intermediate,0.753
+AGENT_037,Compliance|Customer Service|Mobile Money,28,M-PESA Onboarding|KYC Verification,Nakuru,1,Available,Junior,0.736
+AGENT_038,Compliance|Document Review|Identity Verification,22,Document Verification|Account Activation,Thika,2,Available,Junior,0.833
+AGENT_039,Customer Service|Data Entry|Account Setup,78,Account Activation|KYC Verification,Eldoret,1,Available,Intermediate,0.764
+AGENT_040,Data Entry|Customer Service|Identity Verification,41,Customer Registration|KYC Verification,Mombasa,3,Available,Junior,0.888
+AGENT_041,Data Entry|Customer Service|Compliance,86,Customer Registration|Document Verification,Mombasa,2,Available,Intermediate,0.822
+AGENT_042,Customer Service|Account Setup|Data Entry,58,Account Activation|KYC Verification,Eldoret,4,Available,Intermediate,0.933
+AGENT_043,Compliance|Document Review|Identity Verification,34,KYC Verification|Document Verification,Nairobi,3,Available,Junior,0.896
+AGENT_044,Compliance|Document Review|Identity Verification,55,Account Activation|Document Verification,Eldoret,2,Available,Intermediate,0.787
+AGENT_045,Compliance|Document Review|Identity Verification,57,KYC Verification|Document Verification,Nairobi,4,Available,Intermediate,0.933
+AGENT_046,Identity Verification|Compliance|Document Review,38,KYC Verification|SIM Registration,Nairobi,4,Available,Junior,0.925
+AGENT_047,Data Entry|Identity Verification|SIM Registration,26,SIM Registration|M-PESA Onboarding,Kisumu,2,Available,Junior,0.808
+AGENT_048,Data Entry|Identity Verification|Customer Service,53,SIM Registration|Customer Registration,Kisumu,1,Available,Intermediate,0.781
+AGENT_049,Compliance|Customer Service|Mobile Money,61,M-PESA Onboarding|SIM Registration,Nakuru,3,Available,Intermediate,0.891
+AGENT_050,Compliance|Document Review|Identity Verification,47,Document Verification|KYC Verification,Thika,1,Available,Junior,0.739
+AGENT_051,Compliance|Customer Service|Mobile Money,177,M-PESA Onboarding|Account Activation,Nakuru,1,Available,Intermediate,0.756
+AGENT_052,Compliance|Document Review|Identity Verification,33,KYC Verification|Document Verification,Nairobi,0,Available,Junior,0.702
+AGENT_053,Account Setup|Customer Service|Data Entry,52,Account Activation|KYC Verification,Eldoret,4,Available,Intermediate,0.92
+AGENT_054,Identity Verification|Data Entry|SIM Registration,557,SIM Registration|M-PESA Onboarding,Kisumu,3,Available,Senior,0.886
+AGENT_055,Compliance|Document Review|Identity Verification,90,KYC Verification|Document Verification,Nairobi,3,Available,Intermediate,0.897
+AGENT_056,Compliance|Document Review|Identity Verification,131,KYC Verification|Document Verification,Nairobi,4,Available,Intermediate,0.919
+AGENT_057,Identity Verification|Data Entry|Compliance,569,SIM Registration|Document Verification,Kisumu,2,Available,Senior,0.828
+AGENT_058,Customer Service|Account Setup|Data Entry,25,Account Activation|KYC Verification,Eldoret,3,Available,Junior,0.859
+AGENT_059,Compliance|Identity Verification|Data Entry,56,M-PESA Onboarding|SIM Registration,Nakuru,1,Available,Intermediate,0.739
+AGENT_060,Data Entry|Identity Verification|SIM Registration,75,SIM Registration|M-PESA Onboarding,Kisumu,1,Available,Intermediate,0.732
+AGENT_061,Compliance|Document Review|Identity Verification,42,KYC Verification|Document Verification,Nairobi,3,Available,Junior,0.887
+AGENT_062,Identity Verification|Compliance|Document Review,42,KYC Verification|SIM Registration,Nairobi,2,Available,Junior,0.832
+AGENT_063,Compliance|Customer Service|Mobile Money,47,M-PESA Onboarding|KYC Verification,Nakuru,3,Available,Junior,0.858
+AGENT_064,Compliance|Document Review|Identity Verification,32,KYC Verification|Document Verification,Nairobi,4,Available,Junior,0.914
+AGENT_065,Identity Verification|Data Entry|SIM Registration,86,SIM Registration|M-PESA Onboarding,Kisumu,3,Available,Intermediate,0.878
+AGENT_066,Compliance|Document Review|Identity Verification,33,KYC Verification|Account Activation,Nairobi,3,Available,Junior,0.855
+AGENT_067,Identity Verification|Data Entry|SIM Registration,108,SIM Registration|KYC Verification,Kisumu,3,Available,Intermediate,0.857
+AGENT_068,Compliance|Customer Service|Mobile Money,56,M-PESA Onboarding|KYC Verification,Nakuru,2,Available,Intermediate,0.785
+AGENT_069,Compliance|Document Review|Identity Verification,88,M-PESA Onboarding|Document Verification,Nakuru,0,Available,Intermediate,0.709
+AGENT_070,Compliance|Document Review|Identity Verification,161,KYC Verification|Account Activation,Nairobi,2,Available,Intermediate,0.822
+AGENT_071,Compliance|Document Review|Identity Verification,180,KYC Verification|Document Verification,Nairobi,1,Available,Intermediate,0.76
+AGENT_072,Compliance|Customer Service|Mobile Money,21,M-PESA Onboarding|KYC Verification,Nakuru,2,Available,Junior,0.814
+AGENT_073,Identity Verification|Data Entry|SIM Registration,22,SIM Registration|KYC Verification,Kisumu,4,Available,Junior,0.939
+AGENT_074,Compliance|Document Review|Identity Verification,39,KYC Verification|Document Verification,Nairobi,1,Available,Junior,0.766
+AGENT_075,Compliance|Document Review|Identity Verification,118,Document Verification|Account Activation,Thika,0,Available,Intermediate,0.716
+AGENT_076,Customer Service|Account Setup|Data Entry,251,Account Activation|M-PESA Onboarding,Eldoret,1,Available,Senior,0.779
+AGENT_077,Compliance|Document Review|Identity Verification,41,KYC Verification|Document Verification,Nairobi,1,Available,Junior,0.782
+AGENT_078,Compliance|Document Review|Identity Verification,31,KYC Verification|Account Activation,Nairobi,3,Available,Junior,0.885
+AGENT_079,Compliance|Document Review|Identity Verification,127,KYC Verification|M-PESA Onboarding,Nairobi,3,Available,Intermediate,0.856
+AGENT_080,Compliance|Document Review|Identity Verification,74,Document Verification|Account Activation,Thika,4,Available,Intermediate,0.919
+AGENT_081,Data Entry|Customer Service|Identity Verification,730,Customer Registration|SIM Registration,Mombasa,3,Available,Senior,0.886
+AGENT_082,Identity Verification|Compliance|Document Review,31,KYC Verification|Document Verification,Nairobi,2,Available,Junior,0.814
+AGENT_083,Account Setup|Customer Service|Data Entry,15,Account Activation|KYC Verification,Eldoret,4,Available,Junior,0.928
+AGENT_084,Data Entry|Identity Verification|SIM Registration,229,SIM Registration|M-PESA Onboarding,Kisumu,1,Available,Senior,0.747
+AGENT_085,Data Entry|Account Setup|Customer Service,20,Account Activation|SIM Registration,Eldoret,0,Available,Junior,0.706
+AGENT_086,Customer Service|Data Entry|Compliance,37,M-PESA Onboarding|SIM Registration,Nakuru,0,Available,Junior,0.725
+AGENT_087,Identity Verification|Compliance|Document Review,67,KYC Verification|SIM Registration,Nairobi,3,Available,Intermediate,0.902
+AGENT_088,Compliance|Document Review|Identity Verification,71,Document Verification|KYC Verification,Thika,2,Available,Intermediate,0.829
+AGENT_089,Identity Verification|Data Entry|SIM Registration,350,SIM Registration|KYC Verification,Kisumu,1,Available,Senior,0.745
+AGENT_090,Compliance|Document Review|Identity Verification,47,Document Verification|M-PESA Onboarding,Thika,2,Available,Junior,0.84
+AGENT_091,Compliance|Identity Verification|Document Review,109,KYC Verification|M-PESA Onboarding,Nairobi,1,Available,Intermediate,0.743
+AGENT_092,Customer Service|Data Entry|Compliance,66,Customer Registration|M-PESA Onboarding,Mombasa,3,Available,Intermediate,0.895
+AGENT_093,Compliance|Document Review|Identity Verification,52,KYC Verification|M-PESA Onboarding,Nairobi,2,Available,Intermediate,0.825
+AGENT_094,Compliance|Customer Service|Mobile Money,31,M-PESA Onboarding|KYC Verification,Nakuru,2,Available,Junior,0.807
+AGENT_095,Compliance|Document Review|Identity Verification,82,Document Verification|KYC Verification,Thika,2,Available,Intermediate,0.784
+AGENT_096,Compliance|Document Review|Identity Verification,139,KYC Verification|Document Verification,Nairobi,3,Available,Intermediate,0.876
+AGENT_097,Compliance|Customer Service|Mobile Money,438,M-PESA Onboarding|KYC Verification,Nakuru,2,Available,Senior,0.801
+AGENT_098,Compliance|Document Review|Identity Verification,33,KYC Verification|M-PESA Onboarding,Nairobi,0,Available,Junior,0.725
+AGENT_099,Data Entry|Identity Verification|SIM Registration,30,SIM Registration|Customer Registration,Kisumu,1,Available,Junior,0.733
+AGENT_100,Identity Verification|Data Entry|SIM Registration,22,SIM Registration|KYC Verification,Kisumu,5,Unavailable,Junior,0.969
+AGENT_101,Compliance|Identity Verification|Document Review,239,KYC Verification|M-PESA Onboarding,Nairobi,5,Unavailable,Senior,0.954
+AGENT_102,Compliance|Document Review|Identity Verification,59,KYC Verification|Document Verification,Nairobi,3,Available,Intermediate,0.896
+AGENT_103,Compliance|Identity Verification|Document Review,13,M-PESA Onboarding|KYC Verification,Nakuru,1,Available,Junior,0.774
+AGENT_104,Data Entry|Customer Service|Compliance,39,Customer Registration|KYC Verification,Mombasa,5,Unavailable,Junior,0.971
+AGENT_105,Compliance|Document Review|Identity Verification,30,Account Activation|Document Verification,Eldoret,4,Available,Junior,0.918
+AGENT_106,Identity Verification|Compliance|Document Review,19,Document Verification|SIM Registration,Thika,3,Available,Junior,0.901
+AGENT_107,Identity Verification|Compliance|Document Review,35,Document Verification|SIM Registration,Thika,2,Available,Junior,0.826
+AGENT_108,Data Entry|Customer Service|Account Setup,63,Customer Registration|Account Activation,Mombasa,1,Available,Intermediate,0.776
+AGENT_109,Compliance|Document Review|Identity Verification,143,KYC Verification|M-PESA Onboarding,Nairobi,0,Available,Intermediate,0.727
+AGENT_110,Identity Verification|Data Entry|SIM Registration,233,SIM Registration|Document Verification,Kisumu,5,Unavailable,Senior,0.953
+AGENT_111,Customer Service|Account Setup|Data Entry,31,Account Activation|M-PESA Onboarding,Eldoret,2,Available,Junior,0.828
+AGENT_112,Compliance|Document Review|Identity Verification,27,KYC Verification|Document Verification,Nairobi,1,Available,Junior,0.757
+AGENT_113,Identity Verification|Data Entry|SIM Registration,32,SIM Registration|KYC Verification,Kisumu,2,Available,Junior,0.786
+AGENT_114,Identity Verification|Data Entry|SIM Registration,393,SIM Registration|KYC Verification,Kisumu,3,Available,Senior,0.862
+AGENT_115,Compliance|Customer Service|Mobile Money,45,M-PESA Onboarding|KYC Verification,Nakuru,1,Available,Junior,0.749
+AGENT_116,Compliance|Document Review|Identity Verification,211,KYC Verification|Account Activation,Nairobi,4,Available,Senior,0.94
+AGENT_117,Compliance|Customer Service|Mobile Money,33,M-PESA Onboarding|KYC Verification,Nakuru,4,Available,Junior,0.912
+AGENT_118,Compliance|Document Review|Identity Verification,148,KYC Verification|M-PESA Onboarding,Nairobi,3,Available,Intermediate,0.901
+AGENT_119,Compliance|Document Review|Identity Verification,57,Document Verification|KYC Verification,Thika,2,Available,Intermediate,0.821
+AGENT_120,Identity Verification|Data Entry|SIM Registration,63,SIM Registration|M-PESA Onboarding,Kisumu,3,Available,Intermediate,0.876
+AGENT_121,Compliance|Document Review|Identity Verification,63,KYC Verification|Account Activation,Nairobi,3,Available,Intermediate,0.864
+AGENT_122,Identity Verification|Data Entry|Compliance,84,SIM Registration|Document Verification,Kisumu,3,Available,Intermediate,0.882
+AGENT_123,Compliance|Document Review|Identity Verification,48,KYC Verification|Account Activation,Nairobi,0,Available,Junior,0.724
+AGENT_124,Customer Service|Data Entry|Compliance,761,Customer Registration|Document Verification,Mombasa,2,Available,Senior,0.816
+AGENT_125,Identity Verification|Compliance|Document Review,24,KYC Verification|SIM Registration,Nairobi,0,Available,Junior,0.712
+AGENT_126,Compliance|Customer Service|Mobile Money,59,M-PESA Onboarding|KYC Verification,Nakuru,2,Available,Intermediate,0.838
+AGENT_127,Compliance|Customer Service|Identity Verification,75,M-PESA Onboarding|Document Verification,Nakuru,2,Available,Intermediate,0.792
+AGENT_128,Compliance|Document Review|Identity Verification,107,KYC Verification|Account Activation,Nairobi,1,Available,Intermediate,0.74
+AGENT_129,Customer Service|Compliance|Mobile Money,120,M-PESA Onboarding|Account Activation,Nakuru,1,Available,Intermediate,0.729
+AGENT_130,Compliance|Customer Service|Mobile Money,172,M-PESA Onboarding|KYC Verification,Nakuru,3,Available,Intermediate,0.865
+AGENT_131,Compliance|Document Review|Identity Verification,43,Document Verification|Account Activation,Thika,1,Available,Junior,0.748
+AGENT_132,Identity Verification|Compliance|Document Review,36,Document Verification|SIM Registration,Thika,5,Unavailable,Junior,0.959
+AGENT_133,Customer Service|Account Setup|Data Entry,566,Account Activation|M-PESA Onboarding,Eldoret,3,Available,Senior,0.863
+AGENT_134,Identity Verification|Compliance|Document Review,33,KYC Verification|SIM Registration,Nairobi,2,Available,Junior,0.797
+AGENT_135,Identity Verification|Compliance|Document Review,21,KYC Verification|SIM Registration,Nairobi,3,Available,Junior,0.865
+AGENT_136,Compliance|Customer Service|Mobile Money,65,M-PESA Onboarding|Document Verification,Nakuru,0,Available,Intermediate,0.706
+AGENT_137,Data Entry|Identity Verification|SIM Registration,312,SIM Registration|Customer Registration,Kisumu,5,Unavailable,Senior,0.968
+AGENT_138,Identity Verification|Data Entry|SIM Registration,72,SIM Registration|KYC Verification,Kisumu,2,Available,Intermediate,0.835
+AGENT_139,Compliance|Document Review|Identity Verification,79,KYC Verification|Account Activation,Nairobi,4,Available,Intermediate,0.919
+AGENT_140,Compliance|Document Review|Identity Verification,61,Document Verification|M-PESA Onboarding,Thika,0,Available,Intermediate,0.723
+AGENT_141,Compliance|Document Review|Identity Verification,45,KYC Verification|Customer Registration,Nairobi,2,Available,Junior,0.836
+AGENT_142,Compliance|Document Review|Identity Verification,45,KYC Verification|Account Activation,Nairobi,2,Available,Junior,0.837
+AGENT_143,Customer Service|Data Entry|Compliance,146,Customer Registration|M-PESA Onboarding,Mombasa,5,Unavailable,Intermediate,0.963
+AGENT_144,Customer Service|Account Setup|Data Entry,44,Account Activation|KYC Verification,Eldoret,3,Available,Junior,0.86
+AGENT_145,Customer Service|Data Entry|Compliance,24,Customer Registration|M-PESA Onboarding,Mombasa,2,Available,Junior,0.833
+AGENT_146,Compliance|Document Review|Identity Verification,44,Document Verification|KYC Verification,Thika,1,Available,Junior,0.775
+AGENT_147,Identity Verification|Compliance|Document Review,34,KYC Verification|Customer Registration,Nairobi,2,Available,Junior,0.793
+AGENT_148,Compliance|Document Review|Identity Verification,82,KYC Verification|Document Verification,Nairobi,2,Available,Intermediate,0.846
+AGENT_149,Compliance|Document Review|Identity Verification,23,KYC Verification|Document Verification,Nairobi,2,Available,Junior,0.823
+AGENT_150,Compliance|Document Review|Identity Verification,91,KYC Verification|Document Verification,Nairobi,0,Available,Intermediate,0.706
+AGENT_151,Compliance|Document Review|Identity Verification,15,KYC Verification|Document Verification,Nairobi,4,Available,Junior,0.931
+AGENT_152,Compliance|Document Review|Identity Verification,61,KYC Verification|Document Verification,Nairobi,4,Available,Intermediate,0.951
+AGENT_153,Compliance|Document Review|Identity Verification,46,KYC Verification|Document Verification,Nairobi,1,Available,Junior,0.739
+AGENT_154,Compliance|Document Review|Identity Verification,20,KYC Verification|Account Activation,Nairobi,3,Available,Junior,0.855
+AGENT_155,Compliance|Document Review|Identity Verification,40,Document Verification|M-PESA Onboarding,Thika,1,Available,Junior,0.73
+AGENT_156,Customer Service|Compliance|Account Setup,87,Account Activation|KYC Verification,Eldoret,3,Available,Intermediate,0.888
+AGENT_157,Compliance|Document Review|Identity Verification,113,KYC Verification|Document Verification,Nairobi,1,Available,Intermediate,0.779
+AGENT_158,Compliance|Document Review|Identity Verification,22,KYC Verification|Document Verification,Nairobi,3,Available,Junior,0.885
+AGENT_159,Identity Verification|Data Entry|SIM Registration,36,SIM Registration|M-PESA Onboarding,Kisumu,3,Available,Junior,0.904
+AGENT_160,Data Entry|Identity Verification|SIM Registration,56,SIM Registration|M-PESA Onboarding,Kisumu,4,Available,Intermediate,0.915
+AGENT_161,Compliance|Document Review|Identity Verification,44,KYC Verification|Document Verification,Nairobi,1,Available,Junior,0.73
+AGENT_162,Customer Service|Compliance|Data Entry,45,Customer Registration|KYC Verification,Mombasa,5,Unavailable,Junior,0.956
+AGENT_163,Identity Verification|Compliance|Document Review,26,KYC Verification|SIM Registration,Nairobi,1,Available,Junior,0.764
+AGENT_164,Data Entry|Customer Service|Identity Verification,574,Customer Registration|Document Verification,Mombasa,0,Available,Senior,0.71
+AGENT_165,Identity Verification|Data Entry|SIM Registration,36,SIM Registration|M-PESA Onboarding,Kisumu,3,Available,Junior,0.855
+AGENT_166,Data Entry|Customer Service|Identity Verification,27,Customer Registration|KYC Verification,Mombasa,2,Available,Junior,0.804
+AGENT_167,Identity Verification|Data Entry|Compliance,365,KYC Verification|SIM Registration,Nairobi,4,Available,Senior,0.932
+AGENT_168,Identity Verification|Data Entry|SIM Registration,536,SIM Registration|M-PESA Onboarding,Kisumu,4,Available,Senior,0.926
+AGENT_169,Identity Verification|Data Entry|SIM Registration,77,SIM Registration|KYC Verification,Kisumu,2,Available,Intermediate,0.789
+AGENT_170,Identity Verification|Compliance|Document Review,385,KYC Verification|SIM Registration,Nairobi,5,Unavailable,Senior,0.967
+AGENT_171,Compliance|Document Review|Identity Verification,50,KYC Verification|Document Verification,Nairobi,1,Available,Intermediate,0.781
+AGENT_172,Compliance|Document Review|Identity Verification,273,Document Verification|Account Activation,Thika,2,Available,Senior,0.844
+AGENT_173,Customer Service|Data Entry|Compliance,686,Customer Registration|KYC Verification,Mombasa,1,Available,Senior,0.772
+AGENT_174,Customer Service|Account Setup|Data Entry,42,Account Activation|KYC Verification,Eldoret,5,Unavailable,Junior,0.962
+AGENT_175,Compliance|Document Review|Identity Verification,125,KYC Verification|M-PESA Onboarding,Nairobi,1,Available,Intermediate,0.746
+AGENT_176,Compliance|Document Review|Identity Verification,44,Account Activation|KYC Verification,Eldoret,0,Available,Junior,0.713
+AGENT_177,Identity Verification|Data Entry|SIM Registration,468,SIM Registration|M-PESA Onboarding,Kisumu,2,Available,Senior,0.822
+AGENT_178,Compliance|Document Review|Identity Verification,35,Document Verification|KYC Verification,Thika,5,Unavailable,Junior,0.978
+AGENT_179,Identity Verification|Data Entry|SIM Registration,47,SIM Registration|KYC Verification,Kisumu,4,Available,Junior,0.95
+AGENT_180,Compliance|Document Review|Identity Verification,24,KYC Verification|Account Activation,Nairobi,3,Available,Junior,0.91
+AGENT_181,Compliance|Document Review|Identity Verification,26,KYC Verification|Document Verification,Nairobi,4,Available,Junior,0.949
+AGENT_182,Identity Verification|Compliance|Document Review,40,KYC Verification|SIM Registration,Nairobi,4,Available,Junior,0.95
+AGENT_183,Compliance|Document Review|Identity Verification,125,Account Activation|Document Verification,Eldoret,2,Available,Intermediate,0.845
+AGENT_184,Compliance|Document Review|Identity Verification,73,KYC Verification|M-PESA Onboarding,Nairobi,2,Available,Intermediate,0.788
+AGENT_185,Customer Service|Account Setup|Data Entry,895,Account Activation|Document Verification,Eldoret,4,Available,Senior,0.916
+AGENT_186,Compliance|Document Review|Identity Verification,127,KYC Verification|Account Activation,Nairobi,3,Available,Intermediate,0.885
+AGENT_187,Compliance|Customer Service|Mobile Money,12,M-PESA Onboarding|KYC Verification,Nakuru,2,Available,Junior,0.805
+AGENT_188,Customer Service|Data Entry|Compliance,484,Customer Registration|KYC Verification,Mombasa,0,Available,Senior,0.726
+AGENT_189,Compliance|Document Review|Identity Verification,97,KYC Verification|M-PESA Onboarding,Nairobi,3,Available,Intermediate,0.909
+AGENT_190,Data Entry|Identity Verification|SIM Registration,37,SIM Registration|M-PESA Onboarding,Kisumu,1,Available,Junior,0.773
+AGENT_191,Compliance|Document Review|Identity Verification,64,Account Activation|Document Verification,Eldoret,5,Unavailable,Intermediate,0.962
+AGENT_192,Customer Service|Account Setup|Data Entry,152,Account Activation|Document Verification,Eldoret,1,Available,Intermediate,0.767
+AGENT_193,Compliance|Document Review|Identity Verification,163,Document Verification|Account Activation,Thika,1,Available,Intermediate,0.734
+AGENT_194,Compliance|Document Review|Identity Verification,24,KYC Verification|Customer Registration,Nairobi,4,Available,Junior,0.933
