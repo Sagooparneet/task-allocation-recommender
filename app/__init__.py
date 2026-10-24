@@ -9,6 +9,10 @@ def create_app(test_config=None):
 
     app = Flask(__name__)
 
+    from app.services.skill_display_labels import skill_label, skill_explanation
+    app.add_template_filter(skill_label, "skill_label")
+    app.add_template_filter(skill_explanation, "skill_explanation")
+
     app.config.from_object(Config)
 
     if test_config:

@@ -121,10 +121,11 @@ The runner uses `instance/netease_setup_test` explicitly, a separate session coo
 ### Try a recommendation
 
 1. Sign in as the supervisor and choose Create Task.
-2. Choose Other / New Task Type and enter `NetEase capability 56`.
-3. Enter a description and a location such as `Online` for this local website task.
-4. Select only `NetEase capability 56` as the required skill.
-5. Save and open recommendations. Worker labels use original NetEase IDs.
+2. Choose **KYC Verification** as the task type.
+3. Enter a description and choose a location such as **Nairobi**.
+4. Select only **KYC Verification** as the required skill.
+5. Choose a deadline on or after today in Kenya time.
+6. Save and open recommendations. Workers appear under demonstration aliases linked to their original source IDs.
 
 The required skill selection drives recommendation eligibility; the task title alone does not. The new installation has a local mapping from each original capability label to the same source code. It does not use the legacy KYC demonstration mapping. Website-created tasks are not additional NetEase observations.
 
@@ -240,3 +241,28 @@ Verification on 23 October 2026:
 - The new installation created 1,653 correctly mapped workers, one supervisor, zero tasks, and zero assignments at initialisation. The user verified login and source-ID recommendations on port 5001.
 
 These checks establish the tested prototype workflows, not full production readiness or onboarding prediction accuracy.
+
+## Supervisor interface conventions
+
+Names shown for imported workers are synthetic demonstration aliases from the saved display profiles. Original source-worker IDs and database bindings remain unchanged. Aliases do not affect model scores or represent the real identities of NetEase workers.
+
+The interface uses these approved demonstration skill labels:
+
+| Source capability | Display label |
+|---|---|
+| 50 | SIM Registration |
+| 53 | M-PESA Onboarding |
+| 56 | KYC Verification |
+| 69 | Account Activation |
+
+These labels do not establish real onboarding qualifications or change the meaning of the benchmark. Database skills, submitted skill IDs, ML features, and ranking logic retain their source identities. Historical success rates describe training responses, not real onboarding work; ranking scores are not success probabilities.
+
+Application task locations are Nairobi, Mombasa, Kisumu, Nakuru, and Eldoret. They are operational choices, not worker locations inferred from the dataset. New tasks require a deadline on or after today's date in Kenya time (EAT). Existing tasks without deadlines are retained. These UI changes are being tested locally; they are not yet verified on the public deployment.
+
+## Dashboard theme (issue #46)
+
+The shared IntelliTask theme uses a local SVG logo, stylesheet and small navigation script. No chart service, CDN or additional Python package is required. Task charts use real application counts. The supervisor overview shows only that supervisor's tasks and supports name search, status filters, overdue indicators and ten-row pagination. Deadline comparisons use Kenya time. The worker-history snapshot continues to use the saved source-linked display names and labels described above.
+
+Role navigation only links to existing pages. Google signup, OTP verification, reports, administrator management and the full worker status lifecycle are future work. See [the role feature plan](docs/ROLE_FEATURE_PLAN.md).
+
+The isolated automated check passed 54 tests, with 17 existing SQLAlchemy legacy-method warnings. Desktop/mobile visual review remains pending: the automatic browser preview timed out. These local changes have not yet been verified or published on Render.

@@ -64,19 +64,19 @@ Create New Task | IntelliTask
                     required
                     onchange="toggleCustomTaskType()"
                 >
-                    <option value="" selected disabled>
+                    <option value="" {% if not request.form.get("task_type") %}selected{% endif %} disabled>
                         Select task type
                     </option>
 
                     {% for task_type in task_types %}
 
-                        <option value="{{ task_type }}">
+                        <option value="{{ task_type }}" {% if request.form.get("task_type") == task_type %}selected{% endif %}>
                             {{ task_type }}
                         </option>
 
                     {% endfor %}
 
-                    <option value="__other__">
+                    <option value="__other__" {% if request.form.get("task_type") == "__other__" %}selected{% endif %}>
                         Other / New Task Type
                     </option>
 
@@ -102,6 +102,7 @@ Create New Task | IntelliTask
                         type="text"
                         id="custom_task_type"
                         name="custom_task_type"
+                        value="{{ request.form.get('custom_task_type', '') }}"
                         placeholder="e.g. Business Account Verification"
                     >
 
@@ -127,7 +128,7 @@ Create New Task | IntelliTask
                     name="description"
                     rows="5"
                     placeholder="Describe the task requirements..."
-                ></textarea>
+                >{{ request.form.get("description", "") }}</textarea>
 
             </div>
 
@@ -157,6 +158,7 @@ Create New Task | IntelliTask
                                     type="checkbox"
                                     name="required_skills"
                                     value="{{ skill.id }}"
+                                    {% if skill.id|string in request.form.getlist("required_skills") %}checked{% endif %}
                                 >
 
                                 <span class="skill-check">
@@ -164,7 +166,7 @@ Create New Task | IntelliTask
                                 </span>
 
                                 <span>
-                                    {{ skill.name }}
+                                    {{ skill.name | skill_label }}
                                 </span>
 
                             </label>
@@ -184,7 +186,7 @@ Create New Task | IntelliTask
             </div>
 
 
-            <!-- LOCATION + PRIORITY -->
+<!-- LOCATION + PRIORITY -->
 
             <div class="form-row">
 
@@ -196,16 +198,19 @@ Create New Task | IntelliTask
                     </label>
 
                     <p class="field-help">
-                        Where will this website task be performed? Enter your own location or Online. This is not a NetEase dataset attribute.
+                        Choose where this task will be carried out.
                     </p>
 
-                    <input id="location" name="location" list="known-locations"
-                        required placeholder="Enter a location or Online">
-                    <datalist id="known-locations">
+                    <select id="location" name="location" required>
+                        <option value="" disabled {% if request.form.get('location') not in locations %}selected{% endif %}>
+                            Select a location
+                        </option>
                         {% for location in locations %}
-                        <option value="{{ location }}"></option>
+                        <option value="{{ location }}" {% if request.form.get('location') == location %}selected{% endif %}>
+                            {{ location }}
+                        </option>
                         {% endfor %}
-                    </datalist>
+                    </select>
 
                 </div>
 
@@ -224,18 +229,18 @@ Create New Task | IntelliTask
                         id="priority"
                         name="priority"
                     >
-                        <option value="Low">
+                        <option value="Low" {% if request.form.get("priority") == "Low" %}selected{% endif %}>
                             Low
                         </option>
 
                         <option
                             value="Medium"
-                            selected
+                            {% if request.form.get("priority", "Medium") == "Medium" %}selected{% endif %}
                         >
                             Medium
                         </option>
 
-                        <option value="High">
+                        <option value="High" {% if request.form.get("priority") == "High" %}selected{% endif %}>
                             High
                         </option>
 
@@ -252,16 +257,20 @@ Create New Task | IntelliTask
 
                 <label for="deadline">
                     Deadline
+                    <span class="required-mark">*</span>
                 </label>
 
                 <p class="field-help">
-                    Optional target date and time for completion.
+                    Choose today or a later date. Times are in Kenya time (EAT).
                 </p>
 
                 <input
                     type="datetime-local"
                     id="deadline"
                     name="deadline"
+                    required
+                    min="{{ deadline_min }}"
+                    value="{{ request.form.get('deadline', '') }}"
                 >
 
             </div>
@@ -301,8 +310,7 @@ Create New Task | IntelliTask
         </strong>
 
         <p>
-            After the task is created, IntelliTask can rank available
-            workers using mapped capabilities and recorded NetEase training history. Location and workload do not contribute to the current ranking.
+            After saving, review the recommended workers and choose who to assign.
         </p>
 
     </div>
@@ -339,6 +347,7 @@ function toggleCustomTaskType() {
 
     }
 }
+toggleCustomTaskType();
 </script>
 
 {% endblock %}

@@ -1,3 +1,8 @@
+import datetime as _deadline_datetime
+
+def _future_task_deadline():
+    return (_deadline_datetime.datetime.now(_deadline_datetime.timezone(_deadline_datetime.timedelta(hours=3))) + _deadline_datetime.timedelta(days=7)).strftime("%Y-%m-%dT%H:%M")
+
 """Exercise production routes using a disposable copy, never a live database.
 
 Login credentials are tested separately. This script creates authenticated test
@@ -75,10 +80,10 @@ def run_check(project, temporary_parent=None):
                 with client.session_transaction(base_url=base) as session:
                     session['_user_id'] = f'supervisor:{supervisor_id}'
                     session['_fresh'] = True
-                response = client.post('/supervisor/task/create', base_url=base, data={
+                response = client.post('/supervisor/task/create', base_url=base, data={"deadline": _future_task_deadline(),
                     'task_type': '__other__', 'custom_task_type': title,
                     'description': 'Disposable application workflow test.',
-                    'location': 'Online', 'priority': 'Medium',
+                    'location': 'Nairobi', 'priority': 'Medium',
                     'required_skills': str(skill_id),
                 })
                 require(response.status_code == 302, 'Task creation failed.')

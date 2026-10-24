@@ -1,3 +1,10 @@
+import datetime as _deadline_datetime
+
+def _future_task_deadline():
+    return (_deadline_datetime.datetime.now(_deadline_datetime.timezone(_deadline_datetime.timedelta(hours=3))) + _deadline_datetime.timedelta(days=7)).strftime("%Y-%m-%dT%H:%M")
+
+from datetime import datetime, timedelta, timezone
+
 from app.extensions import db
 
 from app.models import (
@@ -91,7 +98,7 @@ def test_valid_task_creation(app, client):
             "description": "Register and verify customer",
             "location": "Nairobi",
             "priority": "High",
-            "deadline": "2026-10-15T12:00",
+            "deadline": (datetime.now(timezone(timedelta(hours=3))) + timedelta(days=7)).strftime("%Y-%m-%dT%H:%M"),
             "required_skills": str(skill_id)
         },
         follow_redirects=True
@@ -126,7 +133,7 @@ def test_missing_required_task_fields(app, client):
 
     response = client.post(
         "/supervisor/task/create",
-        data={
+        data={"deadline": _future_task_deadline(),
             "task_type": "",
             "location": "Nairobi",
             "required_skills": str(skill_id)
@@ -143,7 +150,7 @@ def test_task_requires_skill(client):
 
     response = client.post(
         "/supervisor/task/create",
-        data={
+        data={"deadline": _future_task_deadline(),
             "task_type": "KYC Verification",
             "location": "Nairobi",
             "priority": "Medium"
@@ -630,5 +637,6 @@ def test_direct_source_capability_recommendation_reaches_page(app, client):
     login_supervisor(client)
     response = client.get(f"/supervisor/task/{task_id}/recommendations")
     assert response.status_code == 200
-    assert result["source_worker_id"].encode() in response.data
+    assert result["agent_name"].encode() in response.data
+    assert f'name="agent_id" value="{result["agent_id"]}"'.encode() in response.data
     assert b'assignment_csrf_token' in response.data

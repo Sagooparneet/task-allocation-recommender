@@ -1,3 +1,5 @@
+from app.services.recommendation_presentation import worker_summary
+from app.services.worker_display_names import worker_display_name
 
 import json
 from pathlib import Path
@@ -113,7 +115,8 @@ class NetEaseRecommendationService:
             'capability_ids': capabilities,
             'candidate_worker_ids': list(candidates),
         }, top_k=limit)
-        weights = load_artifacts()['model']['weights']
+        artifacts = load_artifacts()
+        weights = artifacts['model']['weights']
         results = []
         for row in ranked:
             agent = candidates[row['source_worker_id']]
@@ -128,7 +131,7 @@ class NetEaseRecommendationService:
                 **row,
                 'agent_display_id': row['agent_id'],
                 'agent_id': agent.id,  # Existing assignment endpoint expects the DB primary key.
-                'agent_name': agent.name,
+                'agent_name': worker_display_name(row['source_worker_id']),
                 'task_id': task.id,
                 'task_type': task.task_type,
                 'match_percentage': round(row['score'] * 100, 2),
@@ -143,5 +146,6 @@ class NetEaseRecommendationService:
                 'explanations': reasons,
                 'model_weights': weights,
                 'workload_used_in_score': False,
+                'summary': worker_summary(artifacts['features'][row['source_worker_id']], capabilities),
             })
         return results

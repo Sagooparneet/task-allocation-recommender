@@ -1,43 +1,21 @@
-{% extends "base.html" %}
-
+{% extends 'base.html' %}
+{% from 'ui/icons.html' import icon %}
+{% block title %}Sign in | IntelliTask{% endblock %}
 {% block content %}
-
-<div class="login-container">
-
-    <h1>Login</h1>
-
-    <p>
-        Sign in to the Intelligent Task Allocation System.
-    </p>
-
-    <form method="POST">
-
-        <label>
-            Email
-        </label>
-
-        <input
-            type="email"
-            name="email"
-            required
-        >
-
-        <label>
-            Password
-        </label>
-
-        <input
-            type="password"
-            name="password"
-            required
-        >
-
-        <button type="submit">
-            Login
-        </button>
-
-    </form>
-
+<div class="it-login">
+    <section class="it-login-story" aria-label="Welcome to IntelliTask">
+        <div class="it-brand"><img src="{{ url_for('static',filename='img/intellitask-mark.svg') }}" alt="" width="42" height="42"><span><strong>IntelliTask<span class="it-brand-dot">.</span></strong><small>Make every task count</small></span></div>
+        <div><h2>The right work.<br>The right people.<br><span>A clearer day.</span></h2><p>Bring your tasks, your team, and your next steps together in one place.</p></div>
+        <small>Clear decisions. Meaningful progress.</small>
+    </section>
+    <section class="it-login-form">
+        <span class="it-eyebrow">YOUR WORKSPACE AWAITS</span><h1>Welcome back.</h1><p>Sign in to pick up where you left off.</p>
+        <form method="POST">
+            <label for="email">Email address</label><input id="email" type="email" name="email" autocomplete="username" placeholder="you@example.com" value="{{ request.form.get('email','') }}" required>
+            <label for="password">Password</label><input id="password" type="password" name="password" autocomplete="current-password" required>
+            <button class="it-button" type="submit">Sign in {{ icon('arrow') }}</button>
+        </form>
+        <small>Need access? Contact your administrator.</small>
+    </section>
 </div>
-
 {% endblock %}
