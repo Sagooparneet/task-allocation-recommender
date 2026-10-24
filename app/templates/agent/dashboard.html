@@ -1,110 +1,40 @@
-{% extends "base.html" %}
-
+{% extends 'base.html' %}
+{% from 'ui/icons.html' import icon %}
+{% block title %}My tasks | IntelliTask{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/agent-dashboard.css') }}">{% endblock %}
 {% block content %}
-
-<div class="dashboard">
-
-    <h1>Onboarding Agent Dashboard</h1>
-
-    <p>
-        Welcome {{ current_user.name }}.
-    </p>
-
-    <h2>My Assigned Tasks</h2>
-
-    {% if assignments %}
-
-        <table class="task-table">
-
-            <thead>
-
-                <tr>
-                    <th>Task</th>
-                    <th>Location</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th>Assigned On</th>
-                    <th>Action</th>
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                {% for assignment in assignments %}
-
-                    <tr>
-
-                        <td>
-                            {{ assignment.task.task_type }}
-                        </td>
-
-                        <td>
-                            {{ assignment.task.location }}
-                        </td>
-
-                        <td>
-                            {{ assignment.task.priority }}
-                        </td>
-
-                        <td>
-                            {{ assignment.task.status }}
-                        </td>
-
-                        <td>
-                            {{ assignment.assigned_at.strftime("%d %b %Y %H:%M") }}
-                        </td>
-
-                        <td>
-
-                            {% if assignment.status != "Completed" %}
-
-                                <form
-                                    method="POST"
-                                    action="{{ url_for(
-                                        'agent.complete_assignment',
-                                        assignment_id=assignment.id
-                                    ) }}"
-                                >
-
-                                    <button
-                                        type="submit"
-                                        class="complete-button"
-                                        onclick="return confirm(
-                                            'Are you sure you want to mark this task as completed?'
-                                        );"
-                                    >
-                                        Mark Completed
-                                    </button>
-
-                                </form>
-
-                            {% else %}
-
-                                <span class="completed-label">
-                                    Completed
-                                </span>
-
-                            {% endif %}
-
-                        </td>
-
-                    </tr>
-
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    {% else %}
-
-        <p>
-            No tasks have been assigned to you yet.
-        </p>
-
-    {% endif %}
-
+<div class="it-overview">
+    <div class="it-heading"><div><p class="it-eyebrow">YOUR WORKSPACE</p><h1>One task at a time.</h1><p>Here’s what needs your attention today.</p></div></div>
+    <section class="it-hero" aria-label="Next step">
+        <div><span class="it-hero-label">Your next step</span>
+        {% if overdue_tasks %}<h2>{{ overdue_tasks }} task{{ 's' if overdue_tasks != 1 else '' }} need{{ '' if overdue_tasks != 1 else 's' }} attention.</h2><p>Review the overdue work and follow up with your supervisor.</p><a href="{{ url_for('agent.dashboard', status='Overdue') }}#my-tasks">Review overdue tasks {{ icon('arrow') }}</a>
+        {% elif active_tasks %}<h2>You have {{ active_tasks }} active task{{ 's' if active_tasks != 1 else '' }}.</h2><p>Check the nearest deadline and plan your next step.</p><a href="{{ url_for('agent.dashboard', status='Active') }}#my-tasks">See active tasks {{ icon('arrow') }}</a>
+        {% else %}<h2>You’re all caught up.</h2><p>New assignments from your supervisor will appear here.</p>{% endif %}</div>
+        <div class="it-hero-aside"><span class="it-hero-icon">{{ icon('check') }}</span><strong>{{ completion_percent }}%</strong><span>of your tasks completed</span></div>
+    </section>
+    <section class="it-metrics" aria-label="My task totals">
+    {% for label,value,note,symbol,tone in [('Active',active_tasks,'Still to finish','tasks','blue'),('Due today',due_today,'Upcoming deadlines today','clock','amber'),('Overdue',overdue_tasks,'Unfinished past deadline','clock','amber'),('Completed',completed_tasks,'Work finished','check','teal')] %}
+        <article class="it-metric"><span class="it-metric-icon {{ tone }}">{{ icon(symbol) }}</span><span>{{ label }}</span><strong>{{ value }}</strong><small>{{ note }}</small></article>
+    {% endfor %}
+    </section>
+    <section class="it-card" id="my-tasks" aria-labelledby="my-tasks-title">
+        <div class="it-card-heading"><div><h2 id="my-tasks-title">My assignments</h2><p class="it-muted">Active tasks appear first, with the nearest deadlines at the top. Times are in Kenya time.</p></div><span class="it-count">{{ assignment_page.total }} result{{ 's' if assignment_page.total != 1 else '' }}</span></div>
+        <form method="GET" action="{{ url_for('agent.dashboard') }}#my-tasks" class="it-task-filters it-agent-filters" role="search">
+            <div><label for="agent-search">Search tasks</label><div class="it-search-field">{{ icon('search') }}<input type="search" id="agent-search" name="q" maxlength="100" value="{{ search }}" placeholder="Search by task name"></div></div>
+            <div><label for="agent-status">Show</label><select name="status" id="agent-status"><option value="">All tasks</option>{% for value in ['Active','Completed','Overdue'] %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
+            <button class="it-button" type="submit">Apply filters</button>{% if search or selected_status %}<a class="it-text-link" href="{{ url_for('agent.dashboard') }}#my-tasks">Clear</a>{% endif %}
+        </form>
+        <div class="it-agent-tasks">
+        {% for assignment in assignment_page.items %}{% set task=assignment.task %}{% set overdue=assignment.status != 'Completed' and task.deadline and task.deadline < now %}
+            <article class="it-agent-task" aria-labelledby="assignment-{{ assignment.id }}">
+                <div class="it-agent-task-top"><div><span class="it-muted">Task #{{ task.id }}</span><h3 id="assignment-{{ assignment.id }}">{{ task.task_type|skill_label }}</h3></div><span class="it-status {{ assignment.status|lower|replace(' ','-') }}">{{ assignment.status }}</span></div>
+                <div class="it-agent-task-meta"><span class="it-priority {{ task.priority|lower }}">{{ task.priority }} priority</span><span>{{ task.location or 'Location not set' }}</span><span class="{{ 'it-overdue' if overdue else '' }}">{{ icon('clock') }} {% if task.deadline %}Due {{ task.deadline.strftime('%d %b %Y, %H:%M') }} EAT{% if overdue %} · Overdue{% endif %}{% else %}Deadline not set{% endif %}</span></div>
+                <div class="it-agent-task-footer"><details><summary>View task details</summary><div class="it-agent-description"><p>{{ task.description or 'No additional instructions.' }}</p><strong>Required skills</strong><p>{% for link in task.task_skills %}{{ link.skill.name|skill_label }}{{ ' · ' if not loop.last else '' }}{% else %}No skills listed{% endfor %}</p></div></details>
+                {% if assignment.status != 'Completed' %}<form method="POST" action="{{ url_for('agent.complete_assignment', assignment_id=assignment.id) }}"><button class="it-button" type="submit" onclick="return confirm('Have you finished this task?');">{{ icon('check') }} Mark complete</button></form>{% else %}<span class="it-good">{{ icon('check') }} Work finished</span>{% endif %}</div>
+            </article>
+        {% else %}<div class="it-empty">{{ icon('search' if search or selected_status else 'tasks') }}<h3>{{ 'No tasks match your filters' if search or selected_status else 'No assignments yet' }}</h3><p>{{ 'Try a different search or clear your filters.' if search or selected_status else 'Your supervisor’s assignments will appear here.' }}</p></div>{% endfor %}
+        </div>
+        {% if assignment_page.pages > 1 %}<nav class="it-pagination" aria-label="Assignment pages">{% if assignment_page.has_prev %}<a href="{{ url_for('agent.dashboard',page=assignment_page.prev_num,q=search,status=selected_status) }}#my-tasks">← Previous</a>{% endif %}<span>Page {{ assignment_page.page }} of {{ assignment_page.pages }}</span>{% if assignment_page.has_next %}<a href="{{ url_for('agent.dashboard',page=assignment_page.next_num,q=search,status=selected_status) }}#my-tasks">Next →</a>{% endif %}</nav>{% endif %}
+    </section>
 </div>
-
 {% endblock %}
