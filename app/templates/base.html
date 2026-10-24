@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/intellitask-theme.css') }}">
     <script src="{{ url_for('static', filename='js/intellitask-ui.js') }}" defer></script>
+    {% block extra_styles %}{% endblock %}
 </head>
 <body class="it-theme {% if not current_user.is_authenticated %}it-public{% endif %}">
 <a class="it-skip" href="#main-content">Skip to content</a>
@@ -33,15 +34,15 @@
         </nav>
         <div class="it-sidebar-note"><span class="it-dot"></span> A little clarity. A lot of progress.</div>
         <div class="it-account">
-            <span class="it-avatar">{{ current_user.name[:1]|upper }}</span>
-            <div><strong>{{ current_user.name }}</strong><small>{{ 'Worker' if role == 'agent' else role|title }}</small></div>
+            <span class="it-avatar">{{ account_display_name[:1]|upper }}</span>
+            <div><strong>{{ account_display_name }}</strong><small>{{ 'Worker' if role == 'agent' else role|title }}</small></div>
             <a href="{{ url_for('auth.logout') }}" aria-label="Sign out" title="Sign out">{{ icon('logout') }}</a>
         </div>
     </aside>
     <div class="it-workspace">
         <header class="it-topbar">
             <button type="button" class="it-menu" aria-controls="it-sidebar" aria-expanded="false" aria-label="Toggle navigation">{{ icon('menu') }}</button>
-            <span class="it-breadcrumb">Your workspace <span>/</span> <strong>{% if request.endpoint == 'supervisor.create_task' %}Create task{% elif request.endpoint == 'supervisor.recommendations' %}Recommendations{% else %}Overview{% endif %}</strong></span>
+            <span class="it-breadcrumb">Your workspace <span>/</span> <strong>{% if request.endpoint == 'supervisor.create_task' %}Create task{% elif request.endpoint == 'supervisor.recommendations' %}Recommendations{% elif request.endpoint == 'agent.dashboard' %}My tasks{% else %}Overview{% endif %}</strong></span>
             <span class="it-topbar-role">{{ 'Worker' if role == 'agent' else role|title }} portal</span>
         </header>
         <main class="it-main" id="main-content">

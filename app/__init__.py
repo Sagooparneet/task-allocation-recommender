@@ -22,6 +22,13 @@ def create_app(test_config=None):
     login_manager.init_app(app)
     migrate.init_app(app, db)
 
+    @app.context_processor
+    def account_display_context():
+        if current_user.is_authenticated:
+            from app.services.account_display_name import account_display_name
+            return {"account_display_name": account_display_name(current_user)}
+        return {}
+
     # Import models
     from app.models import (
         Supervisor,
