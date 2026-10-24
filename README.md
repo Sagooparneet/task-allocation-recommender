@@ -2,7 +2,7 @@
 
 **An Explainable Knowledge Graph-Driven Hybrid Recommender for Intelligent Task Allocation in Distributed Onboarding Operations.**
 
-IntelliTask is a Flask prototype in which supervisors create tasks, review recommendations, and assign workers. Workers sign in to view assignments and mark them complete. Recommendations use saved models built from real NetEaseCrowd observations.
+IntelliTask is a Flask prototype in which supervisors create tasks, review recommendations, and assign workers. The worker workflow supports viewing assignments and marking them complete after worker login has been explicitly enabled. Fresh dataset accounts have login disabled. Recommendations use saved models built from real NetEaseCrowd observations.
 
 NetEaseCrowd is a proxy research dataset for this project. Its worker histories do not establish real onboarding qualifications or accuracy on KYC, SIM registration, or M-PESA tasks.
 
@@ -49,7 +49,7 @@ A successful recorded response means the worker's answer equals the dataset grou
 - Some imported accounts and saved display artifacts still contain synthetic names and Kenyan locations. These are demonstration attributes, not source identities or model evidence. The dataset overview displays original worker IDs.
 - Website accounts, availability, current workload, and assignments are local application records.
 - `ml/config/onboarding_capability_mapping.json` currently maps **KYC Verification to capability 56 for demonstration only**. The dataset does not establish that capability 56 means KYC. Other unmapped requirements return an explanatory message instead of recommendations.
-- Database IDs are mapped explicitly to source-worker IDs in the local `instance/netease_agent_bindings.json`. This file belongs to its database and must not be copied onto an unrelated database.
+- Local SQLite installations map database IDs to source-worker IDs in `instance/netease_agent_bindings.json`. This file belongs to its database and must not be copied onto an unrelated database. The PostgreSQL production entry point instead reads mappings from the `worker_source_bindings` database table and maps original capability labels directly to their source codes.
 
 ## Evaluation
 
@@ -80,11 +80,15 @@ ml/src/              Training, evaluation, explanations, and inference
 ml/salesmesh_ml/     Retained implementation needed for baseline comparisons
 ml/reports/          Metrics and figures
 ml/tests/            ML package tests
-scripts/             Import preview, migration, and demo login utilities
+scripts/             Setup, migration, verification, and legacy demo utilities
+migrations/          Versioned database schema changes
 tests/               Flask application tests
 instance/            Local database, backups, and bindings (not committed)
 config.py
 requirements.txt
+.python-version      Python 3.13.3 for Render
+gunicorn.conf.py     Hosted web server configuration
+wsgi.py              Production application entry point
 run.py
 seed.py
 ```
@@ -126,9 +130,9 @@ The required skill selection drives recommendation eligibility; the task title a
 
 ### Existing integrated installation
 
-For the original local website, activate the existing environment and run `python run.py`. It continues using `instance/task_allocation.db` and its matching bindings. Its KYC demonstration mapping remains the fallback when no installation-specific configuration exists.
+For the original local website, activate the existing environment and run `python run.py`. With no deployment environment variables set, it uses `instance/task_allocation.db` and its matching bindings. Its KYC demonstration mapping remains the fallback when no installation-specific configuration exists.
 
-The scripts under `scripts/` are retained migration utilities for the original installation. In particular, `import_netease_agents.py` assumes the original seven-task migration state, and `enable_demo_agent_login.py` targets a verified database/source-ID pair from that migration. Do not run these as the fresh-installation procedure. Use `seed.py` instead.
+Some scripts under `scripts/` are legacy migration utilities for the original installation. In particular, `import_netease_agents.py` assumes the original seven-task migration state, and `enable_demo_agent_login.py` targets a verified database/source-ID pair from that migration. Do not run these as the fresh-installation procedure. Use `seed.py` instead.
 
 ### Dependencies and deployment boundary
 
@@ -136,7 +140,74 @@ The root `requirements.txt` lists the application and test dependencies with ver
 
 Research notebook reproduction uses its own isolated environment and `ml/requirements-notebooks.txt`. Its historical NetworkX pin differs from the application environment; do not combine both dependency sets in one environment. Saved artifact inference does not rebuild the graph.
 
-This is a local academic prototype. The original `run.py` enables debug mode, and `config.py` retains a development secret. Do not expose that runner publicly. Production deployment requires a separate configuration and security review.
+This is an academic prototype with deployment preparation in progress. The original `run.py` enables debug mode, and `config.py` retains a development secret for local use. Public hosting must use `wsgi:app`, which requires explicit production settings and disables debug mode. Public deployment and testing are still pending.
+
+## Deployment preparation: Render and Neon
+
+Neon stores the PostgreSQL database; Render will run the Flask website and saved ML inference. The website is not publicly deployed yet. The local application has been checked against Neon using read-only transactions.
+
+### Database setup (new installations only)
+
+Create an empty Neon PostgreSQL database and install the root requirements in a local virtual environment. Run from the project root:
+
+```powershell
+python scripts/check_neon_connection.py
+python scripts/check_neon_sqlalchemy.py
+python scripts/create_neon_tables.py
+python scripts/initialize_neon.py
+python scripts/check_neon_application.py
+```
+
+Each script prompts privately for the connection string. Initialisation also prompts for a supervisor name, email, and password. Never commit connection strings or passwords.
+
+`create_neon_tables.py` applies the committed initial migration to an empty database. `initialize_neon.py` refuses nonempty application tables and creates one supervisor, 1,653 source-ID worker accounts, four capability skills, and database worker mappings. It creates no tasks or assignments. Worker logins remain disabled. Unknown historical performance remains unknown.
+
+The project owner's Neon database has already completed these steps. Do not rerun schema creation or initialisation against that populated database. Future schema changes require new reviewed migrations; do not reset the database or rerun `db init`.
+
+The existing local databases are separate installations. This process does not transfer their tasks, assignments, accounts, or JSON binding files to Neon.
+
+### Planned Render web service settings
+
+| Setting | Value |
+|---|---|
+| Service type | Web Service |
+| Runtime | Python |
+| Region | Frankfurt, matching the Neon region |
+| Plan | Free |
+| Root directory | Repository root (leave blank) |
+| Build command | `python -m pip install -r requirements.txt` |
+| Start command | `gunicorn --config gunicorn.conf.py wsgi:app` |
+| Python | `3.13.3`, specified in `.python-version` |
+
+Select the branch containing the reviewed deployment changes. During preparation this is `feature/deployment-preparation`; use `main` after those changes have been merged. These settings document the planned deployment, not an already running public service.
+
+Configure these private environment variables in the hosting dashboard:
+
+| Variable | Value |
+|---|---|
+| `INTELLITASK_DATABASE_URL` | Neon PostgreSQL connection string |
+| `INTELLITASK_SECRET_KEY` | A persistent, randomly generated secret of at least 32 characters |
+
+Generate a secret locally with `python -c "import secrets; print(secrets.token_hex(32))"` and store it privately in the hosting settings. Keep it stable across restarts. Do not put it in the README, source files, screenshots, or Git history.
+
+The production entry point selects the Psycopg driver, requires encrypted PostgreSQL connections, and uses database worker bindings. PostgreSQL does not require `INTELLITASK_INSTANCE_PATH` or local JSON mapping files. SQLite production-style tests retain their separate instance-folder configuration.
+
+Gunicorn uses one worker process and a 120-second timeout as an initial configuration. Hosting memory use, startup time, and request performance must still be measured. Gunicorn is installed on Linux; its requirement is skipped on Windows. Use the existing local runners for development.
+
+Do not run setup or initialisation scripts in the build or start command. Database records must survive application restarts. Render's free service filesystem is temporary, so application records belong in Neon; committed ML artifacts are installed again from the repository on deployment. Free services can sleep while inactive and have usage limits. Check current provider terms before relying on them for a demonstration.
+
+Provider documentation: [Render Flask hosting](https://render.com/docs/deploy-flask), [Python version configuration](https://render.com/docs/python-version), [Render free service limits](https://render.com/docs/free), and [Neon plans](https://neon.com/pricing).
+
+### Verification completed on 24 October 2026
+
+- Combined Flask and ML tests: **26 passed**, with 14 SQLAlchemy legacy-API warnings.
+- Installed dependency consistency: `python -m pip check` reported no broken requirements. This is not a clean Linux installation test.
+- The production workflow check passed task creation, saved-model inference, recommendation display, assignment, duplicate protection, workload changes, and completion using a temporary SQLite copy. The source databases were unchanged.
+- The read-only Neon application check verified all 1,653 worker identities, database-backed ML configuration, supervisor login, session-cookie protections, and the authenticated dashboard.
+- The Neon check did not create or assign a task. A complete PostgreSQL write workflow and public HTTPS browser test remain pending.
+- Worker completion tests simulate an authenticated worker session. Real hosted worker login has not been enabled or verified.
+
+Before declaring the public demo ready, verify the Linux build and model loading, run the task/assignment workflow against the hosted database, review authentication and form protections, and test HTTPS login and session behaviour in a browser. These checks do not establish model accuracy on real onboarding tasks.
 
 ## Research notebooks
 
