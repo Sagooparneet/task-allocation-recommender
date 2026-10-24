@@ -1,104 +1,51 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% from 'ui/icons.html' import icon %}
+{% block title %}Find a worker | IntelliTask{% endblock %}
 {% block content %}
-<div class="dashboard recommendation-page">
-    <a class="back-link" href="{{ url_for('supervisor.dashboard') }}">← Back to Dashboard</a>
-    <div class="page-heading">
-        <div>
-            <h1>Agent Recommendations</h1>
-            <p class="page-subtitle">Review ranked demonstration agents and the evidence behind each recommendation.</p>
-        </div>
-    </div>
-
-    <div class="task-summary-card">
-        <div class="task-summary-header">
-            <div><span class="section-label">Task</span><h2>{{ task.task_type }}</h2></div>
-            <span class="status-badge">{{ task.status }}</span>
-        </div>
-        <div class="task-summary-grid">
-            <div><span class="info-label">Location</span><strong>{{ task.location }}</strong></div>
-            <div><span class="info-label">Priority</span><strong>{{ task.priority }}</strong></div>
-            <div>
-                <span class="info-label">Required skills</span>
-                <strong>{% for link in task.task_skills %}{{ link.skill.name }}{% if not loop.last %}, {% endif %}{% else %}Not specified{% endfor %}</strong>
-            </div>
-        </div>
-        {% if task.description %}<div class="task-description"><span class="info-label">Description</span><p>{{ task.description }}</p></div>{% endif %}
-    </div>
-
+<div class="it-recommendations">
+    <a class="it-text-link" href="{{ url_for('supervisor.dashboard') }}#task-list">← Back to your tasks</a>
+    <div class="it-heading it-rec-page-heading"><div><p class="it-eyebrow">THE NEXT STEP</p><h1>Find the right person.</h1><p>Compare the suggestions, then choose who to assign.</p></div></div>
+    <section class="it-rec-task" aria-label="Task details">
+        <div><span class="it-muted">Your task</span><h2>{{ task.task_type | skill_label }}</h2></div>
+        <div class="it-rec-task-meta"><span>{{ task.location or 'Location not set' }}</span><span>{{ task.priority }} priority</span>{% if task.deadline %}<span>Due {{ task.deadline.strftime('%d %b, %H:%M') }} EAT</span>{% endif %}</div>
+        <div class="it-rec-chips">{% for link in task.task_skills %}<span>{{ link.skill.name | skill_label }}</span>{% endfor %}</div>
+        {% if task.description %}<details class="it-rec-description"><summary>Task description</summary><p>{{ task.description }}</p></details>{% endif %}
+    </section>
     {% if recommendation_error %}
-        <div class="message warning" role="alert">
-            <strong>Recommendations unavailable</strong>
-            <p>{{ recommendation_error }}</p>
-        </div>
+    <div class="message warning" role="alert"><strong>Recommendations unavailable</strong><p>{{ recommendation_error }}</p></div>
     {% elif recommendations %}
-        <div class="recommendation-heading">
-            <div><h2>Recommended Agents</h2><p>Ranking scores compare candidates. They are not accuracy percentages or probabilities of success.</p></div>
-        </div>
-        {% if task.status != "Pending" %}<div class="message warning">This task is {{ task.status|lower }}. Recommendations are shown for review only.</div>{% endif %}
-        <div class="recommendation-list">
-            {% for recommendation in recommendations %}
-                <div class="recommendation-card">
-                    <div class="recommendation-top">
-                        <div class="agent-heading">
-                            <div class="rank-circle">{{ recommendation.rank }}</div>
-                            <div><h3>{{ recommendation.agent_name }}</h3><span class="suitability-badge review">Supervisor review required</span></div>
-                        </div>
-                        <div class="match-score">
-                            <span class="score-number">{{ "%.2f"|format(recommendation.match_percentage) }}/100</span>
-                            <span class="score-label">Ranking score</span>
-                        </div>
+    <div class="it-rec-list-heading"><h2>Suggested workers</h2><span class="it-muted">{{ recommendations|length }} suggestions · highest ranked first</span></div>
+    {% if task.status != 'Pending' %}<div class="message info">This task is {{ task.status|lower }}. You can review the suggestions here.</div>{% endif %}
+    <div class="it-rec-list">
+        {% for recommendation in recommendations %}{% set summary = recommendation.summary %}
+        <article class="it-rec-card {% if loop.first %}it-rec-first{% endif %}" aria-labelledby="worker-{{ recommendation.agent_id }}">
+            <div class="it-rec-top">
+                <span class="it-rec-avatar">{{ recommendation.agent_name[:1] }}</span>
+                <div class="it-rec-person"><div class="it-rec-title"><h3 id="worker-{{ recommendation.agent_id }}">{{ recommendation.agent_name }}</h3>{% if loop.first %}<span class="it-rec-top-label">Top ranked</span>{% else %}<span class="it-rec-position">#{{ recommendation.rank }}</span>{% endif %}</div><p><span class="it-rec-availability">{{ 'Available' if recommendation.availability else 'Unavailable' }}</span><span class="it-rec-separator">·</span>{{ recommendation.workload }} active task{{ '' if recommendation.workload == 1 else 's' }}</p></div>
+                <div class="it-rec-score"><strong>{{ '%.0f'|format(recommendation.match_percentage) }}<small>/100</small></strong><span>Ranking score</span></div>
+            </div>
+            <div class="it-rec-body">
+                <div><span class="it-rec-field-label">Selected skills</span><div class="it-rec-chips">{% for skill in summary.skills %}<span>{{ skill.label }}</span>{% endfor %}</div></div>
+                <div class="it-rec-results"><span class="it-rec-field-label">Successful past responses</span>{% if summary.total %}<strong>{{ summary.successful }} <small>of {{ summary.total }}</small></strong><span>For the selected skills</span>{% else %}<strong class="it-rec-no-history">No past results</strong>{% endif %}</div>
+            </div>
+            <div class="it-rec-footer">
+                <details class="it-rec-details">
+                    <summary>Why this recommendation?</summary>
+                    <div class="it-rec-evidence">
+                        {% if summary.with_history %}<p>Past results are available for {{ summary.with_history }} of {{ summary.skills|length }} selected skill{{ 's' if summary.skills|length != 1 else '' }}.</p>{% else %}<p>There is limited past history for the selected skills.</p>{% endif %}
+                        <table><caption class="it-sr-only">Past responses by selected skill for {{ recommendation.agent_name }}</caption><thead><tr><th scope="col">Skill</th><th scope="col">Successful / recorded</th></tr></thead><tbody>{% for skill in summary.skills %}<tr><td>{{ skill.label }}</td><td>{% if skill.total %}{{ skill.successful }} / {{ skill.total }}{% else %}No past results{% endif %}</td></tr>{% endfor %}</tbody></table>
+                        {% if summary.shared_history_used %}<p>Patterns from shared task history also contribute to this ranking.</p>{% endif %}
+                        <p class="it-muted">Detailed ranking score: {{ '%.2f'|format(recommendation.match_percentage) }}/100</p>
                     </div>
-                    <progress class="match-progress-bar" value="{{ recommendation.match_percentage }}" max="100" aria-label="Ranking score for {{ recommendation.agent_name }}">{{ recommendation.match_percentage }}/100</progress>
-                    <div class="agent-summary-grid">
-                        <div class="agent-summary-item"><span class="info-label">Availability</span><strong>{{ 'Available' if recommendation.availability else 'Unavailable' }}</strong></div>
-                        <div class="agent-summary-item"><span class="info-label">Current application workload</span><strong>{{ recommendation.workload }} active task{{ '' if recommendation.workload == 1 else 's' }}</strong></div>
-                        <div class="agent-summary-item">
-                            <span class="info-label">NetEase training success rate</span>
-                            <strong>{% if recommendation.performance_score is not none %}{{ "%.1f"|format(recommendation.performance_score) }}%{% else %}No training history{% endif %}</strong>
-                            <span>{{ recommendation.historical_task_count }} recorded training outcomes</span>
-                        </div>
-                        <div class="agent-summary-item"><span class="info-label">Recorded capabilities</span><strong>{{ recommendation.skills|join(', ') if recommendation.skills else 'No training participation' }}</strong></div>
-                        <div class="agent-summary-item"><span class="info-label">Recorded experience</span><strong>{{ recommendation.experience_level }}</strong></div>
-                    </div>
-                    <div class="recommendation-explanation">
-                        <h4>Why this agent?</h4>
-                        <ul>{% for reason in recommendation.explanations %}<li>{{ reason }}</li>{% endfor %}</ul>
-                    </div>
-                    <details class="model-details">
-                        <summary>View model details and source reference</summary>
-                        <div class="model-details-content">
-                            <p>Display ID: {{ recommendation.agent_display_id }} · Source worker: {{ recommendation.source_worker_id }}</p>
-                            <div class="model-score-row"><strong>Capability compatibility</strong><span>{{ "%.3f"|format(recommendation.cbf_score) }}</span></div>
-                            <div class="model-score-row"><strong>Collaborative history</strong><span>{{ "%.3f"|format(recommendation.cf_score) }}</span></div>
-                            <div class="model-score-row"><strong>Knowledge graph evidence</strong><span>{{ "%.3f"|format(recommendation.kg_score) }}</span></div>
-                            <p class="model-weight-note">Weights: {{ "%.0f"|format(recommendation.model_weights[0] * 100) }}% content,
-                                {{ "%.0f"|format(recommendation.model_weights[1] * 100) }}% collaborative,
-                                {{ "%.0f"|format(recommendation.model_weights[2] * 100) }}% knowledge graph.</p>
-                            <p>Availability filters candidates. Workload is displayed but does not affect this score. Synthetic names and locations do not determine benchmark scores.</p>
-                        </div>
-                    </details>
-                    {% if task.status == "Pending" %}
-                        <div class="recommendation-actions">
-                            {% if assignments_enabled %}
-                                <form method="POST" action="{{ url_for('supervisor.assign_task', task_id=task.id) }}">
-                                    <input type="hidden" name="agent_id" value="{{ recommendation.agent_id }}">
-                                    <input type="hidden" name="assignment_csrf_token" value="{{ assignment_csrf_token }}">
-                                    <button type="submit" class="assign-button">Assign Agent</button>
-                                </form>
-                            {% else %}
-                                <button type="button" class="assign-button" disabled aria-disabled="true">Assignment not enabled</button>
-                            {% endif %}
-                        </div>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        </div>
-        <div class="recommendation-method-note">
-            <strong>Demonstration context</strong>
-            <p>Agent names are synthetic display identities. Training evidence comes from NetEaseCrowd, used as a proxy dataset. The onboarding-to-capability mapping is illustrative and is not proof of real KYC qualifications.</p>
-        </div>
-    {% else %}
-        <div class="empty-state"><h3>No eligible agents found</h3><p>No available, mapped agent currently supports all required demonstration capabilities.</p></div>
-    {% endif %}
+                </details>
+                {% if task.status == 'Pending' %}<div class="it-rec-action">
+                    {% if assignments_enabled %}<form method="POST" action="{{ url_for('supervisor.assign_task', task_id=task.id) }}"><input type="hidden" name="agent_id" value="{{ recommendation.agent_id }}"><input type="hidden" name="assignment_csrf_token" value="{{ assignment_csrf_token }}"><button class="it-button" type="submit" aria-label="Assign {{ recommendation.agent_name }} to this task">Assign worker {{ icon('arrow') }}</button></form>
+                    {% else %}<button class="it-button" type="button" disabled>Assignment unavailable</button>{% endif %}
+                </div>{% endif %}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}<div class="it-card it-empty">{{ icon('people') }}<h2>No available matches yet</h2><p>No available worker currently matches all the selected requirements.</p><a class="it-text-link" href="{{ url_for('supervisor.dashboard') }}">Back to your tasks</a></div>{% endif %}
 </div>
 {% endblock %}

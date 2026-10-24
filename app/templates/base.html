@@ -1,220 +1,64 @@
+{% from 'ui/icons.html' import icon %}
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>
-        {% block title %}IntelliTask{% endblock %}
-    </title>
-
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#102c35">
+    <title>{% block title %}IntelliTask{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/intellitask-mark.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/intellitask-theme.css') }}">
+    <script src="{{ url_for('static', filename='js/intellitask-ui.js') }}" defer></script>
 </head>
-
-<body>
-
+<body class="it-theme {% if not current_user.is_authenticated %}it-public{% endif %}">
+<a class="it-skip" href="#main-content">Skip to content</a>
 {% if current_user.is_authenticated %}
-
-<div class="app-shell">
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-
-        <div class="sidebar-brand">
-
-            <div class="brand-logo">
-                IT
-            </div>
-
-            <div class="brand-text">
-
-                <h2>
-                    IntelliTask
-                </h2>
-
-                <span>
-                    {% if current_user.role == "supervisor" %}
-                        Supervisor Portal
-                    {% elif current_user.role == "agent" %}
-                        Agent Portal
-                    {% elif current_user.role == "administrator" %}
-                        Administrator Portal
-                    {% endif %}
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <nav class="sidebar-nav">
-
-            {% if current_user.role == "supervisor" %}
-
-                <a
-                    href="{{ url_for('supervisor.dashboard') }}"
-                    class="sidebar-link
-                    {% if request.endpoint == 'supervisor.dashboard' %}
-                        active
-                    {% endif %}"
-                >
-                    <span class="nav-icon">⌂</span>
-                    Dashboard
-                </a>
-
-                <a
-                    href="{{ url_for('supervisor.create_task') }}"
-                    class="sidebar-link
-                    {% if request.endpoint == 'supervisor.create_task' %}
-                        active
-                    {% endif %}"
-                >
-                    <span class="nav-icon">＋</span>
-                    Create Task
-                </a>
-
-            {% elif current_user.role == "agent" %}
-
-                <a
-                    href="{{ url_for('agent.dashboard') }}"
-                    class="sidebar-link
-                    {% if request.endpoint == 'agent.dashboard' %}
-                        active
-                    {% endif %}"
-                >
-                    <span class="nav-icon">⌂</span>
-                    My Tasks
-                </a>
-
-            {% elif current_user.role == "administrator" %}
-
-                <a
-                    href="{{ url_for('admin.dashboard') }}"
-                    class="sidebar-link
-                    {% if request.endpoint == 'admin.dashboard' %}
-                        active
-                    {% endif %}"
-                >
-                    <span class="nav-icon">⌂</span>
-                    Dashboard
-                </a>
-
+{% set role = current_user.role %}
+{% set home_endpoint = 'supervisor.dashboard' if role == 'supervisor' else ('agent.dashboard' if role == 'agent' else 'admin.dashboard') %}
+<div class="it-shell">
+    <aside class="it-sidebar" id="it-sidebar">
+        <a class="it-brand" href="{{ url_for(home_endpoint) }}">
+            <img src="{{ url_for('static', filename='img/intellitask-mark.svg') }}" alt="" width="42" height="42">
+            <span><strong>IntelliTask<span class="it-brand-dot">.</span></strong><small>Make every task count</small></span>
+        </a>
+        <p class="it-nav-label">{{ 'Worker' if role == 'agent' else role|title }} workspace</p>
+        <nav class="it-nav" aria-label="Main navigation">
+            <a href="{{ url_for(home_endpoint) }}" {% if request.endpoint == home_endpoint %}aria-current="page"{% endif %}>{{ icon('grid') }} {{ 'My tasks' if role == 'agent' else 'Overview' }}</a>
+            {% if role == 'supervisor' %}
+            <a href="{{ url_for('supervisor.dashboard') }}#task-list">{{ icon('tasks') }} Your tasks</a>
+            <a href="{{ url_for('supervisor.create_task') }}" {% if request.endpoint == 'supervisor.create_task' %}aria-current="page"{% endif %}>{{ icon('plus') }} Create task</a>
             {% endif %}
-
+            <a class="it-mobile-only" href="{{ url_for('auth.logout') }}">{{ icon('logout') }} Sign out</a>
         </nav>
-
-
-        <div class="sidebar-footer">
-
-            <div class="sidebar-user">
-
-                <div class="user-avatar">
-                    {{ current_user.name[:1] | upper }}
-                </div>
-
-                <div class="user-details">
-
-                    <strong>
-                        {{ current_user.name }}
-                    </strong>
-
-                    <span>
-                        {{ current_user.role | replace('_', ' ') | title }}
-                    </span>
-
-                </div>
-
-            </div>
-
-            <a
-                href="{{ url_for('auth.logout') }}"
-                class="logout-link"
-            >
-                Sign Out
-            </a>
-
+        <div class="it-sidebar-note"><span class="it-dot"></span> A little clarity. A lot of progress.</div>
+        <div class="it-account">
+            <span class="it-avatar">{{ current_user.name[:1]|upper }}</span>
+            <div><strong>{{ current_user.name }}</strong><small>{{ 'Worker' if role == 'agent' else role|title }}</small></div>
+            <a href="{{ url_for('auth.logout') }}" aria-label="Sign out" title="Sign out">{{ icon('logout') }}</a>
         </div>
-
     </aside>
-
-
-    <!-- MAIN AREA -->
-    <div class="main-panel">
-
-        <header class="app-topbar">
-
-            <span class="topbar-label">
-                Intelligent Task Allocation
-            </span>
-
-            <span class="topbar-user">
-                {{ current_user.name }}
-            </span>
-
+    <div class="it-workspace">
+        <header class="it-topbar">
+            <button type="button" class="it-menu" aria-controls="it-sidebar" aria-expanded="false" aria-label="Toggle navigation">{{ icon('menu') }}</button>
+            <span class="it-breadcrumb">Your workspace <span>/</span> <strong>{% if request.endpoint == 'supervisor.create_task' %}Create task{% elif request.endpoint == 'supervisor.recommendations' %}Recommendations{% else %}Overview{% endif %}</strong></span>
+            <span class="it-topbar-role">{{ 'Worker' if role == 'agent' else role|title }} portal</span>
         </header>
-
-        <main class="app-content">
-
+        <main class="it-main" id="main-content">
 {% else %}
-
-<div class="public-layout">
-
-    <main class="public-content">
-
+<main class="it-public-main" id="main-content">
 {% endif %}
-
-
-    <!-- FLASH MESSAGES -->
     {% with messages = get_flashed_messages(with_categories=true) %}
-
-        {% if messages %}
-
-            <div class="flash-container">
-
-                {% for category, message in messages %}
-
-                    <div class="message {{ category }}">
-                        {{ message }}
-                    </div>
-
-                {% endfor %}
-
-            </div>
-
-        {% endif %}
-
+    {% if messages %}<div class="it-flashes" aria-live="polite">
+        {% for category, message in messages %}<div class="message {{ category }}">{{ message }}</div>{% endfor %}
+    </div>{% endif %}
     {% endwith %}
-
-
-    <!-- PAGE CONTENT -->
-    {% block content %}
-    {% endblock %}
-
-
+    {% block content %}{% endblock %}
 {% if current_user.is_authenticated %}
-
+        <footer class="it-footer">IntelliTask <span>Clear decisions. Meaningful progress.</span></footer>
         </main>
-
     </div>
-
 </div>
-
-{% else %}
-
-    </main>
-
-</div>
-
-{% endif %}
-
+{% else %}</main>{% endif %}
 </body>
-
 </html>

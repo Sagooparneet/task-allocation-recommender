@@ -1,345 +1,69 @@
-{% extends "base.html" %}
-
-{% block title %}
-Supervisor Dashboard | IntelliTask
-{% endblock %}
-
-
+{% extends 'base.html' %}
+{% from 'ui/icons.html' import icon %}
+{% block title %}Overview | IntelliTask{% endblock %}
 {% block content %}
-
-<div class="supervisor-dashboard">
-
-    <!-- PAGE HEADER -->
-
-    <div class="dashboard-header">
-
-        <div>
-
-            <h1>
-                Dashboard
-            </h1>
-
-            <p>
-                Welcome back, {{ current_user.name }}.
-                Here is your task allocation overview.
-            </p>
-
-        </div>
-
-        <a
-            href="{{ url_for('supervisor.create_task') }}"
-            class="primary-button"
-        >
-            + Create New Task
-        </a>
-
+<div class="it-overview">
+    <div class="it-heading">
+        <div><p class="it-eyebrow">LET'S MAKE PROGRESS</p><h1>Your day, organised.</h1><p>Welcome back, {{ current_user.name }}. Here’s where your team’s work stands.</p></div>
+        <a class="it-button" href="{{ url_for('supervisor.create_task') }}">{{ icon('plus') }} Create a task</a>
     </div>
-
-
-    <!-- SUMMARY CARDS -->
-
-    <div class="summary-grid">
-
-        <div class="summary-card">
-
-            <span class="summary-label">
-                Total Tasks
-            </span>
-
-            <strong>
-                {{ total_tasks }}
-            </strong>
-
-            <span class="summary-note">
-                All registered tasks
-            </span>
-
+    <section class="it-hero" aria-label="Next steps">
+        <div><span class="it-hero-label">A clear next step</span>
+            {% if pending_tasks %}<h2>{{ pending_tasks }} task{{ 's' if pending_tasks != 1 else '' }} waiting for the right person.</h2><p>Review the suggestions and give your next task a home.</p><a href="{{ url_for('supervisor.dashboard', status='Pending') }}#task-list">Review waiting tasks {{ icon('arrow') }}</a>
+            {% elif total_tasks %}<h2>Your assignments are up to date.</h2><p>Keep an eye on deadlines and follow your team’s progress.</p><a href="#task-list">See your tasks {{ icon('arrow') }}</a>
+            {% else %}<h2>Good work starts with a clear task.</h2><p>Create your first task. We’ll help you find someone for it.</p><a href="{{ url_for('supervisor.create_task') }}">Start your first task {{ icon('arrow') }}</a>{% endif %}
         </div>
-
-
-        <div class="summary-card">
-
-            <span class="summary-label">
-                Pending Tasks
-            </span>
-
-            <strong>
-                {{ pending_tasks }}
-            </strong>
-
-            <span class="summary-note">
-                Awaiting assignment
-            </span>
-
-        </div>
-
-
-        <div class="summary-card">
-
-            <span class="summary-label">
-                Completed Tasks
-            </span>
-
-            <strong>
-                {{ completed_tasks }}
-            </strong>
-
-            <span class="summary-note">
-                Successfully completed
-            </span>
-
-        </div>
-
-
-        <div class="summary-card">
-
-            <span class="summary-label">
-                Available Agents
-            </span>
-
-            <strong>
-                {{ available_agents }}
-            </strong>
-
-            <span class="summary-note">
-                Ready for allocation
-            </span>
-
-        </div>
-
+        <div class="it-hero-aside"><span class="it-hero-icon">{{ icon('people') }}</span><strong>{{ available_agents }}</strong><span>workers available</span></div>
+    </section>
+    <section class="it-metrics" aria-label="Your task totals">
+        {% for label,value,note,symbol,tone in [('All tasks',total_tasks,'Created by you','tasks','navy'),('Waiting',pending_tasks,'Ready to assign','clock','amber'),('Assigned',assigned_tasks,'With your team','people','blue'),('Completed',completed_tasks,'Work finished','check','teal')] %}
+        <article class="it-metric"><span class="it-metric-icon {{ tone }}">{{ icon(symbol) }}</span><span>{{ label }}</span><strong>{{ value }}</strong><small>{{ note }}</small></article>
+        {% endfor %}
+    </section>
+    <div class="it-insights">
+        <section class="it-card it-progress-card" aria-labelledby="progress-title">
+            <div class="it-card-heading"><h2 id="progress-title">Task progress</h2><span class="it-muted">All your tasks</span></div>
+            {% if total_tasks %}
+            <div class="it-progress-content">
+                <div class="it-donut" role="img" aria-label="{{ completed_tasks }} completed, {{ assigned_tasks }} assigned, {{ pending_tasks }} waiting, {{ other_tasks }} other tasks" style="--done:{{ completed_end }}%;--assigned:{{ assigned_end }}%;--pending:{{ pending_end }}%"><div><strong>{{ completion_percent }}%</strong><span>completed</span></div></div>
+                <ul class="it-legend"><li><i class="teal"></i>Completed <strong>{{ completed_tasks }}</strong></li><li><i class="blue"></i>Assigned <strong>{{ assigned_tasks }}</strong></li><li><i class="amber"></i>Waiting <strong>{{ pending_tasks }}</strong></li>{% if other_tasks %}<li><i class="navy"></i>Other <strong>{{ other_tasks }}</strong></li>{% endif %}</ul>
+            </div>
+            {% else %}<div class="it-chart-empty">{{ icon('tasks') }}<p>Your progress will appear after you create a task.</p></div>{% endif %}
+        </section>
+        <section class="it-card" aria-labelledby="priorities-title">
+            <div class="it-card-heading"><h2 id="priorities-title">Task priorities</h2><span class="it-muted">At a glance</span></div>
+            <div class="it-bars">{% for label,tone in [('High','coral'),('Medium','amber'),('Low','teal')] %}{% set count=priorities.get(label,0) %}<div class="it-bar-row"><div><span>{{ label }}</span><strong>{{ count }}</strong></div><progress class="{{ tone }}" value="{{ count }}" max="{{ total_tasks if total_tasks else 1 }}" aria-label="{{ label }} priority: {{ count }} tasks">{{ count }}</progress></div>{% endfor %}</div>
+        </section>
+        <section class="it-card it-deadlines" aria-labelledby="deadlines-title">
+            <div class="it-card-heading"><h2 id="deadlines-title">Keep on track</h2>{{ icon('clock') }}</div>
+            <div class="it-deadline-stat"><span>Overdue</span><strong class="{{ 'it-overdue' if overdue_tasks else '' }}">{{ overdue_tasks }}</strong></div>
+            <div class="it-deadline-stat"><span>Still due today</span><strong>{{ due_today }}</strong></div>
+            <p class="it-muted">Deadlines use Kenya time.</p>
+            {% if overdue_tasks %}<a class="it-text-link" href="{{ url_for('supervisor.dashboard', status='Overdue') }}#task-list">Review overdue tasks {{ icon('arrow') }}</a>{% else %}<span class="it-good">{{ icon('check') }} No overdue tasks</span>{% endif %}
+        </section>
     </div>
-
-
-    <!-- RECENT TASKS -->
-
-    <section class="dashboard-section">
-
-        <div class="section-header">
-
-            <div>
-
-                <h2>
-                    Recent Tasks
-                </h2>
-
-                <p>
-                    Latest onboarding tasks in the system.
-                </p>
-
-            </div>
-
-            <a
-                href="{{ url_for('supervisor.create_task') }}"
-                class="text-link"
-            >
-                Create Task
-            </a>
-
-        </div>
-
-
-        {% if recent_tasks %}
-
-            <div class="dashboard-table-wrapper">
-
-                <table class="dashboard-table">
-
-                    <thead>
-
-                        <tr>
-                            <th>Task</th>
-                            <th>Location</th>
-                            <th>Priority</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        {% for task in recent_tasks %}
-
-                            <tr>
-
-                                <td>
-
-                                    <div class="task-name-cell">
-
-                                        <strong>
-                                            {{ task.task_type }}
-                                        </strong>
-
-                                        <span>
-                                            Task #{{ task.id }}
-                                        </span>
-
-                                    </div>
-
-                                </td>
-
-
-                                <td>
-                                    {{ task.location }}
-                                </td>
-
-
-                                <td>
-
-                                    <span
-                                        class="priority-badge
-                                        priority-{{ task.priority | lower }}"
-                                    >
-                                        {{ task.priority }}
-                                    </span>
-
-                                </td>
-
-
-                                <td>
-
-                                    <span
-                                        class="task-status
-                                        status-{{ task.status | lower | replace(' ', '-') }}"
-                                    >
-                                        {{ task.status }}
-                                    </span>
-
-                                </td>
-
-
-                                <td>
-
-                                    <a
-                                        class="table-action"
-                                        href="{{ url_for(
-                                            'supervisor.recommendations',
-                                            task_id=task.id
-                                        ) }}"
-                                    >
-                                        View
-                                    </a>
-
-                                </td>
-
-                            </tr>
-
-                        {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-
-        {% else %}
-
-            <div class="dashboard-empty-state">
-
-                <h3>
-                    No tasks yet
-                </h3>
-
-                <p>
-                    Create your first onboarding task to begin allocation.
-                </p>
-
-                <a
-                    href="{{ url_for('supervisor.create_task') }}"
-                    class="primary-button"
-                >
-                    Create Task
-                </a>
-
-            </div>
-
-        {% endif %}
-
+    <section class="it-card it-task-card" id="task-list" aria-labelledby="tasks-title">
+        <div class="it-card-heading"><div><h2 id="tasks-title">Your tasks</h2><p class="it-muted">Find a task, check its progress, or choose who to assign.</p></div><span class="it-count">{{ task_page.total }} result{{ 's' if task_page.total != 1 else '' }}</span></div>
+        <form method="GET" action="{{ url_for('supervisor.dashboard') }}#task-list" class="it-task-filters" role="search">
+            <div><label for="task-search">Search tasks</label><div class="it-search-field">{{ icon('search') }}<input id="task-search" name="q" value="{{ search }}" placeholder="Search by task name" maxlength="100" type="search"></div></div>
+            <div><label for="task-status">Status</label><select id="task-status" name="status"><option value="">All statuses</option>{% for value,label in [('Pending','Waiting for assignment'),('Assigned','Assigned'),('Completed','Completed'),('Overdue','Overdue')] %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+            <button class="it-button" type="submit">Apply filters</button>
+            {% if search or selected_status %}<a class="it-text-link" href="{{ url_for('supervisor.dashboard') }}#task-list">Clear</a>{% endif %}
+        </form>
+        {% if task_page.items %}
+        <div class="it-table-scroll" tabindex="0" role="region" aria-label="Your tasks table"><table class="it-table"><thead><tr><th>Task</th><th>Location</th><th>Deadline</th><th>Priority</th><th>Status</th><th><span class="it-sr-only">Action</span></th></tr></thead><tbody>
+        {% for task in task_page.items %}<tr>
+            <td><strong>{{ task.task_type | skill_label }}</strong><small>Task #{{ task.id }}</small></td><td>{{ task.location or 'Not set' }}</td>
+            <td>{% if task.deadline %}<span>{{ task.deadline.strftime('%d %b %Y') }}</span><small>{{ task.deadline.strftime('%H:%M') }} EAT{% if task.status != 'Completed' and task.deadline < now %} · <span class="it-overdue">Overdue</span>{% endif %}</small>{% else %}<span class="it-muted">Not set</span>{% endif %}</td>
+            <td><span class="it-priority {{ task.priority|lower }}">{{ task.priority }}</span></td>
+            <td><span class="it-status {{ task.status|lower }}">{{ 'Waiting' if task.status == 'Pending' else task.status }}</span></td>
+            <td><a class="it-table-action" href="{{ url_for('supervisor.recommendations', task_id=task.id) }}">{{ 'Find a worker' if task.status == 'Pending' else 'View task' }} {{ icon('arrow') }}</a></td>
+        </tr>{% endfor %}</tbody></table></div>
+        {% else %}<div class="it-empty"><span class="it-empty-icon">{{ icon('search' if search or selected_status else 'tasks') }}</span><h3>{{ 'No tasks match these filters' if search or selected_status else 'Your next task starts here' }}</h3><p>{{ 'Try another task name or clear your filters.' if search or selected_status else 'Add a task, review suggestions, and assign the work.' }}</p>{% if not search and not selected_status %}<a class="it-button" href="{{ url_for('supervisor.create_task') }}">Create your first task</a>{% endif %}</div>{% endif %}
+        {% if task_page.pages > 1 %}<nav class="it-pagination" aria-label="Task pages">{% if task_page.has_prev %}<a href="{{ url_for('supervisor.dashboard',page=task_page.prev_num,q=search,status=selected_status) }}#task-list">← Previous</a>{% endif %}<span>Page {{ task_page.page }} of {{ task_page.pages }}</span>{% if task_page.has_next %}<a href="{{ url_for('supervisor.dashboard',page=task_page.next_num,q=search,status=selected_status) }}#task-list">Next →</a>{% endif %}</nav>{% endif %}
     </section>
-
-
-    <!-- NETEASE DATASET PROFILES -->
-
-    <section class="dashboard-section">
-
-        <div class="section-header">
-            <div>
-                <h2>NetEase Worker Training History</h2>
-                <p>
-                    First five workers by source worker ID.
-                    Capabilities and results come from training records.
-                    This table is not a recommendation ranking.
-                </p>
-            </div>
-        </div>
-
-        {% if agents %}
-            <div class="dashboard-table-wrapper">
-                <table class="dashboard-table">
-                    <thead>
-                        <tr>
-                            <th>Source Worker</th>
-                            <th>Observed Capability Codes</th>
-                            <th>Training Tasks</th>
-                            <th>Successful Responses / Total</th>
-                            <th>Training Success Rate</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {% for agent in agents %}
-                            <tr>
-                                <td>
-                                    <strong>
-                                        {{ agent.display_name }}
-                                    </strong>
-                                </td>
-
-                                <td>
-                                    {% if agent.capabilities %}
-                                        {{ agent.capabilities | join(', ') }}
-                                    {% else %}
-                                        No training history
-                                    {% endif %}
-                                </td>
-
-                                <td>
-                                    {{ agent.training_task_count }}
-                                </td>
-
-                                <td>
-                                    {{ agent.successful_responses }}
-                                    /
-                                    {{ agent.training_responses }}
-                                </td>
-
-                                <td>
-                                    {% if agent.training_success_rate is not none %}
-                                        {{ "%.2f" | format(agent.training_success_rate) }}%
-                                    {% else %}
-                                        No training history
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <p>
-                Success means the recorded answer matched the ground truth.
-                These historical worker rates are not model accuracy
-                or predictions of future success.
-            </p>
-        {% else %}
-            <div class="dashboard-empty-state">
-                <p>No dataset profiles are available.</p>
-            </div>
-        {% endif %}
-
+    <section class="it-card" aria-labelledby="workers-title"><div class="it-card-heading"><div><h2 id="workers-title">Worker snapshot</h2><p class="it-muted">A quick look at five workers and their past results.</p></div>{{ icon('people') }}</div>
+        <div class="it-worker-grid">{% for agent in agents %}<article class="it-worker"><span class="it-avatar">{{ agent.display_name[:1] }}</span><h3>{{ agent.display_name }}</h3><p>{{ agent.capabilities|map('skill_label')|join(' · ') if agent.capabilities else 'No past results' }}</p>{% if agent.training_success_rate is not none %}<div class="it-worker-result"><span>Past success rate</span><strong>{{ '%.1f'|format(agent.training_success_rate) }}%</strong></div><progress value="{{ agent.training_success_rate }}" max="100" aria-label="Past success rate for {{ agent.display_name }}">{{ agent.training_success_rate }}%</progress><small>{{ agent.successful_responses }} successful / {{ agent.training_responses }} responses</small>{% else %}<span class="it-muted">No past results yet</span>{% endif %}</article>{% endfor %}</div>
     </section>
-
 </div>
-
 {% endblock %}

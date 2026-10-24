@@ -1,3 +1,4 @@
+from app.services.worker_display_names import worker_display_name
 import csv
 from functools import lru_cache
 from pathlib import Path
@@ -22,7 +23,7 @@ def load_dataset_profiles():
                 worker_id,
                 {
                     "source_worker_id": worker_id,
-                    "display_name": f"NetEase worker {worker_id}",
+                    "display_name": worker_display_name(worker_id),
                     "capabilities": set(),
                     "training_tasks": set(),
                     "training_responses": 0,

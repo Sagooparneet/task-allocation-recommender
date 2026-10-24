@@ -1,3 +1,4 @@
+from app.services.worker_display_names import worker_display_name
 import secrets
 
 from flask import abort, current_app, session
@@ -5,7 +6,7 @@ from sqlalchemy import update, exists, func
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.services.netease_recommendation_service import NetEaseRecommendationService
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from app.services.netease_dataset_profiles import load_dataset_profiles
 
 from flask import (
@@ -42,54 +43,53 @@ supervisor_bp = Blueprint(
 @supervisor_bp.route("/dashboard")
 @login_required
 def dashboard():
-
     if current_user.role != "supervisor":
         return redirect(url_for("home"))
 
-    tasks = (
-        Task.query
-        .order_by(Task.created_at.desc())
-        .all()
-    )
+    now = datetime.now(timezone(timedelta(hours=3))).replace(tzinfo=None)
+    owned = Task.query.filter_by(supervisor_id=current_user.id)
+    counts = dict(db.session.query(Task.status, func.count(Task.id))
+                  .filter(Task.supervisor_id == current_user.id).group_by(Task.status).all())
+    total = sum(counts.values())
+    pending = counts.get("Pending", 0)
+    assigned = counts.get("Assigned", 0)
+    completed = counts.get("Completed", 0)
+    other = total - pending - assigned - completed
+    overdue = owned.filter(Task.status != "Completed", Task.deadline < now).count()
+    end_of_day = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+    due_today = owned.filter(Task.status != "Completed", Task.deadline >= now,
+                            Task.deadline <= end_of_day).count()
+    priorities = dict(db.session.query(Task.priority, func.count(Task.id))
+                      .filter(Task.supervisor_id == current_user.id).group_by(Task.priority).all())
 
-    total_tasks = len(tasks)
-
-    pending_tasks = sum(
-        1 for task in tasks
-        if task.status == "Pending"
-    )
-
-    completed_tasks = sum(
-        1 for task in tasks
-        if task.status == "Completed"
-    )
-
-    available_agents = (
-        OnboardingAgent.query
-        .filter_by(availability=True)
-        .count()
-    )
-
-    recent_tasks = tasks[:5]
-
-    dataset_profiles = load_dataset_profiles()
-
-    # Preview the first five workers by original numeric worker ID.
-    # This is a dataset overview, not a recommendation ranking.
-    agents = [
-        dataset_profiles[worker_id]
-        for worker_id in sorted(dataset_profiles, key=int)[:5]
-    ]
-
+    search = request.args.get("q", "").strip()[:100]
+    selected_status = request.args.get("status", "")
+    valid_statuses = ("Pending", "Assigned", "Completed", "Overdue")
+    if selected_status not in valid_statuses:
+        selected_status = ""
+    filtered = owned
+    if search:
+        filtered = filtered.filter(Task.task_type.contains(search, autoescape=True))
+    if selected_status == "Overdue":
+        filtered = filtered.filter(Task.status != "Completed", Task.deadline < now)
+    elif selected_status:
+        filtered = filtered.filter(Task.status == selected_status)
+    page_number = max(1, request.args.get("page", 1, type=int) or 1)
+    page = filtered.order_by(Task.created_at.desc(), Task.id.desc()).paginate(
+        page=page_number, per_page=10, error_out=False)
+    profiles = load_dataset_profiles()
+    workers = [profiles[key] for key in sorted(profiles, key=int)[:5]]
     return render_template(
-        "supervisor/dashboard.html",
-        tasks=tasks,
-        total_tasks=total_tasks,
-        pending_tasks=pending_tasks,
-        completed_tasks=completed_tasks,
-        available_agents=available_agents,
-        recent_tasks=recent_tasks,
-        agents=agents
+        "supervisor/dashboard.html", total_tasks=total, pending_tasks=pending,
+        assigned_tasks=assigned, completed_tasks=completed, other_tasks=other,
+        overdue_tasks=overdue, due_today=due_today,
+        available_agents=OnboardingAgent.query.filter_by(availability=True).count(),
+        completion_percent=round(100 * completed / total) if total else 0,
+        completed_end=100 * completed / total if total else 0,
+        assigned_end=100 * (completed + assigned) / total if total else 0,
+        pending_end=100 * (completed + assigned + pending) / total if total else 0,
+        priorities=priorities, agents=workers, task_page=page,
+        search=search, selected_status=selected_status, now=now,
     )
 
 
@@ -102,6 +102,10 @@ def create_task():
 
     if current_user.role != "supervisor":
         return redirect(url_for("home"))
+
+    # Task deadlines use East Africa Time on both Windows and the hosting server.
+    today_eat = datetime.now(timezone(timedelta(hours=3))).date()
+    deadline_min = today_eat.isoformat() + "T00:00"
 
     # -------------------------
     # FORM OPTIONS
@@ -118,23 +122,8 @@ def create_task():
         "Account Activation"
     ]
 
-    locations = [
-        row[0]
-        for row in (
-            db.session.query(
-                OnboardingAgent.location
-            )
-            .filter(
-                OnboardingAgent.location.isnot(None),
-                OnboardingAgent.location != ""
-            )
-            .distinct()
-            .order_by(
-                OnboardingAgent.location
-            )
-            .all()
-        )
-    ]
+    # Application task locations, not inferred worker locations from the dataset.
+    locations = ["Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret"]
 
 
     # -------------------------
@@ -177,9 +166,7 @@ def create_task():
         )
 
 
-        deadline_value = request.form.get(
-            "deadline"
-        )
+        deadline_value = request.form.get("deadline", "").strip()
 
 
         selected_skill_ids = request.form.getlist(
@@ -205,7 +192,8 @@ def create_task():
                 "supervisor/create_task.html",
                 skills=skills,
                 locations=locations,
-                task_types=task_types
+                task_types=task_types,
+                deadline_min=deadline_min
             )
 
 
@@ -220,7 +208,19 @@ def create_task():
                 "supervisor/create_task.html",
                 skills=skills,
                 locations=locations,
-                task_types=task_types
+                task_types=task_types,
+                deadline_min=deadline_min
+            )
+
+
+        if location not in locations:
+            flash("Please select a location from the list.", "danger")
+            return render_template(
+                "supervisor/create_task.html",
+                skills=skills,
+                locations=locations,
+                task_types=task_types,
+                deadline_min=deadline_min,
             )
 
 
@@ -235,13 +235,21 @@ def create_task():
                 "supervisor/create_task.html",
                 skills=skills,
                 locations=locations,
-                task_types=task_types
+                task_types=task_types,
+                deadline_min=deadline_min
             )
 
 
         # -------------------------
         # DEADLINE
         # -------------------------
+
+        if not deadline_value:
+            flash("Please choose a deadline.", "danger")
+            return render_template(
+                "supervisor/create_task.html", skills=skills,
+                locations=locations, task_types=task_types, deadline_min=deadline_min,
+            )
 
         deadline = None
 
@@ -265,9 +273,20 @@ def create_task():
                     "supervisor/create_task.html",
                     skills=skills,
                     locations=locations,
-                    task_types=task_types
+                    task_types=task_types,
+                    deadline_min=deadline_min
                 )
 
+
+        if deadline is not None and deadline.date() < today_eat:
+            flash("Please choose today or a later date for the deadline (Kenya time).", "danger")
+            return render_template(
+                "supervisor/create_task.html",
+                skills=skills,
+                locations=locations,
+                task_types=task_types,
+                deadline_min=deadline_min,
+            )
 
         # -------------------------
         # CREATE TASK
@@ -324,7 +343,8 @@ def create_task():
         "supervisor/create_task.html",
         skills=skills,
         locations=locations,
-        task_types=task_types
+        task_types=task_types,
+        deadline_min=deadline_min
     )
 
 
@@ -343,10 +363,10 @@ def recommendations(task_id):
         recommended_agents = HybridRecommendationService().get_recommendations(task_id, limit=5)
     except ValueError as exc:
         recommended_agents = []
-        recommendation_error = str(exc)
+        recommendation_error = "Recommendations could not be loaded. Please contact your administrator."
     except OSError:
         recommended_agents = []
-        recommendation_error = "The model or demonstration mapping files could not be loaded."
+        recommendation_error = "Recommendations are temporarily unavailable. Please contact your administrator."
 
     if "assignment_csrf_token" not in session:
         session["assignment_csrf_token"] = secrets.token_urlsafe(32)
@@ -386,7 +406,7 @@ def assign_task(task_id):
     try:
         _, _, candidates = NetEaseRecommendationService().get_eligible_candidates(task.id)
     except (ValueError, OSError):
-        flash("Eligibility could not be checked. Review the task's capability mapping before assigning.", "warning")
+        flash("Eligibility could not be checked. Please contact your administrator.", "warning")
         return redirect(url_for("supervisor.recommendations", task_id=task.id))
 
     selected = next((agent for agent in candidates.values() if agent.id == agent_id), None)
@@ -394,7 +414,11 @@ def assign_task(task_id):
         flash("This agent is no longer available or does not meet all mapped task requirements.", "warning")
         return redirect(url_for("supervisor.recommendations", task_id=task.id))
 
-    selected_name, selected_task_type = selected.name, task.task_type
+    selected_source_id = next(
+        source_id for source_id, agent in candidates.items() if agent.id == selected.id
+    )
+    selected_name = worker_display_name(selected_source_id)
+    selected_task_type = task.task_type
     supervisor_id = current_user.id
     try:
         # Conditional update prevents duplicate assignment through competing requests.
