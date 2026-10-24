@@ -2,7 +2,7 @@ from flask import Flask, redirect, url_for
 from flask_login import current_user
 
 from config import Config
-from app.extensions import db, login_manager
+from app.extensions import db, login_manager, migrate
 
 
 def create_app(test_config=None):
@@ -16,6 +16,7 @@ def create_app(test_config=None):
 
     db.init_app(app)
     login_manager.init_app(app)
+    migrate.init_app(app, db)
 
     # Import models
     from app.models import (

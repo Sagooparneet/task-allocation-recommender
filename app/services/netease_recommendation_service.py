@@ -4,15 +4,35 @@ from pathlib import Path
 
 from flask import current_app
 from app.extensions import db
-from app.models import OnboardingAgent, Task, AgentSkill, Skill
+from app.models import OnboardingAgent, Task, AgentSkill, Skill, WorkerSourceBinding
 from ml.src.recommender import load_artifacts, recommend_agents
 
 
 class NetEaseRecommendationService:
     def _read_configuration(self):
+        storage = current_app.config.get("NETEASE_BINDING_STORAGE", "file")
+        if storage not in ("file", "database"):
+            raise ValueError("Unknown NetEase binding storage mode.")
+
+        if storage == "database":
+            rows = WorkerSourceBinding.query.all()
+            if not rows:
+                raise ValueError("No NetEase worker mappings found in the database.")
+            workers = {str(row.agent_id): row.source_worker_id for row in rows}
+            if len(set(workers.values())) != len(workers):
+                raise ValueError("Duplicate NetEase source-worker bindings detected.")
+            artifacts = load_artifacts()
+            if not set(workers.values()).issubset(artifacts["profiles"]):
+                raise ValueError("Database worker mappings do not match the saved model.")
+            capability_map = {
+                f"NetEase capability {code}": [code]
+                for code in artifacts["model"]["capabilities"]
+            }
+            return workers, capability_map
+
         project = Path(current_app.root_path).parent
         mapping_path = Path(current_app.instance_path) / 'netease_agent_bindings.json'
-                # Use installation-specific configuration when available.
+        # Use installation-specific configuration when available.
         capability_path = (
             Path(current_app.instance_path)
             / "onboarding_capability_mapping.json"

@@ -12,3 +12,4 @@ from app.models.skill import (
 
 from app.models.recommendation import Recommendation
 from app.models.assignment import TaskAssignment
+from app.models.worker_source_binding import WorkerSourceBinding
