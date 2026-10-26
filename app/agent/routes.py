@@ -13,7 +13,7 @@ from flask import (
 from flask_login import login_required, current_user
 
 from app.extensions import db
-from app.models import TaskAssignment, OnboardingAgent, Task
+from app.models import TaskAssignment, OnboardingAgent, Task, TaskVenueDetails
 
 
 agent_bp = Blueprint(
@@ -63,6 +63,8 @@ def dashboard():
         total_tasks=total, active_tasks=active, completed_tasks=completed,
         overdue_tasks=overdue, due_today=due_today, now=now,
         search=search, selected_status=selected_status,
+        venue_details={item.task_id: item for item in TaskVenueDetails.query.filter(
+            TaskVenueDetails.task_id.in_([a.task_id for a in assignment_page.items])).all()},
         completion_percent=round(100 * completed / total) if total else 0,
     )
 

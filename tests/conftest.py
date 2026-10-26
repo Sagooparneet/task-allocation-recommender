@@ -181,3 +181,19 @@ def client(app):
 def runner(app):
 
     return app.test_cli_runner()
+
+def task_venue_fields(client, location="Nairobi"):
+    """Supply a real form token and a disposable test venue for task POSTs."""
+    from app.models import WorkVenue
+    city = location if location in ('Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret') else 'Nairobi'
+    with client.application.app_context():
+        venue = WorkVenue.query.filter_by(city=city, is_active=True).first()
+        if venue is None:
+            venue = WorkVenue(city=city, name='Test service point', address='Test address')
+            db.session.add(venue)
+            db.session.commit()
+        venue_id = venue.id
+    client.get('/supervisor/task/create')
+    with client.session_transaction() as session:
+        token = session['task_create_csrf_token']
+    return dict(venue_id=str(venue_id), reporting_point='Test reception', task_create_csrf_token=token)

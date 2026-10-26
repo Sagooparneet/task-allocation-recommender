@@ -1,3 +1,4 @@
+from conftest import task_venue_fields
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -14,7 +15,7 @@ def test_deadline_date_validation(app, client, days, created):
     with app.app_context():
         skill_id = Skill.query.first().id
     day = datetime.now(timezone(timedelta(hours=3))).date() + timedelta(days=days)
-    response = client.post("/supervisor/task/create", data={
+    response = client.post("/supervisor/task/create", data={**task_venue_fields(client, location='Nairobi'),
         "task_type": "__other__", "custom_task_type": "Deadline check",
         "description": "Keep these details", "location": "Nairobi",
         "priority": "High", "deadline": day.isoformat() + "T12:00",

@@ -27,7 +27,7 @@ from app.models import (
     OnboardingAgent,
     TaskAssignment,
     Skill,
-    TaskSkill
+    TaskSkill, WorkVenue, TaskVenueDetails
 )
 
 from app.services.recommendation_service import HybridRecommendationService
@@ -90,6 +90,8 @@ def dashboard():
         pending_end=100 * (completed + assigned + pending) / total if total else 0,
         priorities=priorities, agents=workers, task_page=page,
         search=search, selected_status=selected_status, now=now,
+        venue_details={item.task_id: item for item in TaskVenueDetails.query.filter(
+            TaskVenueDetails.task_id.in_([task.id for task in page.items])).all()},
     )
 
 
@@ -103,249 +105,93 @@ def create_task():
     if current_user.role != "supervisor":
         return redirect(url_for("home"))
 
-    # Task deadlines use East Africa Time on both Windows and the hosting server.
     today_eat = datetime.now(timezone(timedelta(hours=3))).date()
-    deadline_min = today_eat.isoformat() + "T00:00"
-
-    # -------------------------
-    # FORM OPTIONS
-    # -------------------------
-
-    skills = Skill.query.order_by(
-        Skill.name
-    ).all()
-
-    task_types = [
-        "KYC Verification",
-        "SIM Registration",
-        "M-PESA Onboarding",
-        "Account Activation"
-    ]
-
-    # Application task locations, not inferred worker locations from the dataset.
     locations = ["Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret"]
+    skills = Skill.query.order_by(Skill.name).all()
+    venues = WorkVenue.query.filter_by(is_active=True).order_by(WorkVenue.city, WorkVenue.name).all()
+    if "task_create_csrf_token" not in session:
+        session["task_create_csrf_token"] = secrets.token_urlsafe(32)
 
+    def show_form(message=None):
+        if message:
+            flash(message, "danger")
+        return render_template("supervisor/create_task.html", skills=skills,
+            locations=locations, venues=venues,
+            deadline_min=today_eat.isoformat() + "T00:00",
+            task_create_csrf_token=session["task_create_csrf_token"])
 
-    # -------------------------
-    # FORM SUBMISSION
-    # -------------------------
-
-    if request.method == "POST":
-
-        selected_task_type = request.form.get(
-            "task_type",
-            ""
-        ).strip()
-
-        custom_task_type = request.form.get(
-            "custom_task_type",
-            ""
-        ).strip()
-
-        if selected_task_type == "__other__":
-            task_type = custom_task_type
-        else:
-            task_type = selected_task_type
-
-
-        description = request.form.get(
-            "description",
-            ""
-        ).strip()
-
-
-        location = request.form.get(
-            "location",
-            ""
-        ).strip()
-
-
-        priority = request.form.get(
-            "priority",
-            "Medium"
-        )
-
-
-        deadline_value = request.form.get("deadline", "").strip()
-
-
-        selected_skill_ids = request.form.getlist(
-            "required_skills"
-        )
-
-
-        # -------------------------
-        # VALIDATION
-        # -------------------------
-
-        if (
-            selected_task_type == "__other__"
-            and not custom_task_type
-        ):
-
-            flash(
-                "Please enter the new task type.",
-                "danger"
-            )
-
-            return render_template(
-                "supervisor/create_task.html",
-                skills=skills,
-                locations=locations,
-                task_types=task_types,
-                deadline_min=deadline_min
-            )
-
-
-        if not task_type or not location:
-
-            flash(
-                "Task type and location are required.",
-                "danger"
-            )
-
-            return render_template(
-                "supervisor/create_task.html",
-                skills=skills,
-                locations=locations,
-                task_types=task_types,
-                deadline_min=deadline_min
-            )
-
-
-        if location not in locations:
-            flash("Please select a location from the list.", "danger")
-            return render_template(
-                "supervisor/create_task.html",
-                skills=skills,
-                locations=locations,
-                task_types=task_types,
-                deadline_min=deadline_min,
-            )
-
-
-        if not selected_skill_ids:
-
-            flash(
-                "Please select at least one required skill.",
-                "danger"
-            )
-
-            return render_template(
-                "supervisor/create_task.html",
-                skills=skills,
-                locations=locations,
-                task_types=task_types,
-                deadline_min=deadline_min
-            )
-
-
-        # -------------------------
-        # DEADLINE
-        # -------------------------
-
-        if not deadline_value:
-            flash("Please choose a deadline.", "danger")
-            return render_template(
-                "supervisor/create_task.html", skills=skills,
-                locations=locations, task_types=task_types, deadline_min=deadline_min,
-            )
-
-        deadline = None
-
-        if deadline_value:
-
-            try:
-
-                deadline = datetime.strptime(
-                    deadline_value,
-                    "%Y-%m-%dT%H:%M"
-                )
-
-            except ValueError:
-
-                flash(
-                    "Please enter a valid deadline.",
-                    "danger"
-                )
-
-                return render_template(
-                    "supervisor/create_task.html",
-                    skills=skills,
-                    locations=locations,
-                    task_types=task_types,
-                    deadline_min=deadline_min
-                )
-
-
-        if deadline is not None and deadline.date() < today_eat:
-            flash("Please choose today or a later date for the deadline (Kenya time).", "danger")
-            return render_template(
-                "supervisor/create_task.html",
-                skills=skills,
-                locations=locations,
-                task_types=task_types,
-                deadline_min=deadline_min,
-            )
-
-        # -------------------------
-        # CREATE TASK
-        # -------------------------
-
-        task = Task(
-            task_type=task_type,
-            description=description,
-            location=location,
-            priority=priority,
-            deadline=deadline,
-            status="Pending",
-            supervisor_id=current_user.id
-        )
-
+    if request.method == "GET":
+        return show_form()
+    expected = session["task_create_csrf_token"]
+    supplied = request.form.get("task_create_csrf_token", "")
+    if not secrets.compare_digest(expected.encode(), supplied.encode()):
+        abort(400, description="This form expired. Reload Create Task and try again.")
+    # Keep the stored field and older custom-title submissions compatible.
+    selected_type = request.form.get("task_type", "").strip()
+    custom_type = request.form.get("custom_task_type", "").strip()
+    task_type = custom_type if selected_type == "__other__" else selected_type
+    location = request.form.get("location", "").strip()
+    if selected_type == "__other__" and not custom_type:
+        return show_form("Please enter a task title.")
+    if not task_type or not location:
+        return show_form("Task title and location are required.")
+    if len(task_type) > 100:
+        return show_form("Keep the task title within 100 characters.")
+    if location not in locations:
+        return show_form("Please select a location from the list.")
+    selected_skills = request.form.getlist("required_skills")
+    if not selected_skills:
+        return show_form("Please select at least one service.")
+    try:
+        skill_ids = {int(value) for value in selected_skills}
+    except ValueError:
+        return show_form("Please select valid services from the list.")
+    if not skill_ids.issubset({skill.id for skill in skills}):
+        return show_form("Please select valid services from the list.")
+    deadline_value = request.form.get("deadline", "").strip()
+    if not deadline_value:
+        return show_form("Please choose a deadline.")
+    try:
+        deadline = datetime.strptime(deadline_value, "%Y-%m-%dT%H:%M")
+    except ValueError:
+        return show_form("Please enter a valid deadline.")
+    if deadline.date() < today_eat:
+        return show_form("Please choose today or a later date for the deadline (Kenya time).")
+    priority = request.form.get("priority", "Medium")
+    if priority not in ("Low", "Medium", "High"):
+        return show_form("Please choose a priority from the list.")
+    venue_id = request.form.get("venue_id", type=int)
+    # Read the current database record, never client-supplied address fields.
+    venue = db.session.get(WorkVenue, venue_id) if venue_id else None
+    if venue is None or not venue.is_active or venue.city != location:
+        return show_form("Please choose an active work location in the selected city.")
+    reporting_point = request.form.get("reporting_point", "").strip()
+    instructions = request.form.get("location_instructions", "").strip()
+    contact_details = request.form.get("location_contact", "").strip()
+    if not reporting_point or len(reporting_point) > 200:
+        return show_form("Enter where the agent should report, using 1 to 200 characters.")
+    if len(instructions) > 2000 or len(contact_details) > 250:
+        return show_form("Keep arrival instructions within 2,000 characters and contact details within 250 characters.")
+    try:
+        task = Task(task_type=task_type, description=request.form.get("description", "").strip(),
+            location=location, priority=priority, deadline=deadline, status="Pending",
+            supervisor_id=current_user.id)
         db.session.add(task)
-
-        # Generates task ID before TaskSkill records are created
         db.session.flush()
-
-
-        # -------------------------
-        # ADD REQUIRED SKILLS
-        # -------------------------
-
-        for skill_id in selected_skill_ids:
-
-            task_skill = TaskSkill(
-                task_id=task.id,
-                skill_id=int(skill_id)
-            )
-
-            db.session.add(task_skill)
-
-
+        for skill_id in sorted(skill_ids):
+            db.session.add(TaskSkill(task_id=task.id, skill_id=skill_id))
+        db.session.add(TaskVenueDetails(task_id=task.id, venue_id=venue.id,
+            city=venue.city, venue_name=venue.name, address=venue.address,
+            directions=venue.directions, map_url=venue.map_url,
+            reporting_point=reporting_point, instructions=instructions,
+            contact_details=contact_details))
         db.session.commit()
-
-
-        flash(
-            f"{task.task_type} was created successfully.",
-            "success"
-        )
-
-        return redirect(
-            url_for("supervisor.dashboard")
-        )
-
-
-    # -------------------------
-    # INITIAL PAGE LOAD
-    # -------------------------
-
-    return render_template(
-        "supervisor/create_task.html",
-        skills=skills,
-        locations=locations,
-        task_types=task_types,
-        deadline_min=deadline_min
-    )
+    except SQLAlchemyError:
+        db.session.rollback()
+        current_app.logger.exception("Task creation transaction failed")
+        return show_form("The task could not be saved. Please try again.")
+    flash(f"{task.task_type} was created successfully.", "success")
+    return redirect(url_for("supervisor.dashboard"))
 
 
 @supervisor_bp.route("/task/<int:task_id>/recommendations")
@@ -375,6 +221,7 @@ def recommendations(task_id):
     return render_template(
         "supervisor/recommendations.html",
         task=task,
+        venue_details=db.session.get(TaskVenueDetails, task.id),
         recommendations=recommended_agents,
         recommendation_error=recommendation_error,
         assignment_csrf_token=session["assignment_csrf_token"],

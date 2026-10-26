@@ -1,3 +1,4 @@
+from conftest import task_venue_fields
 import datetime as _deadline_datetime
 
 def _future_task_deadline():
@@ -93,7 +94,7 @@ def test_valid_task_creation(app, client):
 
     response = client.post(
         "/supervisor/task/create",
-        data={
+        data={**task_venue_fields(client, location='Nairobi'),
             "task_type": "KYC Registration",
             "description": "Register and verify customer",
             "location": "Nairobi",
@@ -133,7 +134,7 @@ def test_missing_required_task_fields(app, client):
 
     response = client.post(
         "/supervisor/task/create",
-        data={"deadline": _future_task_deadline(),
+        data={**task_venue_fields(client, location='Nairobi'), "deadline": _future_task_deadline(),
             "task_type": "",
             "location": "Nairobi",
             "required_skills": str(skill_id)
@@ -141,7 +142,7 @@ def test_missing_required_task_fields(app, client):
         follow_redirects=True
     )
 
-    assert b"Task type and location are required" in response.data
+    assert b"Task title and location are required" in response.data
 
 
 def test_task_requires_skill(client):
@@ -150,7 +151,7 @@ def test_task_requires_skill(client):
 
     response = client.post(
         "/supervisor/task/create",
-        data={"deadline": _future_task_deadline(),
+        data={**task_venue_fields(client, location='Nairobi'), "deadline": _future_task_deadline(),
             "task_type": "KYC Verification",
             "location": "Nairobi",
             "priority": "Medium"
@@ -158,7 +159,7 @@ def test_task_requires_skill(client):
         follow_redirects=True
     )
 
-    assert b"Please select at least one required skill" in response.data
+    assert b"Please select at least one service" in response.data
 
 
 def test_invalid_deadline(app, client):
@@ -172,7 +173,7 @@ def test_invalid_deadline(app, client):
 
     response = client.post(
         "/supervisor/task/create",
-        data={
+        data={**task_venue_fields(client, location='Nairobi'),
             "task_type": "KYC Verification",
             "location": "Nairobi",
             "deadline": "invalid-date",

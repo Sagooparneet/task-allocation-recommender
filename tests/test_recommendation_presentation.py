@@ -1,3 +1,4 @@
+from conftest import task_venue_fields
 from html.parser import HTMLParser
 
 from app.services.recommendation_presentation import worker_summary
@@ -43,7 +44,7 @@ def test_compact_card_keeps_assignment_and_collapses_evidence(app, client):
     client.post('/auth/login', data={'email': 'supervisor@test.com', 'password': 'password123'})
     with app.app_context():
         skill_id = Skill.query.filter_by(name='NetEase capability 56').one().id
-    response = client.post('/supervisor/task/create', data={
+    response = client.post('/supervisor/task/create', data={**task_venue_fields(client, location='Nairobi'),
         'task_type': 'KYC Verification', 'location': 'Nairobi', 'priority': 'Medium',
         'required_skills': str(skill_id),
         'deadline': (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%dT%H:%M'),

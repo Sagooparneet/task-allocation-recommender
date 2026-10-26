@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% from 'ui/icons.html' import icon %}
+{% from 'ui/task_location.html' import task_location %}
 {% block title %}Find a worker | IntelliTask{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/task-venues.css') }}">{% endblock %}
 {% block content %}
 <div class="it-recommendations">
     <a class="it-text-link" href="{{ url_for('supervisor.dashboard') }}#task-list">← Back to your tasks</a>
@@ -9,6 +11,7 @@
         <div><span class="it-muted">Your task</span><h2>{{ task.task_type | skill_label }}</h2></div>
         <div class="it-rec-task-meta"><span>{{ task.location or 'Location not set' }}</span><span>{{ task.priority }} priority</span>{% if task.deadline %}<span>Due {{ task.deadline.strftime('%d %b, %H:%M') }} EAT</span>{% endif %}</div>
         <div class="it-rec-chips">{% for link in task.task_skills %}<span>{{ link.skill.name | skill_label }}</span>{% endfor %}</div>
+        {{ task_location(venue_details) }}
         {% if task.description %}<details class="it-rec-description"><summary>Task description</summary><p>{{ task.description }}</p></details>{% endif %}
     </section>
     {% if recommendation_error %}
@@ -25,15 +28,15 @@
                 <div class="it-rec-score"><strong>{{ '%.0f'|format(recommendation.match_percentage) }}<small>/100</small></strong><span>Ranking score</span></div>
             </div>
             <div class="it-rec-body">
-                <div><span class="it-rec-field-label">Selected skills</span><div class="it-rec-chips">{% for skill in summary.skills %}<span>{{ skill.label }}</span>{% endfor %}</div></div>
-                <div class="it-rec-results"><span class="it-rec-field-label">Successful past responses</span>{% if summary.total %}<strong>{{ summary.successful }} <small>of {{ summary.total }}</small></strong><span>For the selected skills</span>{% else %}<strong class="it-rec-no-history">No past results</strong>{% endif %}</div>
+                <div><span class="it-rec-field-label">Services needed</span><div class="it-rec-chips">{% for skill in summary.skills %}<span>{{ skill.label }}</span>{% endfor %}</div></div>
+                <div class="it-rec-results"><span class="it-rec-field-label">Successful past responses</span>{% if summary.total %}<strong>{{ summary.successful }} <small>of {{ summary.total }}</small></strong><span>For the selected services</span>{% else %}<strong class="it-rec-no-history">No past results</strong>{% endif %}</div>
             </div>
             <div class="it-rec-footer">
                 <details class="it-rec-details">
                     <summary>Why this recommendation?</summary>
                     <div class="it-rec-evidence">
-                        {% if summary.with_history %}<p>Past results are available for {{ summary.with_history }} of {{ summary.skills|length }} selected skill{{ 's' if summary.skills|length != 1 else '' }}.</p>{% else %}<p>There is limited past history for the selected skills.</p>{% endif %}
-                        <table><caption class="it-sr-only">Past responses by selected skill for {{ recommendation.agent_name }}</caption><thead><tr><th scope="col">Skill</th><th scope="col">Successful / recorded</th></tr></thead><tbody>{% for skill in summary.skills %}<tr><td>{{ skill.label }}</td><td>{% if skill.total %}{{ skill.successful }} / {{ skill.total }}{% else %}No past results{% endif %}</td></tr>{% endfor %}</tbody></table>
+                        {% if summary.with_history %}<p>Past results are available for {{ summary.with_history }} of {{ summary.skills|length }} selected service{{ 's' if summary.skills|length != 1 else '' }}.</p>{% else %}<p>There is limited past history for the selected services.</p>{% endif %}
+                        <table><caption class="it-sr-only">Past responses by selected service for {{ recommendation.agent_name }}</caption><thead><tr><th scope="col">Service</th><th scope="col">Successful / recorded</th></tr></thead><tbody>{% for skill in summary.skills %}<tr><td>{{ skill.label }}</td><td>{% if skill.total %}{{ skill.successful }} / {{ skill.total }}{% else %}No past results{% endif %}</td></tr>{% endfor %}</tbody></table>
                         {% if summary.shared_history_used %}<p>Patterns from shared task history also contribute to this ranking.</p>{% endif %}
                         <p class="it-muted">Detailed ranking score: {{ '%.2f'|format(recommendation.match_percentage) }}/100</p>
                     </div>
