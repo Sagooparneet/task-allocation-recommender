@@ -1,3 +1,4 @@
+from conftest import task_venue_fields
 from html.parser import HTMLParser
 import pytest
 from app.models import Skill, Task
@@ -12,7 +13,7 @@ def test_deadline_cannot_be_omitted(app, client, value):
             "required_skills": str(skill_id), "description": "Keep my entries"}
     if value is not None:
         data["deadline"] = value
-    response = client.post("/supervisor/task/create", data=data)
+    response = client.post("/supervisor/task/create", data={**task_venue_fields(client), **data})
     assert b"Please choose a deadline." in response.data
     assert b"Keep my entries" in response.data
     with app.app_context():

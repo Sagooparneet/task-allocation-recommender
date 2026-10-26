@@ -1,0 +1,3 @@
+{% macro task_location(details) %}
+{% if details %}<section class="tv-saved" aria-label="Work location"><h3>Where to go</h3><p><strong>{{ details.venue_name }}</strong> · {{ details.city }}</p><p>{{ details.address }}</p><dl><dt>Report to</dt><dd>{{ details.reporting_point }}</dd>{% if details.directions %}<dt>Directions</dt><dd>{{ details.directions }}</dd>{% endif %}{% if details.instructions %}<dt>Arrival instructions</dt><dd>{{ details.instructions }}</dd>{% endif %}{% if details.contact_details %}<dt>Contact</dt><dd>{{ details.contact_details }}</dd>{% endif %}</dl></section>{% endif %}
+{% endmacro %}

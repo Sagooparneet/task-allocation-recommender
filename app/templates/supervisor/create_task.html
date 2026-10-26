@@ -5,6 +5,10 @@ Create New Task | IntelliTask
 {% endblock %}
 
 
+{% block extra_styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/task-venues.css') }}">
+<script src="{{ url_for('static', filename='js/task-venues.js') }}" defer></script>
+{% endblock %}
 {% block content %}
 
 <div class="create-task-page">
@@ -27,8 +31,7 @@ Create New Task | IntelliTask
             </h1>
 
             <p>
-                Enter the onboarding task details and required
-                skills before generating agent recommendations.
+                Name the job, choose the services needed, and tell the agent where to report.
             </p>
 
         </div>
@@ -45,78 +48,22 @@ Create New Task | IntelliTask
             class="create-task-form"
         >
 
-            <!-- TASK TYPE -->
-
+            <input type="hidden" name="task_create_csrf_token" value="{{ task_create_csrf_token }}">
             <div class="form-group">
-
-                <label for="task_type">
-                    Task Type
-                    <span class="required-mark">*</span>
-                </label>
-
-                <p class="field-help">
-                    Select the type of onboarding work to be completed.
-                </p>
-
-                <select
-                    id="task_type"
-                    name="task_type"
-                    required
-                    onchange="toggleCustomTaskType()"
-                >
-                    <option value="" {% if not request.form.get("task_type") %}selected{% endif %} disabled>
-                        Select task type
-                    </option>
-
-                    {% for task_type in task_types %}
-
-                        <option value="{{ task_type }}" {% if request.form.get("task_type") == task_type %}selected{% endif %}>
-                            {{ task_type }}
-                        </option>
-
-                    {% endfor %}
-
-                    <option value="__other__" {% if request.form.get("task_type") == "__other__" %}selected{% endif %}>
-                        Other / New Task Type
-                    </option>
-
-                </select>
-
-
-                <div
-                    id="custom-task-type-container"
-                    class="custom-task-type-container"
-                    hidden
-                >
-
-                    <label for="custom_task_type">
-                        New Task Type
-                        <span class="required-mark">*</span>
-                    </label>
-
-                    <p class="field-help">
-                        Enter the name of the new onboarding task type.
-                    </p>
-
-                    <input
-                        type="text"
-                        id="custom_task_type"
-                        name="custom_task_type"
-                        value="{{ request.form.get('custom_task_type', '') }}"
-                        placeholder="e.g. Business Account Verification"
-                    >
-
-                </div>
-
+                <label for="task_type">Task title <span class="required-mark">*</span></label>
+                <p class="field-help" id="task-title-help">Give this job a short, clear name. Choose the services it needs below.</p>
+                <input type="text" id="task_type" name="task_type" required maxlength="100"
+                    aria-describedby="task-title-help"
+                    value="{{ request.form.get('custom_task_type', '') if request.form.get('task_type') == '__other__' else request.form.get('task_type', '') }}"
+                    placeholder="e.g. Register new customers at KICC">
             </div>
-
 
             <!-- DESCRIPTION -->
 
             <div class="form-group">
 
                 <label for="description">
-                    Task Description
+                    Task instructions
                 </label>
 
                 <p class="field-help">
@@ -138,12 +85,12 @@ Create New Task | IntelliTask
             <div class="form-group">
 
                 <label>
-                    Required Skills
+                    Services needed
                     <span class="required-mark">*</span>
                 </label>
 
                 <p class="field-help">
-                    Select one or more skills required to complete this task.
+                    Choose one or more services the agent will carry out. These selections are used to find suitable workers.
                 </p>
 
                 {% if skills %}
@@ -178,7 +125,7 @@ Create New Task | IntelliTask
                 {% else %}
 
                     <div class="form-empty-message">
-                        No skills are currently available.
+                        No services are currently available. Ask your administrator for help.
                     </div>
 
                 {% endif %}
@@ -251,6 +198,24 @@ Create New Task | IntelliTask
             </div>
 
 
+            <fieldset class="tv-fields"><legend>Where to report</legend>
+                <div class="form-group">
+                    <label for="venue_id">Work location <span class="required-mark">*</span></label>
+                    <p class="field-help">Choose a service point in your selected city.</p>
+                    <select id="venue_id" name="venue_id" required>
+                        <option value="">Choose a work location</option>
+                        {% for venue in venues %}
+                        <option value="{{ venue.id }}" data-city="{{ venue.city }}" data-address="{{ venue.address }}" data-directions="{{ venue.directions or '' }}" {% if request.form.get('venue_id') == venue.id|string %}selected{% endif %}>{{ venue.name }} — {{ venue.city }}</option>
+                        {% endfor %}
+                    </select>
+                    <p id="venue-hint" class="field-help" aria-live="polite">{% if not venues %}No active work locations are available. Ask your administrator to add one.{% else %}Select a city, then a work location.{% endif %}</p>
+                    <div id="venue-preview" class="tv-preview" hidden><strong>Address</strong><p id="venue-address"></p><p id="venue-directions"></p></div>
+                </div>
+                <div class="form-group"><label for="reporting_point">Reporting point <span class="required-mark">*</span></label><p class="field-help">Enter the confirmed desk, entrance or room where the agent should report.</p><input type="text" id="reporting_point" name="reporting_point" maxlength="200" required value="{{ request.form.get('reporting_point', '') }}" placeholder="e.g. Main reception"></div>
+                <div class="form-group"><label for="location_instructions">Arrival instructions (optional)</label><textarea id="location_instructions" name="location_instructions" maxlength="2000" rows="3">{{ request.form.get('location_instructions', '') }}</textarea></div>
+                <div class="form-group"><label for="location_contact">Contact person or number (optional)</label><input type="text" id="location_contact" name="location_contact" maxlength="250" value="{{ request.form.get('location_contact', '') }}"></div>
+            </fieldset>
+
             <!-- DEADLINE -->
 
             <div class="form-group">
@@ -318,36 +283,6 @@ Create New Task | IntelliTask
 </div>
 
 
-<script>
-function toggleCustomTaskType() {
 
-    const taskType =
-        document.getElementById("task_type");
-
-    const container =
-        document.getElementById(
-            "custom-task-type-container"
-        );
-
-    const customInput =
-        document.getElementById(
-            "custom_task_type"
-        );
-
-    if (taskType.value === "__other__") {
-
-        container.hidden = false;
-        customInput.required = true;
-
-    } else {
-
-        container.hidden = true;
-        customInput.required = false;
-        customInput.value = "";
-
-    }
-}
-toggleCustomTaskType();
-</script>
 
 {% endblock %}

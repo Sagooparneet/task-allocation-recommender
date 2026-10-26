@@ -24,17 +24,17 @@ Existing: login, task creation, recommendation explanations, assignment, and the
 ## Onboarding agent: remaining issues to create
 
 1. **Add a complete worker task lifecycle**: allow starting an assigned task, track In Progress and Completed separately, retain event history and enforce ownership, valid transitions, CSRF protection and repeat-action handling.
-2. **Improve worker dashboard**: deadline sorting, workload overview, upcoming tasks and task details. Reuse the shared theme.
+Completed locally under issue #48: worker dashboard with deadline sorting, task counts, filters, pagination and task details. Issue #49 adds saved venue/address/reporting instructions.
 
-Existing: login support, assigned-task list and completion. Imported dataset accounts remain disabled for login; production worker identity provisioning is separate work. Never attach a real new account to an unrelated dataset worker's history.
+Existing: login support, the improved assigned-task dashboard and completion. Selected local demonstration logins can be enabled explicitly; fresh imported accounts remain disabled for login. Production worker identity provisioning is separate work. Never attach a real new account to an unrelated dataset worker's history.
 
 ## Administrator: remaining issues to create
 
 1. **Manage onboarding agents**: listing, search, controlled creation/editing and deactivation, preserving source identity bindings.
 2. **Manage supervisors**: controlled account provisioning, role checks, deactivation and an audit trail.
-3. **Manage skills and task types**: editable operational catalogues with validation. Display labels alone must not create unsupported ML capabilities or silently change source mappings.
+3. **Manage service catalogue**: controlled editing with validation. The task form now uses a free-text title rather than a task-type catalogue. Display labels alone must not create unsupported ML capabilities or silently change source mappings.
 
-Existing: administrator login support and a basic dashboard only. Management routes are not yet implemented. Fresh setup does not provision an administrator account.
+Existing under issue #49: administrator overview, venue listing/filtering, adding/editing and deactivation/reactivation with role checks and form-token protection. A local administrator has been provisioned on port 5001. Fresh setup does not provision an administrator account.
 
 ## Authentication: separate issue
 
@@ -42,10 +42,11 @@ Existing: administrator login support and a basic dashboard only. Management rou
 
 ## Delivery order
 
-1. Review issue #46 locally and commit the theme.
-2. Implement worker lifecycle and monitoring.
-3. Implement administrator management and role provisioning.
+1. Commit the locally tested issue #49 venue integration and task-title/services form; complete manual workflow review before release.
+2. Complete issue #48 Start/In Progress lifecycle and monitoring.
+3. Implement remaining administrator account/service management.
 4. Implement verified signup and recovery.
 5. Add reporting and exports.
+6. Separately review PostgreSQL migration, hosted configuration and release verification.
 
 Create and link a GitHub issue for each feature before implementing it. Only expose navigation items when their pages and permission checks work. Keep the current Render deployment unchanged while local UI work is reviewed.

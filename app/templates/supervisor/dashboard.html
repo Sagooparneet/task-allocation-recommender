@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% from 'ui/icons.html' import icon %}
+{% from 'ui/task_location.html' import task_location %}
 {% block title %}Overview | IntelliTask{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/task-venues.css') }}">{% endblock %}
 {% block content %}
 <div class="it-overview">
     <div class="it-heading">
@@ -53,7 +55,7 @@
         {% if task_page.items %}
         <div class="it-table-scroll" tabindex="0" role="region" aria-label="Your tasks table"><table class="it-table"><thead><tr><th>Task</th><th>Location</th><th>Deadline</th><th>Priority</th><th>Status</th><th><span class="it-sr-only">Action</span></th></tr></thead><tbody>
         {% for task in task_page.items %}<tr>
-            <td><strong>{{ task.task_type | skill_label }}</strong><small>Task #{{ task.id }}</small></td><td>{{ task.location or 'Not set' }}</td>
+            <td><strong>{{ task.task_type | skill_label }}</strong><small>Task #{{ task.id }}</small></td><td>{{ task.location or 'Not set' }}{% if venue_details.get(task.id) %}<small>{{ venue_details[task.id].venue_name }}</small><details><summary>Location details</summary>{{ task_location(venue_details[task.id]) }}</details>{% endif %}</td>
             <td>{% if task.deadline %}<span>{{ task.deadline.strftime('%d %b %Y') }}</span><small>{{ task.deadline.strftime('%H:%M') }} EAT{% if task.status != 'Completed' and task.deadline < now %} · <span class="it-overdue">Overdue</span>{% endif %}</small>{% else %}<span class="it-muted">Not set</span>{% endif %}</td>
             <td><span class="it-priority {{ task.priority|lower }}">{{ task.priority }}</span></td>
             <td><span class="it-status {{ task.status|lower }}">{{ 'Waiting' if task.status == 'Pending' else task.status }}</span></td>

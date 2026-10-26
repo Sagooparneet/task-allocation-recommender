@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% from 'ui/icons.html' import icon %}
+{% from 'ui/task_location.html' import task_location %}
 {% block title %}My tasks | IntelliTask{% endblock %}
-{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/agent-dashboard.css') }}">{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/task-venues.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/agent-dashboard.css') }}">{% endblock %}
 {% block content %}
 <div class="it-overview">
     <div class="it-heading"><div><p class="it-eyebrow">YOUR WORKSPACE</p><h1>One task at a time.</h1><p>Here’s what needs your attention today.</p></div></div>
@@ -29,7 +30,7 @@
             <article class="it-agent-task" aria-labelledby="assignment-{{ assignment.id }}">
                 <div class="it-agent-task-top"><div><span class="it-muted">Task #{{ task.id }}</span><h3 id="assignment-{{ assignment.id }}">{{ task.task_type|skill_label }}</h3></div><span class="it-status {{ assignment.status|lower|replace(' ','-') }}">{{ assignment.status }}</span></div>
                 <div class="it-agent-task-meta"><span class="it-priority {{ task.priority|lower }}">{{ task.priority }} priority</span><span>{{ task.location or 'Location not set' }}</span><span class="{{ 'it-overdue' if overdue else '' }}">{{ icon('clock') }} {% if task.deadline %}Due {{ task.deadline.strftime('%d %b %Y, %H:%M') }} EAT{% if overdue %} · Overdue{% endif %}{% else %}Deadline not set{% endif %}</span></div>
-                <div class="it-agent-task-footer"><details><summary>View task details</summary><div class="it-agent-description"><p>{{ task.description or 'No additional instructions.' }}</p><strong>Required skills</strong><p>{% for link in task.task_skills %}{{ link.skill.name|skill_label }}{{ ' · ' if not loop.last else '' }}{% else %}No skills listed{% endfor %}</p></div></details>
+                <div class="it-agent-task-footer"><details><summary>View task details</summary><div class="it-agent-description"><p>{{ task.description or 'No additional instructions.' }}</p>{{ task_location(venue_details.get(task.id)) }}<strong>Services needed</strong><p>{% for link in task.task_skills %}{{ link.skill.name|skill_label }}{{ ' · ' if not loop.last else '' }}{% else %}No services listed{% endfor %}</p></div></details>
                 {% if assignment.status != 'Completed' %}<form method="POST" action="{{ url_for('agent.complete_assignment', assignment_id=assignment.id) }}"><button class="it-button" type="submit" onclick="return confirm('Have you finished this task?');">{{ icon('check') }} Mark complete</button></form>{% else %}<span class="it-good">{{ icon('check') }} Work finished</span>{% endif %}</div>
             </article>
         {% else %}<div class="it-empty">{{ icon('search' if search or selected_status else 'tasks') }}<h3>{{ 'No tasks match your filters' if search or selected_status else 'No assignments yet' }}</h3><p>{{ 'Try a different search or clear your filters.' if search or selected_status else 'Your supervisor’s assignments will appear here.' }}</p></div>{% endfor %}

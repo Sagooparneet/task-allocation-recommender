@@ -26,7 +26,7 @@ The active hybrid uses **10% content, 50% collaborative, and 40% knowledge graph
 
 The service checks source-worker bindings, recorded capabilities, and website availability. The assignment route checks task ownership, the form token, current eligibility, and duplicate assignment conditions. Workload is displayed but is not a component of the active website ranking. Completing a website task does not automatically retrain the model.
 
-The supervisor's dataset overview reads training records directly. It is a worker-history preview, not a task-specific recommendation ranking.
+Worker history and recommendation evidence come from saved training records. Dashboard task counts come from application records; neither is a new measure of model accuracy.
 
 ## Data and provenance
 
@@ -46,7 +46,7 @@ A successful recorded response means the worker's answer equals the dataset grou
 ### Dataset history versus website activity
 
 - Original worker IDs, capability codes, task IDs, and recorded outcomes come from NetEaseCrowd.
-- Some imported accounts and saved display artifacts still contain synthetic names and Kenyan locations. These are demonstration attributes, not source identities or model evidence. The dataset overview displays original worker IDs.
+- Imported workers are displayed using demonstration aliases linked to their original source IDs. These are not source identities or model evidence. Legacy account locations are not verified worker service areas.
 - Website accounts, availability, current workload, and assignments are local application records.
 - `ml/config/onboarding_capability_mapping.json` currently maps **KYC Verification to capability 56 for demonstration only**. The dataset does not establish that capability 56 means KYC. Other unmapped requirements return an explanatory message instead of recommendations.
 - Local SQLite installations map database IDs to source-worker IDs in `instance/netease_agent_bindings.json`. This file belongs to its database and must not be copied onto an unrelated database. The PostgreSQL production entry point instead reads mappings from the `worker_source_bindings` database table and maps original capability labels directly to their source codes.
@@ -95,7 +95,7 @@ seed.py
 
 The older top-level Jira and synthetic experiment folders have been removed from the active working tree and preserved separately by the project owner. They are not inputs to the current NetEase integration.
 
-## Fresh installation (Windows PowerShell)
+## Account bootstrap for a fresh installation (Windows PowerShell)
 
 Use Python 3.13 (the version used for the verified application run). Clone the branch containing this integration:
 
@@ -107,10 +107,11 @@ venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 python seed.py --instance-dir instance/netease_setup_test --check-only
 python seed.py --instance-dir instance/netease_setup_test
-python run_netease_test.py
 ```
 
 The setup prompts for a supervisor name, email, and password of at least 12 characters. Password input is hidden and only its hash is stored. Open `http://127.0.0.1:5001/auth/login` and use that account. The supervisor name/email are user-provided application account information, not NetEase attributes.
+
+This bootstrap is not yet an end-to-end venue-enabled installation procedure: `seed.py` creates tables from the current models but does not record migration history, provision an administrator or seed the venue directory. Review schema and migration history and provision venues before creating tasks; do not blindly stamp an existing database. The verified port-5001 installation described below has already completed its controlled upgrade.
 
 Setup creates 1,653 worker accounts labelled by original source ID, four capability skills, and one supervisor. It creates no tasks or assignments and no administrator account. Workers without training history have an unknown success rate. Source profiles have no invented locations or personal names. Worker logins are disabled until explicitly configured for a local demonstration.
 
@@ -118,16 +119,37 @@ The destination folder must not exist. Setup refuses to overwrite an existing in
 
 The runner uses `instance/netease_setup_test` explicitly, a separate session cookie, port 5001, and debug disabled. Its random session secret changes on restart, requiring users to sign in again. Do not reuse a binding file with a different database. `setup_complete.json` marks successful initialisation.
 
-### Try a recommendation
+### Current port-5001 installation and task workflow
 
-1. Sign in as the supervisor and choose Create Task.
-2. Choose **KYC Verification** as the task type.
-3. Enter a description and choose a location such as **Nairobi**.
-4. Select only **KYC Verification** as the required skill.
-5. Choose a deadline on or after today in Kenya time.
-6. Save and open recommendations. Workers appear under demonstration aliases linked to their original source IDs.
+The existing `instance/netease_setup_test` installation has been backed up and upgraded to migration `49a01b7c2d30`. It has the five initial venues and a separately provisioned administrator. Start it with:
 
-The required skill selection drives recommendation eligibility; the task title alone does not. The new installation has a local mapping from each original capability label to the same source code. It does not use the legacy KYC demonstration mapping. Website-created tasks are not additional NetEase observations.
+```powershell
+python run_netease_test.py
+```
+
+1. Sign in as supervisor and choose **Create Task**.
+2. Enter a **Task title**, such as “Register new customers at KICC”, and task instructions.
+3. Select one or more **Services needed**. These retain the original skill IDs and drive recommendation eligibility.
+4. Select a city and an active work location. Check the address preview and enter the confirmed reporting point. Arrival instructions and contact details are optional.
+5. Choose a priority and a required deadline on or after today in Kenya time.
+6. Save, inspect Location details, open recommendations and assign a worker.
+7. A worker with an explicitly enabled local login can view the saved address and reporting point under task details and mark the assignment complete.
+
+The title remains in the existing `tasks.task_type` column. Changing its wording does not alter the active NetEase ranking inputs. The form does not infer services from the title. Existing tasks and skill links are not rewritten.
+
+The installation-specific mapping links original capability labels to source codes. It does not rely on the older KYC-only fallback configuration. Website-created tasks and venue details are application records, not additional NetEase observations.
+
+### Work location management (issue #49)
+
+Administrators can list and filter locations by city/status, add or edit venues, and deactivate/reactivate them. Multiple venues can be stored in each of the five cities. The initial directory contains KICC in Nairobi, PrideInn Nyali in Mombasa, Acacia Premier Hotel in Kisumu, Merica Hotel in Nakuru, and Boma Inn Eldoret in Eldoret. See [venue sources and migration notes](docs/WORK_VENUES.md).
+
+New tasks require an active venue belonging to the selected city. The backend saves the task, service links and location snapshot together. Supervisor task lists, recommendations and assigned-agent views show the saved details. Venue edits never rewrite those snapshots; older city-only tasks keep their original location without a guessed venue.
+
+Venue management is administrator-only and writes require form tokens. Task creation also checks its form token, title, selected services, location and deadline. Location is not a new ML feature or evidence of a worker's travel eligibility.
+
+The controlled local helpers are `backup_5001_before_venues.py`, `check_5001_venue_upgrade.py`, `apply_5001_venue_upgrade.py` and `setup_local_admin_login.py`. They target the port-5001 installation and are not general Neon migration tools. The upgrade and administrator setup have already run for this installation; do not rerun them as routine startup steps.
+
+Further details: [task location integration](docs/TASK_WORK_LOCATIONS.md), [task titles and services](docs/TASK_TITLES_AND_SERVICES.md).
 
 ### Existing integrated installation
 
@@ -141,11 +163,11 @@ The root `requirements.txt` lists the application and test dependencies with ver
 
 Research notebook reproduction uses its own isolated environment and `ml/requirements-notebooks.txt`. Its historical NetworkX pin differs from the application environment; do not combine both dependency sets in one environment. Saved artifact inference does not rebuild the graph.
 
-This is an academic prototype with deployment preparation in progress. The original `run.py` enables debug mode, and `config.py` retains a development secret for local use. Public hosting must use `wsgi:app`, which requires explicit production settings and disables debug mode. Public deployment and testing are still pending.
+This is an academic prototype with deployment preparation in progress. The original `run.py` enables debug mode, and `config.py` retains a development secret for local use. Public hosting must use `wsgi:app`, which requires explicit production settings and disables debug mode. An earlier version was deployed to Render and its supervisor dashboard was opened successfully. The current local venue and interface changes have not yet been verified on that hosted version.
 
 ## Deployment preparation: Render and Neon
 
-Neon stores the PostgreSQL database; Render will run the Flask website and saved ML inference. The website is not publicly deployed yet. The local application has been checked against Neon using read-only transactions.
+Neon stores the PostgreSQL database; Render hosts the Flask website and saved ML inference. An earlier deployment reached the login page and supervisor dashboard successfully. The checks below describe that earlier setup; this issue does not update Neon or Render. Before deploying the venue-enabled code, apply and verify the corresponding PostgreSQL migration and directory setup separately.
 
 ### Database setup (new installations only)
 
@@ -167,7 +189,7 @@ The project owner's Neon database has already completed these steps. Do not reru
 
 The existing local databases are separate installations. This process does not transfer their tasks, assignments, accounts, or JSON binding files to Neon.
 
-### Planned Render web service settings
+### Render web service settings
 
 | Setting | Value |
 |---|---|
@@ -180,7 +202,7 @@ The existing local databases are separate installations. This process does not t
 | Start command | `gunicorn --config gunicorn.conf.py wsgi:app` |
 | Python | `3.13.3`, specified in `.python-version` |
 
-Select the branch containing the reviewed deployment changes. During preparation this is `feature/deployment-preparation`; use `main` after those changes have been merged. These settings document the planned deployment, not an already running public service.
+Select the branch containing the reviewed deployment changes. During preparation this is `feature/deployment-preparation`; use `main` after those changes have been merged. The last recorded hosted branch was `feature/deployment-preparation`. Pushing this work-locations branch does not itself switch that service to this code.
 
 Configure these private environment variables in the hosting dashboard:
 
@@ -199,13 +221,13 @@ Do not run setup or initialisation scripts in the build or start command. Databa
 
 Provider documentation: [Render Flask hosting](https://render.com/docs/deploy-flask), [Python version configuration](https://render.com/docs/python-version), [Render free service limits](https://render.com/docs/free), and [Neon plans](https://neon.com/pricing).
 
-### Verification completed on 24 October 2026
+### Earlier deployment checks (24 October 2026)
 
 - Combined Flask and ML tests: **26 passed**, with 14 SQLAlchemy legacy-API warnings.
 - Installed dependency consistency: `python -m pip check` reported no broken requirements. This is not a clean Linux installation test.
 - The production workflow check passed task creation, saved-model inference, recommendation display, assignment, duplicate protection, workload changes, and completion using a temporary SQLite copy. The source databases were unchanged.
 - The read-only Neon application check verified all 1,653 worker identities, database-backed ML configuration, supervisor login, session-cookie protections, and the authenticated dashboard.
-- The Neon check did not create or assign a task. A complete PostgreSQL write workflow and public HTTPS browser test remain pending.
+- The read-only Neon check did not create or assign a task. Separately, the user confirmed the Render login page and supervisor dashboard opened. A complete hosted task-to-completion workflow for the current changes remains pending.
 - Worker completion tests simulate an authenticated worker session. Real hosted worker login has not been enabled or verified.
 
 Before declaring the public demo ready, verify the Linux build and model loading, run the task/assignment workflow against the hosted database, review authentication and form protections, and test HTTPS login and session behaviour in a browser. These checks do not establish model accuracy on real onboarding tasks.
@@ -232,13 +254,14 @@ python -m pytest ml/tests -q
 python -m pytest tests -q
 ```
 
-Verification on 23 October 2026:
+Latest local verification reported by the project owner on **26 October 2026**:
 
-- Combined application and ML tests: **26 passed**, with 14 SQLAlchemy legacy-API warnings.
-- Fixtures use temporary databases and installation-specific worker bindings; they do not write to the running website database.
-- Tests cover login, task validation, NetEase recommendation output, availability filtering, assignment tokens, supervisor ownership, duplicate assignment, completion, and worker permissions.
-- The original website's manually exercised assignment/completion flow completed task 6 with one assignment and returned its worker workload to zero.
-- The new installation created 1,653 correctly mapped workers, one supervisor, zero tasks, and zero assignments at initialisation. The user verified login and source-ID recommendations on port 5001.
+- **112 application and ML tests passed** after the task-title/services update. Existing SQLAlchemy deprecation notices remain.
+- Local administrator login and location management, task title and service selection were manually confirmed on port 5001.
+- Tests cover role restrictions, venue validation, city/venue mismatch, inactive venues, form tokens, task creation rollback, preserved snapshots, owner-only location display, legacy city-only tasks and duplicate names.
+- Recommendation regression checks confirm different titles with identical service IDs produce identical ranked worker IDs, scores and component scores; venue edits also preserve scores.
+- Existing assignment, workload, completion, deadline, dashboard and ML tests remain in the suite. Test fixtures use disposable databases.
+- Mobile visual review and a full manual task creation/assignment/location/completion walkthrough remain useful release checks. These results do not certify the hosted deployment.
 
 These checks establish the tested prototype workflows, not full production readiness or onboarding prediction accuracy.
 
@@ -257,12 +280,12 @@ The interface uses these approved demonstration skill labels:
 
 These labels do not establish real onboarding qualifications or change the meaning of the benchmark. Database skills, submitted skill IDs, ML features, and ranking logic retain their source identities. Historical success rates describe training responses, not real onboarding work; ranking scores are not success probabilities.
 
-Application task locations are Nairobi, Mombasa, Kisumu, Nakuru, and Eldoret. They are operational choices, not worker locations inferred from the dataset. New tasks require a deadline on or after today's date in Kenya time (EAT). Existing tasks without deadlines are retained. These UI changes are being tested locally; they are not yet verified on the public deployment.
+Application task cities are Nairobi, Mombasa, Kisumu, Nakuru, and Eldoret, with administrator-managed work venues within each city. They are operational choices, not worker locations inferred from the dataset. New tasks require a deadline on or after today's date in Kenya time (EAT). Existing tasks without deadlines are retained. These UI changes are being tested locally; they are not yet verified on the public deployment.
 
 ## Dashboard theme (issue #46)
 
-The shared IntelliTask theme uses a local SVG logo, stylesheet and small navigation script. No chart service, CDN or additional Python package is required. Task charts use real application counts. The supervisor overview shows only that supervisor's tasks and supports name search, status filters, overdue indicators and ten-row pagination. Deadline comparisons use Kenya time. The worker-history snapshot continues to use the saved source-linked display names and labels described above.
+The shared IntelliTask theme uses a local SVG logo, stylesheet and small navigation script. No chart service, CDN or additional Python package is required. Task charts use real application counts. The supervisor overview shows only that supervisor's tasks and supports name search, status filters, overdue indicators and ten-row pagination. Deadline comparisons use Kenya time. Worker names and service labels retain their source bindings as described above.
 
-Role navigation only links to existing pages. Google signup, OTP verification, reports, administrator management and the full worker status lifecycle are future work. See [the role feature plan](docs/ROLE_FEATURE_PLAN.md).
+Role navigation links to implemented pages, including administrator work locations. The agent dashboard supports task filtering, deadline sorting, details and completion. Start/In Progress transitions, reports, broader account management, Google signup and OTP verification remain future work. See [the role feature plan](docs/ROLE_FEATURE_PLAN.md).
 
-The isolated automated check passed 54 tests, with 17 existing SQLAlchemy legacy-method warnings. Desktop/mobile visual review remains pending: the automatic browser preview timed out. These local changes have not yet been verified or published on Render.
+The latest project test total is recorded above. The user has reviewed the local supervisor and agent dashboards and administrator locations page. Current local changes have not yet been verified or published on Render.

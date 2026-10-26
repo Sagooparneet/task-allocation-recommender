@@ -1,3 +1,4 @@
+from conftest import task_venue_fields
 import datetime as _deadline_datetime
 
 def _future_task_deadline():
@@ -24,7 +25,7 @@ def test_location_is_validated_before_saving(app, client, location):
     sign_in(client)
     with app.app_context():
         skill_id = Skill.query.first().id
-    response = client.post("/supervisor/task/create", data={"deadline": _future_task_deadline(),
+    response = client.post("/supervisor/task/create", data={**task_venue_fields(client, location=location), "deadline": _future_task_deadline(),
         "task_type": "KYC Verification", "description": "Location test",
         "location": location, "priority": "Medium", "required_skills": str(skill_id),
     })
@@ -67,7 +68,7 @@ def test_dropdown_choices_and_preserved_location(client):
     parser.feed(client.get("/supervisor/task/create").get_data(as_text=True))
     assert parser.values == [""] + LOCATIONS
     # Missing required skills returns the form while retaining the chosen location.
-    response = client.post("/supervisor/task/create", data={"deadline": _future_task_deadline(),
+    response = client.post("/supervisor/task/create", data={**task_venue_fields(client, location='Nairobi'), "deadline": _future_task_deadline(),
         "task_type": "KYC Verification", "location": "Mombasa"
     })
     parser = LocationSelect()

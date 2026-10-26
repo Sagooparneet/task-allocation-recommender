@@ -1,3 +1,4 @@
+from conftest import task_venue_fields
 import datetime as _deadline_datetime
 
 def _future_task_deadline():
@@ -47,7 +48,7 @@ def test_readable_skill_keeps_original_database_identity(app, client, code, labe
     assert str(skill_id) in parser.ids
     assert label in page
     assert source_name not in page
-    result = client.post("/supervisor/task/create", data={"deadline": _future_task_deadline(),
+    result = client.post("/supervisor/task/create", data={**task_venue_fields(client, location='Nairobi'), "deadline": _future_task_deadline(),
         "task_type": "__other__", "custom_task_type": label,
         "location": "Nairobi", "priority": "Medium", "required_skills": str(skill_id)
     })
@@ -63,7 +64,7 @@ def test_recommendation_page_uses_labels_without_changing_scores(app, client):
     login(client)
     with app.app_context():
         skill_id = Skill.query.filter_by(name="NetEase capability 56").one().id
-    client.post("/supervisor/task/create", data={"deadline": _future_task_deadline(),
+    client.post("/supervisor/task/create", data={**task_venue_fields(client, location='Nairobi'), "deadline": _future_task_deadline(),
         "task_type": "KYC Verification", "location": "Nairobi",
         "priority": "Medium", "required_skills": str(skill_id)
     })
