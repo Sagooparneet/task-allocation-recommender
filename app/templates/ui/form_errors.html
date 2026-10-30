@@ -1,0 +1,14 @@
+{% macro summary(errors, heading) -%}
+{% if errors %}
+<section class="form-error-summary" id="form-error-summary" tabindex="-1" aria-labelledby="form-error-heading">
+<h2 id="form-error-heading">{{ heading }}</h2>
+<ul>{% for field,message in errors.items() %}<li>{% if field == '__all__' %}<span id="credentials-error">{{ message }}</span> Check your <a href="#email">email address</a> and <a href="#password">password</a>.{% else %}<a href="#{{ field }}">{{ message }}</a>{% endif %}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+{%- endmacro %}
+{% macro attributes(errors, field) -%}
+{% if errors.get(field) %}aria-invalid="true" aria-describedby="{{ field }}-error"{% elif errors.get('__all__') %}aria-describedby="credentials-error"{% endif %}
+{%- endmacro %}
+{% macro inline_error(errors, field) -%}
+{% if errors.get(field) %}<p class="form-field-error" id="{{ field }}-error"><strong>Error:</strong> {{ errors[field] }}</p>{% endif %}
+{%- endmacro %}

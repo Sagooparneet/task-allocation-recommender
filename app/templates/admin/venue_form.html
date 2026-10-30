@@ -1,16 +1,17 @@
 {% extends "base.html" %}
+{% from 'ui/form_errors.html' import summary %}
 {% block title %}{{ 'Edit' if venue else 'Add' }} work location | IntelliTask{% endblock %}
-{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-venues.css') }}">{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}"><script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script><link rel="stylesheet" href="{{ url_for('static', filename='css/admin-venues.css') }}">{% endblock %}
 {% block content %}
 <a href="{{ url_for('admin.venues') }}">← Work locations</a>
 <div class="av-header"><div><h1>{{ 'Edit' if venue else 'Add' }} work location</h1><p>Save a clear address and helpful directions for your team.</p></div></div>
-<form method="post" class="av-panel av-form"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-{% if errors %}<div class="av-error-summary" role="alert"><strong>Please check the highlighted fields.</strong></div>{% endif %}
-<div><label for="city">City *</label><select id="city" name="city" required {% if errors.city %}aria-invalid="true" aria-describedby="city-error"{% endif %}><option value="">Choose a city</option>{% for city in cities %}<option {% if values.city == city %}selected{% endif %}>{{ city }}</option>{% endfor %}</select>{% if errors.city %}<p class="av-error" id="city-error">{{ errors.city }}</p>{% endif %}</div>
+<form method="post" class="av-panel av-form accessible-form" novalidate><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+{{ summary(errors, 'Please check these details before saving the location') }}
+<div><label for="city">City *</label><select id="city" name="city" required {% if errors.city %}aria-invalid="true" aria-describedby="city-error"{% endif %}><option value="">Choose a city</option>{% for city in cities %}<option {% if values.city == city %}selected{% endif %}>{{ city }}</option>{% endfor %}</select>{% if errors.city %}<p class="form-field-error" id="city-error"><strong>Error:</strong> {{ errors.city }}</p>{% endif %}</div>
 {% for key, label, limit, required in [('name','Location name',160,true),('address','Street address',300,true),('directions','Directions',2000,false),('map_url','Map link',1000,false)] %}
 <div><label for="{{ key }}">{{ label }}{{ ' *' if required else ' (optional)' }}</label>
 {% if key == 'directions' %}<textarea id="{{ key }}" name="{{ key }}" rows="3" maxlength="{{ limit }}" {% if errors.get(key) %}aria-invalid="true" aria-describedby="{{ key }}-error"{% endif %}>{{ values[key] }}</textarea>{% else %}<input id="{{ key }}" name="{{ key }}" type="{{ 'url' if key == 'map_url' else 'text' }}" maxlength="{{ limit }}" value="{{ values[key] }}" {% if required %}required{% endif %} {% if errors.get(key) %}aria-invalid="true" aria-describedby="{{ key }}-error"{% endif %}>{% endif %}
-{% if errors.get(key) %}<p class="av-error" id="{{ key }}-error">{{ errors[key] }}</p>{% endif %}</div>{% endfor %}
+{% if errors.get(key) %}<p class="form-field-error" id="{{ key }}-error"><strong>Error:</strong> {{ errors[key] }}</p>{% endif %}</div>{% endfor %}
 <div class="av-active"><label><input type="checkbox" name="is_active" {% if values.is_active %}checked{% endif %}> Active location</label><p>Turn this off when a location is no longer in use. Its record and existing task addresses will be kept.</p></div>
 <div class="av-actions"><button class="av-button" type="submit">{{ 'Save changes' if venue else 'Add location' }}</button><a href="{{ url_for('admin.venues') }}">Cancel</a></div>
 </form>{% endblock %}

@@ -30,10 +30,18 @@ def login():
     if current_user.is_authenticated:
         return redirect_by_role(current_user)
 
+    errors = {}
     if request.method == "POST":
 
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
+
+        if not email:
+            errors['email'] = 'Enter your email address.'
+        if not password:
+            errors['password'] = 'Enter your password.'
+        if errors:
+            return render_template('auth/login.html', errors=errors)
 
         user = Supervisor.query.filter_by(email=email).first()
 
@@ -54,13 +62,10 @@ def login():
 
             return redirect_by_role(user)
 
-        flash(
-            "Invalid email or password.",
-            "danger"
-        )
+        errors['__all__'] = 'Invalid email or password.'
 
     return render_template(
-        "auth/login.html"
+        "auth/login.html", errors=errors
     )
 
 

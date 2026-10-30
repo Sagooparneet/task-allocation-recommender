@@ -1,0 +1,40 @@
+{% macro settings_symbol(name) %}
+{% set paths = {'settings':'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2','appearance':'M12 3a9 9 0 1 0 0 18c2 0 3-1 2-3s0-3 2-3h2c5-6-1-12-6-12 M7 8h.01 M12 6h.01 M17 9h.01 M6 13h.01','person':'M12 3v.01 M4 7l8 2 8-2 M12 9v7 M8 22l4-6 4 6','text':'M3 5h12 M9 5v15 M15 11h7 M18.5 11v9','contrast':'M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18 M12 3v18','bold':'M7 3h6a5 5 0 0 1 0 10H7 M7 13h7a4 4 0 0 1 0 8H7V3','motion':'M4 4l16 16 M9 3a9 9 0 0 1 12 9 M15 21A9 9 0 0 1 3 12 M9 9v7l6-4','back':'M15 5l-7 7 7 7','close':'M5 5l14 14 M19 5L5 19'} %}
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ paths[name] }}"/></svg>
+{% endmacro %}
+{% macro setting_switch(id, title, description, symbol) %}
+<label class="sp-switch-row" for="{{ id }}"><span class="sp-icon" aria-hidden="true">{{ settings_symbol(symbol) }}</span><span class="sp-switch-copy"><strong id="{{ id }}-label">{{ title }}</strong><small id="{{ id }}-help">{{ description }}</small></span><input type="checkbox" role="switch" id="{{ id }}" aria-labelledby="{{ id }}-label" aria-describedby="{{ id }}-help"></label>
+{% endmacro %}
+<dialog id="it-accessibility-panel" class="it-accessibility-panel sp-dialog" aria-labelledby="accessibility-title" aria-describedby="accessibility-description">
+    <div class="sp-heading">
+        <button type="button" id="settings-back" class="sp-icon-button" aria-label="Back to settings" hidden>{{ settings_symbol('back') }}</button>
+        <span id="settings-heading-icon" class="sp-heading-icon" aria-hidden="true">{{ settings_symbol('settings') }}</span>
+        <h2 id="accessibility-title" tabindex="-1">Settings</h2>
+        <button type="button" class="it-accessibility-close sp-icon-button" aria-label="Close settings">{{ settings_symbol('close') }}</button>
+    </div>
+    <p id="accessibility-description" class="sp-description">Make IntelliTask comfortable for you. Your choices are saved in this browser.</p>
+    <div id="settings-home">
+        <fieldset class="sp-card sp-appearance"><legend><span aria-hidden="true">{{ settings_symbol('appearance') }}</span> Appearance</legend>
+        {% for value,label in [('light','Light mode'),('dark','Dark mode'),('system','System default')] %}
+        <label class="sp-radio-row"><input type="radio" name="appearance" value="{{ value }}"><span>{{ label }}</span></label>{% endfor %}
+        </fieldset>
+        <section class="sp-card"><h3 class="sp-card-heading"><span aria-hidden="true">{{ settings_symbol('person') }}</span> Accessibility</h3>
+            <button type="button" id="settings-open-accessibility" class="sp-open-row" aria-controls="settings-accessibility"><span><strong>Text size, contrast &amp; motion</strong><small>Choose what helps you read and navigate.</small></span><span aria-hidden="true">›</span></button>
+        </section>
+    </div>
+    <div id="settings-accessibility" hidden>
+        <div class="sp-intro"><span class="sp-icon" aria-hidden="true">{{ settings_symbol('person') }}</span><p>Adjust IntelliTask to fit your needs — larger text, clearer contrast and fewer motion effects.</p></div>
+        <h3 class="sp-section-title">Vision</h3>
+        <section class="sp-card sp-options" aria-label="Vision settings">
+            <fieldset class="sp-text-options" id="accessibility-text-size"><legend><span class="sp-icon" aria-hidden="true">{{ settings_symbol('text') }}</span><span>Text size<small>Make text easier to read.</small></span></legend>
+                <div class="sp-pills">{% for value,label in [('default','Normal'),('large','Large'),('largest','Extra large'),('huge','Huge')] %}<label class="sp-pill"><input type="radio" name="text-size" value="{{ value }}"><span><span class="sp-check" aria-hidden="true">✓</span>{{ label }}</span></label>{% endfor %}</div>
+            </fieldset>
+            {{ setting_switch('accessibility-contrast','High contrast','Stronger text and clearer borders.','contrast') }}
+            {{ setting_switch('accessibility-bold','Bold text','Make text heavier across the website.','bold') }}
+        </section>
+        <h3 class="sp-section-title">Motion</h3>
+        <section class="sp-card sp-options" aria-label="Motion settings">{{ setting_switch('accessibility-motion','Reduce motion','Limit animation and scrolling effects. Your device’s reduced-motion setting is always respected.','motion') }}</section>
+    </div>
+    <p id="accessibility-save-status" role="status" aria-live="polite"></p>
+    <div class="it-accessibility-actions"><button type="button" id="accessibility-reset" class="secondary-button">Reset preferences</button><button type="button" class="it-button it-accessibility-done">Done</button></div>
+</dialog>

@@ -112,11 +112,9 @@ def create_task():
     if "task_create_csrf_token" not in session:
         session["task_create_csrf_token"] = secrets.token_urlsafe(32)
 
-    def show_form(message=None):
-        if message:
-            flash(message, "danger")
+    def show_form(errors=None):
         return render_template("supervisor/create_task.html", skills=skills,
-            locations=locations, venues=venues,
+            locations=locations, venues=venues, form_errors=errors or {},
             deadline_min=today_eat.isoformat() + "T00:00",
             task_create_csrf_token=session["task_create_csrf_token"])
 
@@ -131,47 +129,54 @@ def create_task():
     custom_type = request.form.get("custom_task_type", "").strip()
     task_type = custom_type if selected_type == "__other__" else selected_type
     location = request.form.get("location", "").strip()
-    if selected_type == "__other__" and not custom_type:
-        return show_form("Please enter a task title.")
-    if not task_type or not location:
-        return show_form("Task title and location are required.")
-    if len(task_type) > 100:
-        return show_form("Keep the task title within 100 characters.")
+    errors = {}
+    if not task_type:
+        errors['task_type'] = "Please enter a task title."
+    elif len(task_type) > 100:
+        errors['task_type'] = "Keep the task title within 100 characters."
     if location not in locations:
-        return show_form("Please select a location from the list.")
+        errors['location'] = "Please select a location from the list."
     selected_skills = request.form.getlist("required_skills")
+    skill_ids = set()
     if not selected_skills:
-        return show_form("Please select at least one service.")
-    try:
-        skill_ids = {int(value) for value in selected_skills}
-    except ValueError:
-        return show_form("Please select valid services from the list.")
-    if not skill_ids.issubset({skill.id for skill in skills}):
-        return show_form("Please select valid services from the list.")
+        errors['required_skills'] = "Please select at least one service."
+    else:
+        try:
+            skill_ids = {int(value) for value in selected_skills}
+        except ValueError:
+            errors['required_skills'] = "Please select valid services from the list."
+        if not skill_ids.issubset({skill.id for skill in skills}):
+            errors['required_skills'] = "Please select valid services from the list."
     deadline_value = request.form.get("deadline", "").strip()
+    deadline = None
     if not deadline_value:
-        return show_form("Please choose a deadline.")
-    try:
-        deadline = datetime.strptime(deadline_value, "%Y-%m-%dT%H:%M")
-    except ValueError:
-        return show_form("Please enter a valid deadline.")
-    if deadline.date() < today_eat:
-        return show_form("Please choose today or a later date for the deadline (Kenya time).")
+        errors['deadline'] = "Please choose a deadline."
+    else:
+        try:
+            deadline = datetime.strptime(deadline_value, "%Y-%m-%dT%H:%M")
+        except ValueError:
+            errors['deadline'] = "Please enter a valid deadline."
+        if deadline is not None and deadline.date() < today_eat:
+            errors['deadline'] = "Please choose today or a later date for the deadline (Kenya time)."
     priority = request.form.get("priority", "Medium")
     if priority not in ("Low", "Medium", "High"):
-        return show_form("Please choose a priority from the list.")
+        errors['priority'] = "Please choose a priority from the list."
     venue_id = request.form.get("venue_id", type=int)
-    # Read the current database record, never client-supplied address fields.
-    venue = db.session.get(WorkVenue, venue_id) if venue_id else None
+    # Refresh the record to reject venues deactivated since the form opened.
+    venue = db.session.get(WorkVenue, venue_id, populate_existing=True) if venue_id else None
     if venue is None or not venue.is_active or venue.city != location:
-        return show_form("Please choose an active work location in the selected city.")
+        errors['venue_id'] = "Please choose an active work location in the selected city."
     reporting_point = request.form.get("reporting_point", "").strip()
     instructions = request.form.get("location_instructions", "").strip()
     contact_details = request.form.get("location_contact", "").strip()
     if not reporting_point or len(reporting_point) > 200:
-        return show_form("Enter where the agent should report, using 1 to 200 characters.")
-    if len(instructions) > 2000 or len(contact_details) > 250:
-        return show_form("Keep arrival instructions within 2,000 characters and contact details within 250 characters.")
+        errors['reporting_point'] = "Enter where the agent should report, using 1 to 200 characters."
+    if len(instructions) > 2000:
+        errors['location_instructions'] = "Keep arrival instructions within 2,000 characters."
+    if len(contact_details) > 250:
+        errors['location_contact'] = "Keep contact details within 250 characters."
+    if errors:
+        return show_form(errors)
     try:
         task = Task(task_type=task_type, description=request.form.get("description", "").strip(),
             location=location, priority=priority, deadline=deadline, status="Pending",
@@ -189,7 +194,7 @@ def create_task():
     except SQLAlchemyError:
         db.session.rollback()
         current_app.logger.exception("Task creation transaction failed")
-        return show_form("The task could not be saved. Please try again.")
+        return show_form({"__all__": "The task could not be saved. Please try again."})
     flash(f"{task.task_type} was created successfully.", "success")
     return redirect(url_for("supervisor.dashboard"))
 

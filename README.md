@@ -202,7 +202,7 @@ The existing local databases are separate installations. This process does not t
 | Start command | `gunicorn --config gunicorn.conf.py wsgi:app` |
 | Python | `3.13.3`, specified in `.python-version` |
 
-Select the branch containing the reviewed deployment changes. During preparation this is `feature/deployment-preparation`; use `main` after those changes have been merged. The last recorded hosted branch was `feature/deployment-preparation`. Pushing this work-locations branch does not itself switch that service to this code.
+Select the branch containing the reviewed deployment changes. During preparation this is `feature/deployment-preparation`; use `main` after those changes have been merged. The last recorded hosted branch was `feature/deployment-preparation`. Pushing a feature branch does not itself switch that service to the new branch. Confirm the configured Render branch before changing deployment settings.
 
 Configure these private environment variables in the hosting dashboard:
 
@@ -254,7 +254,7 @@ python -m pytest ml/tests -q
 python -m pytest tests -q
 ```
 
-Latest local verification reported by the project owner on **26 October 2026**:
+Earlier local verification reported by the project owner on **26 October 2026**:
 
 - **112 application and ML tests passed** after the task-title/services update. Existing SQLAlchemy deprecation notices remain.
 - Local administrator login and location management, task title and service selection were manually confirmed on port 5001.
@@ -262,6 +262,17 @@ Latest local verification reported by the project owner on **26 October 2026**:
 - Recommendation regression checks confirm different titles with identical service IDs produce identical ranked worker IDs, scores and component scores; venue edits also preserve scores.
 - Existing assignment, workload, completion, deadline, dashboard and ML tests remain in the suite. Test fixtures use disposable databases.
 - Mobile visual review and a full manual task creation/assignment/location/completion walkthrough remain useful release checks. These results do not certify the hosted deployment.
+
+For issue #52, the project owner subsequently confirmed the test suite and local login, administrator location forms and accessibility checks were working. Focused verification of the login/location error changes passed **26 tests**, including Create Task error regressions. The preference JavaScript tests passed **6 tests**. Use the current test run output for the full-suite total; the 112-test result above is a historical milestone.
+
+Run the combined suite and browser-preference unit tests from the project root:
+
+```powershell
+python -m pytest tests ml/tests -q
+node --test tests/js/accessibility_preferences.test.cjs
+```
+
+Node.js is needed for these JavaScript tests, not for running the Flask website.
 
 These checks establish the tested prototype workflows, not full production readiness or onboarding prediction accuracy.
 
@@ -289,3 +300,27 @@ The shared IntelliTask theme uses a local SVG logo, stylesheet and small navigat
 Role navigation links to implemented pages, including administrator work locations. The agent dashboard supports task filtering, deadline sorting, details and completion. Start/In Progress transitions, reports, broader account management, Google signup and OTP verification remain future work. See [the role feature plan](docs/ROLE_FEATURE_PLAN.md).
 
 The latest project test total is recorded above. The user has reviewed the local supervisor and agent dashboards and administrator locations page. Current local changes have not yet been verified or published on Render.
+
+
+## Accessibility and role colours (issue #52)
+
+The shared interface uses teal for supervisors, blue for workers and purple for administrators. Portal labels identify roles in text; task status labels retain their meaning independently of role colours.
+
+A Settings button on the login page and each role portal provides:
+
+- Light, Dark and System default appearance.
+- Normal, Large, Extra large and Huge text.
+- High contrast, Bold text and Reduce motion options.
+- Reset preferences to restore defaults.
+
+Preferences apply immediately and are saved in the current browser. They are not synchronised between accounts or devices. System default follows the device appearance, and device reduced-motion preferences remain respected. If browser storage is unavailable, settings apply to the current page and a message explains they could not be saved.
+
+Keyboard navigation includes visible focus indicators, a skip-to-content link, a mobile navigation toggle and a settings dialog that returns focus to its opener when closed. The settings controls support keyboard operation and include accessible names.
+
+Create Task, login and administrator Add/Edit work location forms provide error summaries linked to the affected fields. Invalid fields have associated error messages, and focus moves to the summary after an unsuccessful submission. Entered details remain available for correction; login passwords are always cleared and never returned in HTML. Incorrect credentials use a general message for both known and unknown accounts. Server validation remains active with JavaScript disabled; automatic focus handling requires JavaScript.
+
+Task creation refreshes the selected venue record before validation so an outdated cached active flag does not bypass the inactive-location check. Recommendation inputs, dataset bindings and existing task snapshots are unchanged by these interface improvements.
+
+The project owner confirmed saved preferences, error links, retained entries, keyboard navigation, dark mode and large-text checks on port 5001. A dedicated screen-reader review, wider mobile/browser coverage and a full accessibility audit remain pending; these checks do not establish formal accessibility conformance. Neon and Render have not been updated as part of issue #52.
+
+Further details: [settings and appearance](docs/SETTINGS_AND_APPEARANCE.md), [Create Task errors](docs/ACCESSIBLE_TASK_FORM.md), and [login and location form errors](docs/LOGIN_LOCATION_ERRORS.md).

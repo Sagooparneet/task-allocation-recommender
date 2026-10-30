@@ -1,4 +1,5 @@
 {% from 'ui/icons.html' import icon %}
+{% from 'ui/accessibility.html' import accessibility_button %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,9 +11,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/intellitask-theme.css') }}">
     <script src="{{ url_for('static', filename='js/intellitask-ui.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/accessibility-preferences.js') }}" defer></script>
     {% block extra_styles %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/role-accessibility.css') }}">
 </head>
-<body class="it-theme {% if not current_user.is_authenticated %}it-public{% endif %}">
+<body class="it-theme {% if not current_user.is_authenticated %}it-public{% endif %}" data-role="{{ current_user.role if current_user.is_authenticated else 'public' }}">
 <a class="it-skip" href="#main-content">Skip to content</a>
 {% if current_user.is_authenticated %}
 {% set role = current_user.role %}
@@ -24,7 +27,7 @@
             <span><strong>IntelliTask<span class="it-brand-dot">.</span></strong><small>Make every task count</small></span>
         </a>
         <p class="it-nav-label">{{ 'Worker' if role == 'agent' else role|title }} workspace</p>
-        <nav class="it-nav" aria-label="Main navigation">
+        <nav class="it-nav" id="it-navigation" aria-label="Main navigation">
             <a href="{{ url_for(home_endpoint) }}" {% if request.endpoint == home_endpoint %}aria-current="page"{% endif %}>{{ icon('grid') }} {{ 'My tasks' if role == 'agent' else 'Overview' }}</a>
             {% if role == 'supervisor' %}
             <a href="{{ url_for('supervisor.dashboard') }}#task-list">{{ icon('tasks') }} Your tasks</a>
@@ -44,13 +47,15 @@
     </aside>
     <div class="it-workspace">
         <header class="it-topbar">
-            <button type="button" class="it-menu" aria-controls="it-sidebar" aria-expanded="false" aria-label="Toggle navigation">{{ icon('menu') }}</button>
+            <button type="button" class="it-menu" aria-controls="it-navigation" aria-expanded="false" aria-label="Toggle navigation">{{ icon('menu') }}</button>
             <span class="it-breadcrumb">Your workspace <span>/</span> <strong>{% if request.endpoint == 'supervisor.create_task' %}Create task{% elif request.endpoint == 'supervisor.recommendations' %}Recommendations{% elif request.endpoint == 'agent.dashboard' %}My tasks{% elif request.endpoint in ('admin.venues', 'admin.edit_venue') %}Work locations{% else %}Overview{% endif %}</strong></span>
             <span class="it-topbar-role">{{ 'Worker' if role == 'agent' else role|title }} portal</span>
+            {{ accessibility_button() }}
         </header>
-        <main class="it-main" id="main-content">
+        <main class="it-main" id="main-content" tabindex="-1">
 {% else %}
-<main class="it-public-main" id="main-content">
+<div class="it-public-tools">{{ accessibility_button() }}</div>
+<main class="it-public-main" id="main-content" tabindex="-1">
 {% endif %}
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<div class="it-flashes" aria-live="polite">
@@ -64,5 +69,6 @@
     </div>
 </div>
 {% else %}</main>{% endif %}
+{% include 'ui/accessibility_panel.html' %}
 </body>
 </html>
