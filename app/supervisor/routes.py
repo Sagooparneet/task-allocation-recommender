@@ -53,8 +53,9 @@ def dashboard():
     total = sum(counts.values())
     pending = counts.get("Pending", 0)
     assigned = counts.get("Assigned", 0)
+    in_progress = counts.get("In progress", 0)
     completed = counts.get("Completed", 0)
-    other = total - pending - assigned - completed
+    other = total - pending - assigned - in_progress - completed
     overdue = owned.filter(Task.status != "Completed", Task.deadline < now).count()
     end_of_day = now.replace(hour=23, minute=59, second=59, microsecond=999999)
     due_today = owned.filter(Task.status != "Completed", Task.deadline >= now,
@@ -64,7 +65,7 @@ def dashboard():
 
     search = request.args.get("q", "").strip()[:100]
     selected_status = request.args.get("status", "")
-    valid_statuses = ("Pending", "Assigned", "Completed", "Overdue")
+    valid_statuses = ("Pending", "Assigned", "In progress", "Completed", "Overdue")
     if selected_status not in valid_statuses:
         selected_status = ""
     filtered = owned
@@ -79,15 +80,32 @@ def dashboard():
         page=page_number, per_page=10, error_out=False)
     profiles = load_dataset_profiles()
     workers = [profiles[key] for key in sorted(profiles, key=int)[:5]]
+    progress_details = {}
+    # Fetch only assignments for this supervisor's visible tasks, not the
+    # full task history. Unknown historical timestamps remain undisplayed.
+    assignments = TaskAssignment.query.join(Task).filter(
+        Task.supervisor_id == current_user.id,
+        Task.id.in_([task.id for task in page.items]),
+    ).order_by(TaskAssignment.id).all()
+    for assignment in assignments:
+        progress_details.setdefault(assignment.task_id, []).append({
+            'started': (assignment.started_at + timedelta(hours=3)).strftime('%d %b %Y, %H:%M')
+                       if assignment.started_at is not None else None,
+            'completed': (assignment.completed_at + timedelta(hours=3)).strftime('%d %b %Y, %H:%M')
+                         if assignment.completed_at is not None else None,
+        })
     return render_template(
         "supervisor/dashboard.html", total_tasks=total, pending_tasks=pending,
-        assigned_tasks=assigned, completed_tasks=completed, other_tasks=other,
+        assigned_tasks=assigned, in_progress_tasks=in_progress,
+        completed_tasks=completed, other_tasks=other,
+        progress_details=progress_details,
         overdue_tasks=overdue, due_today=due_today,
         available_agents=OnboardingAgent.query.filter_by(availability=True).count(),
         completion_percent=round(100 * completed / total) if total else 0,
         completed_end=100 * completed / total if total else 0,
-        assigned_end=100 * (completed + assigned) / total if total else 0,
-        pending_end=100 * (completed + assigned + pending) / total if total else 0,
+        in_progress_end=100 * (completed + in_progress) / total if total else 0,
+        assigned_end=100 * (completed + in_progress + assigned) / total if total else 0,
+        pending_end=100 * (completed + in_progress + assigned + pending) / total if total else 0,
         priorities=priorities, agents=workers, task_page=page,
         search=search, selected_status=selected_status, now=now,
         venue_details={item.task_id: item for item in TaskVenueDetails.query.filter(

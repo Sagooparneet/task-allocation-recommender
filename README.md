@@ -2,7 +2,7 @@
 
 **An Explainable Knowledge Graph-Driven Hybrid Recommender for Intelligent Task Allocation in Distributed Onboarding Operations.**
 
-IntelliTask is a Flask prototype in which supervisors create tasks, review recommendations, and assign workers. The worker workflow supports viewing assignments and marking them complete after worker login has been explicitly enabled. Fresh dataset accounts have login disabled. Recommendations use saved models built from real NetEaseCrowd observations.
+IntelliTask is a Flask prototype in which supervisors create tasks, review recommendations, and assign workers. The worker workflow supports viewing assignments, starting work and marking in-progress tasks complete after worker login has been explicitly enabled. Fresh dataset accounts have login disabled. Recommendations use saved models built from real NetEaseCrowd observations.
 
 NetEaseCrowd is a proxy research dataset for this project. Its worker histories do not establish real onboarding qualifications or accuracy on KYC, SIM registration, or M-PESA tasks.
 
@@ -19,7 +19,8 @@ Supervisor opens a task
   -> ranked workers and explanations rendered in the webpage
   -> supervisor chooses a worker
   -> assignment and workload saved together
-  -> worker views and completes the assignment
+  -> worker starts the assignment (In progress; start time recorded)
+  -> worker completes it (Completed; finish time recorded; workload reduced once)
 ```
 
 The active hybrid uses **10% content, 50% collaborative, and 40% knowledge graph**. It loads saved artifacts rather than retraining during page requests. Knowledge-graph features and explanation evidence are precomputed from the saved training graph.
@@ -121,23 +122,43 @@ The runner uses `instance/netease_setup_test` explicitly, a separate session coo
 
 ### Current port-5001 installation and task workflow
 
-The existing `instance/netease_setup_test` installation has been backed up and upgraded to migration `49a01b7c2d30`. It has the five initial venues and a separately provisioned administrator. Start it with:
+The existing `instance/netease_setup_test` installation has been backed up and upgraded to migration `54b01c8d3e40` (task progress), following `49a01b7c2d30` (work venues). It has the five initial venues and a separately provisioned administrator. Start it with:
 
 ```powershell
 python run_netease_test.py
 ```
 
 1. Sign in as supervisor and choose **Create Task**.
-2. Enter a **Task title**, such as “Register new customers at KICC”, and task instructions.
+2. Enter a **Task title**, such as “Register new customers”, and task instructions.
 3. Select one or more **Services needed**. These retain the original skill IDs and drive recommendation eligibility.
 4. Select a city and an active work location. Check the address preview and enter the confirmed reporting point. Arrival instructions and contact details are optional.
 5. Choose a priority and a required deadline on or after today in Kenya time.
 6. Save, inspect Location details, open recommendations and assign a worker.
-7. A worker with an explicitly enabled local login can view the saved address and reporting point under task details and mark the assignment complete.
+7. A worker with an explicitly enabled local login can view the saved address and reporting point, choose **Start task**, then **Mark complete** when finished.
+8. Refresh the supervisor dashboard to see updated totals, task status and recorded start/completion times.
 
 The title remains in the existing `tasks.task_type` column. Changing its wording does not alter the active NetEase ranking inputs. The form does not infer services from the title. Existing tasks and skill links are not rewritten.
 
 The installation-specific mapping links original capability labels to source codes. It does not rely on the older KYC-only fallback configuration. Website-created tasks and venue details are application records, not additional NetEase observations.
+
+### Task progress tracking (issue #54)
+
+The local workflow is **Assigned → In progress → Completed**. Starting work keeps the worker's active workload unchanged. Completing it reduces workload once, with a floor of zero. Only the assigned worker can submit either action, and both actions require a valid session form token. Task and assignment status changes are committed together; completion also records the finish time and updates workload in that transaction. Repeated or stale requests do not overwrite timestamps or reduce workload again. Completion requires an in-progress assignment with a recorded start time.
+
+The nullable `task_assignments.started_at` and `completed_at` columns store UTC timestamps without timezone offsets. Pages display these in Kenya time (EAT, UTC+3). Existing `assigned_at` values and deadline conventions are unchanged. Historical tasks retain their original statuses and records; unknown historical start/completion times stay empty and are not invented. These two timestamps are not a full event/audit history.
+
+The supervisor dashboard separates Waiting, Assigned (not started), In progress and Completed in its totals, chart and filters. Totals cover all tasks owned by the signed-in supervisor even when the table is filtered. Recorded start and completion times appear beside task statuses. Worker counts include both assigned and in-progress work as active. Refresh the page after another user updates a task; live push updates are not implemented.
+
+The port-5001 upgrade has already been applied and verified. Its controlled helpers are:
+
+- `scripts/check_task_progress_schema.py`: test migration, preservation and downgrade protection using a new disposable SQLite database.
+- `scripts/backup_5001_before_task_progress.py`: create a verified backup of the fixed local installation and matching configuration files.
+- `scripts/check_5001_task_progress_upgrade.py --backup <verified-backup-folder>`: rehearse the upgrade on a temporary copy and compare existing records.
+- `scripts/apply_5001_task_progress_upgrade.py --apply --server-stopped`: with port 5001 stopped, make a fresh backup, rehearse, then apply and verify the fixed local upgrade.
+
+Do not rerun upgrade helpers as routine startup steps or use them against Neon. Preserve backups. The migration refuses a downgrade that would discard recorded progress timestamps. Fresh installations and the original `run.py` database need their own schema review; the port-5001 upgrade does not upgrade other installations.
+
+No model features, source bindings, ranking weights or recommendation scores are changed by task-progress tracking. Website progress is application activity, not additional NetEase training evidence. Neon and Render remain unchanged by issue #54.
 
 ### Work location management (issue #49)
 
@@ -163,11 +184,11 @@ The root `requirements.txt` lists the application and test dependencies with ver
 
 Research notebook reproduction uses its own isolated environment and `ml/requirements-notebooks.txt`. Its historical NetworkX pin differs from the application environment; do not combine both dependency sets in one environment. Saved artifact inference does not rebuild the graph.
 
-This is an academic prototype with deployment preparation in progress. The original `run.py` enables debug mode, and `config.py` retains a development secret for local use. Public hosting must use `wsgi:app`, which requires explicit production settings and disables debug mode. An earlier version was deployed to Render and its supervisor dashboard was opened successfully. The current local venue and interface changes have not yet been verified on that hosted version.
+This is an academic prototype with deployment preparation in progress. The original `run.py` enables debug mode, and `config.py` retains a development secret for local use. Public hosting must use `wsgi:app`, which requires explicit production settings and disables debug mode. An earlier version was deployed to Render and its supervisor dashboard was opened successfully. The current local venue, interface and task-progress changes have not yet been verified on that hosted version.
 
 ## Deployment preparation: Render and Neon
 
-Neon stores the PostgreSQL database; Render hosts the Flask website and saved ML inference. An earlier deployment reached the login page and supervisor dashboard successfully. The checks below describe that earlier setup; this issue does not update Neon or Render. Before deploying the venue-enabled code, apply and verify the corresponding PostgreSQL migration and directory setup separately.
+Neon stores the PostgreSQL database; Render hosts the Flask website and saved ML inference. An earlier deployment reached the login page and supervisor dashboard successfully. The checks below describe that earlier setup; this issue does not update Neon or Render. Before deploying the current code, apply and verify the venue and task-progress migrations and directory setup on PostgreSQL separately. Do not point code that expects the new timestamp columns at a database without those columns.
 
 ### Database setup (new installations only)
 
@@ -265,6 +286,15 @@ Earlier local verification reported by the project owner on **26 October 2026**:
 
 For issue #52, the project owner subsequently confirmed the test suite and local login, administrator location forms and accessibility checks were working. Focused verification of the login/location error changes passed **26 tests**, including Create Task error regressions. The preference JavaScript tests passed **6 tests**. Use the current test run output for the full-suite total; the 112-test result above is a historical milestone.
 
+For issue #54 (30 October 2026), the project owner confirmed:
+
+- The migration rehearsal and port-5001 upgrade preserved all existing records, with integrity and foreign-key checks passing.
+- **39 focused tests passed** for protected completion, starting tasks, the worker dashboard and existing workflow checks.
+- **26 focused tests passed** for supervisor progress, dashboard overview, completion and starting tasks. These groups overlap and must not be added together as a full-suite total.
+- Worker start/completion times and supervisor totals/status displays work on port 5001.
+
+Final local verification for issue #54: **159 application and ML tests passed**, with 31 existing SQLAlchemy/Flask-SQLAlchemy deprecation warnings; **6 accessibility-preference JavaScript tests passed**. `git diff --check` reported no whitespace errors. The venue schema check now compares current models after applying the latest migration, while retaining historical venue and rollback checks. Focused tests cover ownership, form tokens, invalid transitions, repeat requests, workload boundaries, timestamp preservation, Kenya-time display, supervisor scoping and status filtering. The updated production workflow helper now starts work and supplies progress form tokens; its updated integration run remains pending. PostgreSQL migration verification and a public hosted workflow test remain separate release work.
+
 Run the combined suite and browser-preference unit tests from the project root:
 
 ```powershell
@@ -297,7 +327,7 @@ Application task cities are Nairobi, Mombasa, Kisumu, Nakuru, and Eldoret, with 
 
 The shared IntelliTask theme uses a local SVG logo, stylesheet and small navigation script. No chart service, CDN or additional Python package is required. Task charts use real application counts. The supervisor overview shows only that supervisor's tasks and supports name search, status filters, overdue indicators and ten-row pagination. Deadline comparisons use Kenya time. Worker names and service labels retain their source bindings as described above.
 
-Role navigation links to implemented pages, including administrator work locations. The agent dashboard supports task filtering, deadline sorting, details and completion. Start/In Progress transitions, reports, broader account management, Google signup and OTP verification remain future work. See [the role feature plan](docs/ROLE_FEATURE_PLAN.md).
+Role navigation links to implemented pages, including administrator work locations. The agent dashboard supports task filtering, deadline sorting, details and the Assigned → In progress → Completed workflow. Reports, broader account management, Google signup and OTP verification remain future work. See [the role feature plan](docs/ROLE_FEATURE_PLAN.md).
 
 The latest project test total is recorded above. The user has reviewed the local supervisor and agent dashboards and administrator locations page. Current local changes have not yet been verified or published on Render.
 

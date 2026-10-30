@@ -17,16 +17,18 @@ Automated tests cover empty dashboards, owner-scoped metrics, literal search, fi
 ## Supervisor: remaining issues to create
 
 1. **Add supervisor reports and CSV export**: task status, completion and deadlines, date filters, and owner-scoped exports. Keep application activity separate from offline ML evaluation.
-2. **Improve task monitoring and assignment history**: assigned worker, lifecycle timestamps, overdue views and status history. Do not infer dates or outcomes that were never recorded.
+2. **Extend task monitoring and assignment history**: assigned-worker details and a full status-event history. Issue #54 already adds in-progress totals/filters and recorded start/completion times. Do not infer dates or outcomes that were never recorded.
 
 Existing: login, task creation, recommendation explanations, assignment, and the task overview. Reports are not implemented yet.
 
 ## Onboarding agent: remaining issues to create
 
-1. **Add a complete worker task lifecycle**: allow starting an assigned task, track In Progress and Completed separately, retain event history and enforce ownership, valid transitions, CSRF protection and repeat-action handling.
+1. **Consider a full task event history**: issue #54 records the first start and completion timestamps, but does not maintain an event/audit log. Scope any additional transitions separately.
+
+Completed locally under issue #54: Assigned → In progress → Completed, ownership and form-token checks, atomic status/workload changes, repeat-action protection, timestamp display and supervisor progress summaries.
 Completed locally under issue #48: worker dashboard with deadline sorting, task counts, filters, pagination and task details. Issue #49 adds saved venue/address/reporting instructions.
 
-Existing: login support, the improved assigned-task dashboard and completion. Selected local demonstration logins can be enabled explicitly; fresh imported accounts remain disabled for login. Production worker identity provisioning is separate work. Never attach a real new account to an unrelated dataset worker's history.
+Existing: login support, the improved assigned-task dashboard, starting work and protected completion. Selected local demonstration logins can be enabled explicitly; fresh imported accounts remain disabled for login. Production worker identity provisioning is separate work. Never attach a real new account to an unrelated dataset worker's history.
 
 ## Administrator: remaining issues to create
 
@@ -42,8 +44,8 @@ Existing under issue #49: administrator overview, venue listing/filtering, addin
 
 ## Delivery order
 
-1. Commit the locally tested issue #49 venue integration and task-title/services form; complete manual workflow review before release.
-2. Complete issue #48 Start/In Progress lifecycle and monitoring.
+1. Issue #49 venue integration and issue #52 accessibility changes have been merged.
+2. Finish full-suite verification, documentation and review of issue #54 task progress before merging.
 3. Implement remaining administrator account/service management.
 4. Implement verified signup and recovery.
 5. Add reporting and exports.

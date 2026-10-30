@@ -31,6 +31,11 @@ class TaskAssignment(db.Model):
         default=datetime.now
     )
 
+    # UTC timestamps, stored without timezone offsets. Historical times remain
+    # unknown (NULL); only an explicit progress action should populate them.
+    started_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+
     status = db.Column(
         db.String(30),
         default="Assigned"

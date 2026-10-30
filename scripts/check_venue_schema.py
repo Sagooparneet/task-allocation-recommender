@@ -77,11 +77,20 @@ def verify_in_temporary_directory(folder):
             assert WorkVenue.query.filter_by(city='Nairobi').count() == 2
             print('Historical location preserved after venue edits: PASS')
             print('Multiple venues per city: PASS')
+            # Venue-specific assertions above intentionally run at its historic
+            # revision. Compare current models only with the current schema.
+            db.session.remove()
+            upgrade(directory=migrations, revision='head')
             with db.engine.connect() as connection:
                 changes = compare_metadata(MigrationContext.configure(connection), db.metadata)
                 assert not changes, f'Model/migration mismatch: {changes}'
-            print('Migration matches application models: PASS')
+            assert tuple(db.session.execute(text('SELECT * FROM tasks WHERE id=1')).one()) == before
+            assert db.session.get(TaskVenueDetails, 1).address == original_address
+            print('Latest migration matches application models and preserves venue snapshot: PASS')
 
+            db.session.remove()
+            downgrade(directory=migrations, revision=VENUE_REVISION)
+            assert db.session.get(TaskVenueDetails, 1).address == original_address
             db.session.remove()
             downgrade(directory=migrations, revision=BASE_REVISION)
             assert 'work_venues' not in inspect(db.engine).get_table_names()
