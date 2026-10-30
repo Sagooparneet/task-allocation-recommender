@@ -93,7 +93,11 @@ def test_agent_dashboard_requires_agent_role(app, client):
 def test_completion_updates_dashboard_and_hides_repeat_action(app, client):
     assignment_id = add_task(app, 'Finish this task')
     login(client)
-    response = client.post(f'/agent/assignment/{assignment_id}/complete', follow_redirects=True)
+    client.get('/agent/dashboard')
+    with client.session_transaction() as session:
+        data = {'task_progress_csrf_token': session['task_progress_csrf_token']}
+    client.post(f'/agent/assignment/{assignment_id}/start', data=data)
+    response = client.post(f'/agent/assignment/{assignment_id}/complete', data=data, follow_redirects=True)
     assert response.status_code == 200
     assert b'Work finished' in response.data
     assert b'Mark complete</button>' not in response.data

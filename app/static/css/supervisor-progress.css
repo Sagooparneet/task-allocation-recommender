@@ -1,0 +1,15 @@
+/* Progress labels remain explicit: colour is an additional cue only. */
+.it-progress-metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
+.it-progress-metrics .it-metric-icon.progress,
+.it-theme .it-status.in-progress { background: var(--role-soft); color: var(--role-accent); border: 1px solid currentColor; }
+.it-legend i.progress { background: #9368b7; }
+.it-progress-donut {
+    background: conic-gradient(#168e7c 0 var(--done), #9368b7 var(--done) var(--working),
+        #678fb5 var(--working) var(--assigned), #e3b052 var(--assigned) var(--pending),
+        #5d7179 var(--pending) 100%);
+}
+.it-table .it-progress-time { display: block; white-space: normal; min-width: 11rem; }
+@media (forced-colors: active) {
+    .it-progress-donut { border: 2px solid CanvasText; }
+    .it-legend i { border: 1px solid CanvasText; }
+}

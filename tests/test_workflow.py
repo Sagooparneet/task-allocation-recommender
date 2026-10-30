@@ -393,9 +393,12 @@ def test_agent_can_complete_assigned_task(app, client):
         agent_id = agent.id
 
     login_agent(client)
+    progress_data = progress_form(client)
+    client.post(f"/agent/assignment/{assignment_id}/start", data=progress_data)
 
     response = client.post(
         f"/agent/assignment/{assignment_id}/complete",
+        data=progress_data,
         follow_redirects=True
     )
 
@@ -463,9 +466,12 @@ def test_workload_cannot_go_below_zero(app, client):
         agent_id = agent.id
 
     login_agent(client)
+    progress_data = progress_form(client)
+    client.post(f"/agent/assignment/{assignment_id}/start", data=progress_data)
 
     response = client.post(
         f"/agent/assignment/{assignment_id}/complete",
+        data=progress_data,
         follow_redirects=True
     )
 
@@ -579,10 +585,11 @@ def test_agent_cannot_complete_another_agents_task(app, client):
 
     response = client.post(
         f"/agent/assignment/{assignment_id}/complete",
+        data=progress_form(client),
         follow_redirects=True
     )
 
-    assert b"You are not allowed to update this assignment" in response.data
+    assert response.status_code == 404
 
     with app.app_context():
 
@@ -648,3 +655,9 @@ def test_direct_source_capability_recommendation_reaches_page(app, client):
     assert result["agent_name"].encode() in response.data
     assert f'name="agent_id" value="{result["agent_id"]}"'.encode() in response.data
     assert b'assignment_csrf_token' in response.data
+
+
+def progress_form(client):
+    assert client.get('/agent/dashboard').status_code == 200
+    with client.session_transaction() as session:
+        return {'task_progress_csrf_token': session['task_progress_csrf_token']}

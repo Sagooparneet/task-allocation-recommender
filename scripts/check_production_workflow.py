@@ -73,6 +73,15 @@ def run_check(project, temporary_parent=None):
                 # Only this disposable copy is extended for the new workflow.
                 # This is not a live database migration check.
                 db.create_all()
+                # Older deployment-test backups predate the progress columns.
+                # Adapt only this disposable copy; schema migration is tested
+                # separately by check_task_progress_schema.py.
+                from sqlalchemy import inspect, text
+                assignment_columns = {c['name'] for c in inspect(db.engine).get_columns('task_assignments')}
+                for column in ('started_at', 'completed_at'):
+                    if column not in assignment_columns:
+                        db.session.execute(text(f'ALTER TABLE task_assignments ADD COLUMN {column} DATETIME'))
+                db.session.commit()
                 from app.services.initial_work_venues import add_initial_venues
                 add_initial_venues(db.session)
                 db.session.commit()
@@ -140,8 +149,12 @@ def run_check(project, temporary_parent=None):
                 response = client.get('/agent/dashboard', base_url=base)
                 require(response.status_code == 200 and title.encode() in response.data,
                         'Assigned task missing from worker dashboard.')
+                with client.session_transaction(base_url=base) as session:
+                    progress_data = {'task_progress_csrf_token': session['task_progress_csrf_token']}
+                response = client.post(f'/agent/assignment/{assignment_id}/start', base_url=base, data=progress_data)
+                require(response.status_code == 302, 'Start request failed.')
                 for _ in range(2):
-                    response = client.post(f'/agent/assignment/{assignment_id}/complete', base_url=base)
+                    response = client.post(f'/agent/assignment/{assignment_id}/complete', base_url=base, data=progress_data)
                     require(response.status_code == 302, 'Completion request failed.')
                 with app.app_context():
                     require(db.session.get(Task, task_id).status == 'Completed', 'Task not completed.')
@@ -149,7 +162,10 @@ def run_check(project, temporary_parent=None):
                             'Assignment not completed.')
                     require(db.session.get(OnboardingAgent, agent_id).workload == workload,
                             'Completion did not restore workload correctly.')
-                print('Worker dashboard, completion, and repeat completion: PASS')
+                    saved = db.session.get(TaskAssignment, assignment_id)
+                    require(saved.started_at is not None and saved.completed_at is not None, 'Progress timestamps missing.')
+                    require(saved.completed_at >= saved.started_at, 'Completion precedes start.')
+                print('Worker dashboard, start, completion, and repeat completion: PASS')
         finally:
             if app is not None:
                 with app.app_context():
