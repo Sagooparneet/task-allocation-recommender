@@ -142,7 +142,14 @@ def test_missing_required_task_fields(app, client):
         follow_redirects=True
     )
 
-    assert b"Task title and location are required" in response.data
+    assert response.status_code == 200
+    assert b"Please enter a task title." in response.data
+    assert b'href="#task_type"' in response.data
+    assert b'id="task_type-error"' in response.data
+    assert b'id="location-error"' not in response.data
+    with app.app_context():
+        assert Task.query.count() == 0
+        assert TaskSkill.query.count() == 0
 
 
 def test_task_requires_skill(client):

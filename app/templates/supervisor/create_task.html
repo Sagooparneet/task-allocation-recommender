@@ -6,10 +6,18 @@ Create New Task | IntelliTask
 
 
 {% block extra_styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}">
+<script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/task-venues.css') }}">
 <script src="{{ url_for('static', filename='js/task-venues.js') }}" defer></script>
 {% endblock %}
 {% block content %}
+{% macro error_attributes(field, help_id='') -%}
+{% if field in form_errors %}aria-invalid="true" aria-describedby="{{ help_id }} {{ field }}-error"{% elif help_id %}aria-describedby="{{ help_id }}"{% endif %}
+{%- endmacro %}
+{% macro field_error(field) -%}
+{% if field in form_errors %}<p class="form-field-error" id="{{ field }}-error"><strong>Error:</strong> {{ form_errors[field] }}</p>{% endif %}
+{%- endmacro %}
 
 <div class="create-task-page">
 
@@ -39,13 +47,21 @@ Create New Task | IntelliTask
     </div>
 
 
+    {% if form_errors %}
+    <section class="form-error-summary" id="form-error-summary" tabindex="-1" aria-labelledby="form-error-heading">
+        <h2 id="form-error-heading">{% if '__all__' in form_errors %}Your task was not saved{% else %}Please fix {{ form_errors|length }} {{ 'problem' if form_errors|length == 1 else 'problems' }} before creating this task{% endif %}</h2>
+        <ul>{% for field, message in form_errors.items() %}
+            <li>{% if field == '__all__' %}{{ message }}{% else %}<a href="#{{ field }}">{{ message }}</a>{% endif %}</li>
+        {% endfor %}</ul>
+    </section>
+    {% endif %}
     <!-- FORM CARD -->
 
     <div class="create-task-card">
 
         <form
             method="POST"
-            class="create-task-form"
+            class="create-task-form" novalidate
         >
 
             <input type="hidden" name="task_create_csrf_token" value="{{ task_create_csrf_token }}">
@@ -53,9 +69,10 @@ Create New Task | IntelliTask
                 <label for="task_type">Task title <span class="required-mark">*</span></label>
                 <p class="field-help" id="task-title-help">Give this job a short, clear name. Choose the services it needs below.</p>
                 <input type="text" id="task_type" name="task_type" required maxlength="100"
-                    aria-describedby="task-title-help"
+                    {{ error_attributes('task_type', 'task-title-help') }}
                     value="{{ request.form.get('custom_task_type', '') if request.form.get('task_type') == '__other__' else request.form.get('task_type', '') }}"
                     placeholder="e.g. Register new customers at KICC">
+                {{ field_error('task_type') }}
             </div>
 
             <!-- DESCRIPTION -->
@@ -82,17 +99,18 @@ Create New Task | IntelliTask
 
             <!-- REQUIRED SKILLS -->
 
-            <div class="form-group">
+            <fieldset class="form-group services-fieldset" id="required_skills" tabindex="-1" {{ error_attributes('required_skills', 'services-help') }}>
 
-                <label>
+                <legend>
                     Services needed
                     <span class="required-mark">*</span>
-                </label>
+                </legend>
 
-                <p class="field-help">
+                <p class="field-help" id="services-help">
                     Choose one or more services the agent will carry out. These selections are used to find suitable workers.
                 </p>
 
+                {{ field_error('required_skills') }}
                 {% if skills %}
 
                     <div class="skill-selection-grid">
@@ -103,7 +121,7 @@ Create New Task | IntelliTask
 
                                 <input
                                     type="checkbox"
-                                    name="required_skills"
+                                    name="required_skills" {{ error_attributes('required_skills', 'services-help') }}
                                     value="{{ skill.id }}"
                                     {% if skill.id|string in request.form.getlist("required_skills") %}checked{% endif %}
                                 >
@@ -130,7 +148,7 @@ Create New Task | IntelliTask
 
                 {% endif %}
 
-            </div>
+            </fieldset>
 
 
 <!-- LOCATION + PRIORITY -->
@@ -148,7 +166,7 @@ Create New Task | IntelliTask
                         Choose where this task will be carried out.
                     </p>
 
-                    <select id="location" name="location" required>
+                    <select id="location" name="location" required {{ error_attributes('location', '') }}>
                         <option value="" disabled {% if request.form.get('location') not in locations %}selected{% endif %}>
                             Select a location
                         </option>
@@ -158,6 +176,7 @@ Create New Task | IntelliTask
                         </option>
                         {% endfor %}
                     </select>
+                {{ field_error('location') }}
 
                 </div>
 
@@ -175,7 +194,7 @@ Create New Task | IntelliTask
                     <select
                         id="priority"
                         name="priority"
-                    >
+                     {{ error_attributes('priority', '') }}>
                         <option value="Low" {% if request.form.get("priority") == "Low" %}selected{% endif %}>
                             Low
                         </option>
@@ -192,6 +211,7 @@ Create New Task | IntelliTask
                         </option>
 
                     </select>
+                {{ field_error('priority') }}
 
                 </div>
 
@@ -202,18 +222,22 @@ Create New Task | IntelliTask
                 <div class="form-group">
                     <label for="venue_id">Work location <span class="required-mark">*</span></label>
                     <p class="field-help">Choose a service point in your selected city.</p>
-                    <select id="venue_id" name="venue_id" required>
+                    <select id="venue_id" name="venue_id" required {{ error_attributes('venue_id', 'venue-hint') }}>
                         <option value="">Choose a work location</option>
                         {% for venue in venues %}
                         <option value="{{ venue.id }}" data-city="{{ venue.city }}" data-address="{{ venue.address }}" data-directions="{{ venue.directions or '' }}" {% if request.form.get('venue_id') == venue.id|string %}selected{% endif %}>{{ venue.name }} — {{ venue.city }}</option>
                         {% endfor %}
                     </select>
+                {{ field_error('venue_id') }}
                     <p id="venue-hint" class="field-help" aria-live="polite">{% if not venues %}No active work locations are available. Ask your administrator to add one.{% else %}Select a city, then a work location.{% endif %}</p>
                     <div id="venue-preview" class="tv-preview" hidden><strong>Address</strong><p id="venue-address"></p><p id="venue-directions"></p></div>
                 </div>
-                <div class="form-group"><label for="reporting_point">Reporting point <span class="required-mark">*</span></label><p class="field-help">Enter the confirmed desk, entrance or room where the agent should report.</p><input type="text" id="reporting_point" name="reporting_point" maxlength="200" required value="{{ request.form.get('reporting_point', '') }}" placeholder="e.g. Main reception"></div>
-                <div class="form-group"><label for="location_instructions">Arrival instructions (optional)</label><textarea id="location_instructions" name="location_instructions" maxlength="2000" rows="3">{{ request.form.get('location_instructions', '') }}</textarea></div>
-                <div class="form-group"><label for="location_contact">Contact person or number (optional)</label><input type="text" id="location_contact" name="location_contact" maxlength="250" value="{{ request.form.get('location_contact', '') }}"></div>
+                <div class="form-group"><label for="reporting_point">Reporting point <span class="required-mark">*</span></label><p class="field-help">Enter the confirmed desk, entrance or room where the agent should report.</p><input type="text" id="reporting_point" name="reporting_point" maxlength="200" required value="{{ request.form.get('reporting_point', '') }}" placeholder="e.g. Main reception" {{ error_attributes('reporting_point', '') }}>
+                {{ field_error('reporting_point') }}</div>
+                <div class="form-group"><label for="location_instructions">Arrival instructions (optional)</label><textarea id="location_instructions" name="location_instructions" maxlength="2000" rows="3" {{ error_attributes('location_instructions', '') }}>{{ request.form.get('location_instructions', '') }}</textarea>
+                {{ field_error('location_instructions') }}</div>
+                <div class="form-group"><label for="location_contact">Contact person or number (optional)</label><input type="text" id="location_contact" name="location_contact" maxlength="250" value="{{ request.form.get('location_contact', '') }}" {{ error_attributes('location_contact', '') }}>
+                {{ field_error('location_contact') }}</div>
             </fieldset>
 
             <!-- DEADLINE -->
@@ -236,7 +260,8 @@ Create New Task | IntelliTask
                     required
                     min="{{ deadline_min }}"
                     value="{{ request.form.get('deadline', '') }}"
-                >
+                 {{ error_attributes('deadline', '') }}>
+                {{ field_error('deadline') }}
 
             </div>
 

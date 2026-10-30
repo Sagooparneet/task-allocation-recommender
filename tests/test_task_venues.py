@@ -148,3 +148,20 @@ def test_legacy_task_stays_city_only_and_other_supervisor_cannot_read(app, clien
     client.get('/auth/logout')
     login(client, 'other@test.com')
     assert client.get(f'/supervisor/task/{task_id}/recommendations').status_code == 403
+
+
+def test_deactivated_venue_is_rechecked_even_when_cached(app, client):
+    login(client)
+    data = payload(client)
+    # Hold the record in the request session while a separate session updates it.
+    cached_venue = db.session.get(WorkVenue, int(data['venue_id']))
+    assert cached_venue.is_active is True
+    with app.app_context():
+        venue = db.session.get(WorkVenue, cached_venue.id)
+        venue.is_active = False
+        db.session.commit()
+    assert cached_venue.is_active is True
+    response = client.post('/supervisor/task/create', data=data)
+    assert response.status_code == 200
+    assert b'Please choose an active work location' in response.data
+    assert Task.query.count() == TaskSkill.query.count() == TaskVenueDetails.query.count() == 0

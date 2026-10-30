@@ -1,0 +1,19 @@
+.form-error-summary { border: 3px solid #a12622; border-radius: 12px; padding: 20px; margin: 0 0 24px; background: #fff5f4; color: #721c18; }
+.form-error-summary h2 { font-size: 1.2rem; margin: 0 0 12px; color: inherit; }
+.form-error-summary ul { margin: 0; padding-left: 24px; }
+.form-error-summary li { margin: 8px 0; }
+body.it-theme .form-error-summary a { color: inherit; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+body.it-theme .form-field-error { color: #a12622; font-size: 1rem; margin: 8px 0; line-height: 1.5; }
+body.it-theme :is(.create-task-form, .accessible-form) [aria-invalid="true"] { border: 2px solid #a12622 !important; }
+body.it-theme :is(.create-task-form, .accessible-form) input[type="checkbox"][aria-invalid="true"] { outline: 2px solid #a12622; outline-offset: 2px; }
+.services-fieldset { min-width: 0; border: 0; padding: 0; }
+.services-fieldset legend { font-weight: 700; padding: 0; }
+.services-fieldset[aria-invalid="true"] { padding: 12px; border-radius: 8px; }
+html[data-appearance="dark"] body.it-theme .form-error-summary { color: #ffd5d1; background: #381c20; border-color: #ffa9a3; }
+html[data-appearance="dark"] body.it-theme .form-field-error { color: #ffa9a3; }
+html[data-appearance="dark"] body.it-theme :is(.create-task-form, .accessible-form) [aria-invalid="true"] { border-color: #ffa9a3 !important; }
+html[data-appearance="dark"] body.it-theme :is(.create-task-form, .accessible-form) input[type="checkbox"][aria-invalid="true"] { outline-color: #ffa9a3; }
+@media (forced-colors: active) {
+    body.it-theme .form-error-summary, body.it-theme :is(.create-task-form, .accessible-form) [aria-invalid="true"] { border-color: CanvasText !important; }
+    body.it-theme .form-field-error { color: CanvasText; }
+}
