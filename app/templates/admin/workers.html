@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Workers | IntelliTask{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-venues.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/admin-workers.css') }}">{% endblock %}
+{% block content %}
+<div class="aw-directory">
+<div class="av-header"><div><p class="av-eyebrow">YOUR TEAM</p><h1>Workers</h1><p>Find a worker and see how their work is progressing.</p></div></div>
+<form method="get" class="av-filters av-panel" role="search">
+    <div><label for="worker-search">Name, email or worker number</label><input type="search" id="worker-search" name="q" value="{{ search }}" maxlength="100"></div>
+    <div><label for="worker-availability">New assignments</label><select id="worker-availability" name="availability"><option value="">All workers</option><option value="available" {% if availability == 'available' %}selected{% endif %}>Available</option><option value="unavailable" {% if availability == 'unavailable' %}selected{% endif %}>Unavailable</option></select></div>
+    <button class="av-button" type="submit">Apply filters</button><a href="{{ url_for('admin.workers') }}">Clear</a>
+</form>
+<section class="it-card" aria-labelledby="worker-list-title">
+<div class="it-card-heading"><h2 id="worker-list-title">Worker directory</h2><span class="it-count">{{ page.total }} result{{ '' if page.total == 1 else 's' }}</span></div>
+{% if page.items %}<div class="it-table-scroll" tabindex="0" role="region" aria-label="Workers table"><table class="it-table">
+<thead><tr><th scope="col">Worker</th><th scope="col">Email</th><th scope="col">New assignments</th><th scope="col">Active tasks</th><th scope="col"><span class="it-sr-only">Action</span></th></tr></thead>
+<tbody>{% for worker in page.items %}<tr>
+<th scope="row">{{ names[worker.id] }}<small>Worker #{{ worker.id }}</small></th>
+<td>{{ worker.email }}</td><td>{{ 'Available' if worker.availability else 'Unavailable' }}</td>
+<td>{{ active_counts.get(worker.id, 0) }}</td><td><a class="it-table-action" href="{{ url_for('admin.worker_profile', worker_id=worker.id) }}">View profile<span class="it-sr-only"> for {{ names[worker.id] }}</span> →</a></td>
+</tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="it-empty"><h3>No workers found</h3><p>Try another search or clear the filters.</p></div>{% endif %}
+{% if page.pages > 1 %}<nav class="av-pagination" aria-label="Worker pages">{% if page.has_prev %}<a href="{{ url_for('admin.workers', page=page.prev_num, q=search, availability=availability) }}">← Previous</a>{% endif %}<span>Page {{ page.page }} of {{ page.pages }}</span>{% if page.has_next %}<a href="{{ url_for('admin.workers', page=page.next_num, q=search, availability=availability) }}">Next →</a>{% endif %}</nav>{% endif %}
+</section>
+</div>
+{% endblock %}

@@ -88,7 +88,7 @@ class NetEaseRecommendationService:
             skills_by_agent.setdefault(agent_id, set()).add(skill_name)
 
         candidates = {}
-        for agent in OnboardingAgent.query.filter_by(availability=True).all():
+        for agent in OnboardingAgent.query.filter_by(availability=True, account_disabled=False).all():
             source_id = bindings.get(str(agent.id))
             if source_id is None:
                 continue
@@ -131,7 +131,7 @@ class NetEaseRecommendationService:
                 **row,
                 'agent_display_id': row['agent_id'],
                 'agent_id': agent.id,  # Existing assignment endpoint expects the DB primary key.
-                'agent_name': worker_display_name(row['source_worker_id']),
+                'agent_name': agent.profile_display_name or worker_display_name(row['source_worker_id']),
                 'task_id': task.id,
                 'task_type': task.task_type,
                 'match_percentage': round(row['score'] * 100, 2),

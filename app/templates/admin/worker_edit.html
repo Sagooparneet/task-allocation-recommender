@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% from 'ui/form_errors.html' import summary, attributes, inline_error %}
+{% block title %}Edit worker name | IntelliTask{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-venues.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}"><script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script>{% endblock %}
+{% block content %}
+<a href="{{ url_for('admin.worker_profile', worker_id=worker.id) }}">← Back to worker profile</a>
+<div class="av-header"><div><p class="av-eyebrow">WORKER #{{ worker.id }}</p><h1>Edit display name</h1><p>Choose the name your team will see for this worker.</p></div></div>
+<form method="post" class="av-panel av-form accessible-form" novalidate>
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="original_display_name" value="{{ original }}">
+{{ summary(errors, 'Please check the name before saving') }}
+<div><label for="display_name">Display name *</label><input id="display_name" name="display_name" value="{{ value }}" maxlength="100" required autocomplete="off" {{ attributes(errors, 'display_name') }}>{{ inline_error(errors, 'display_name') }}</div>
+<p><strong>Account email:</strong> {{ worker.email }}</p>
+<div class="av-actions"><button class="av-button" type="submit">Save changes</button><a href="{{ url_for('admin.worker_profile', worker_id=worker.id) }}">Cancel</a></div>
+</form>
+{% endblock %}

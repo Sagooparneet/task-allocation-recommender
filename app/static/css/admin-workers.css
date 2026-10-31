@@ -1,0 +1,7 @@
+.aw-directory .av-panel { margin-bottom: 24px; }
+.aw-directory .av-filters input[type="search"] { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--it-line); border-radius: 9px; font: inherit; color: var(--it-ink); background: var(--settings-surface, #fff); }
+.aw-directory .it-table th[scope="row"] { font-weight: 600; color: var(--it-ink); }
+.aw-directory .it-table th[scope="row"] small { display: block; font-weight: normal; }
+.aw-directory .av-pagination { flex-wrap: wrap; }
+.aw-directory .av-panel p, .aw-directory .av-header p { overflow-wrap: anywhere; }
+.aw-directory .it-table th, .aw-directory .it-table td { overflow-wrap: anywhere; }

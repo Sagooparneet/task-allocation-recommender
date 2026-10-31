@@ -9,12 +9,15 @@ class OnboardingAgent(UserMixin, db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    # Presentation only; original name, email and source binding remain intact.
+    profile_display_name = db.Column(db.String(100), nullable=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
 
     specialization = db.Column(db.String(100))
     location = db.Column(db.String(100))
     availability = db.Column(db.Boolean, default=True)
+    account_disabled = db.Column(db.Boolean, nullable=False, default=False, server_default=db.false())
     workload = db.Column(db.Integer, default=0)
     performance_score = db.Column(db.Float, default=0.0)
 
@@ -26,6 +29,10 @@ class OnboardingAgent(UserMixin, db.Model):
 
     def get_id(self):
         return f"agent:{self.id}"
+
+    @property
+    def is_active(self):
+        return not self.account_disabled
 
     @property
     def role(self):

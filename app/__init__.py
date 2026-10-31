@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, session
 from flask_login import current_user
 
 from config import Config
@@ -53,10 +53,14 @@ def create_app(test_config=None):
             )
 
         if role == "agent":
-            return db.session.get(
-                OnboardingAgent,
-                record_id
-            )
+            worker = db.session.get(OnboardingAgent, record_id, populate_existing=True)
+            if worker is not None and worker.account_disabled:
+                # Revoke the browser session when its account is deactivated.
+                for key in ('_user_id', '_fresh', '_id'):
+                    session.pop(key, None)
+                session['_remember'] = 'clear'
+                return None
+            return worker
 
         if role == "administrator":
             return db.session.get(

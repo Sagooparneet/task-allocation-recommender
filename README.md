@@ -122,7 +122,7 @@ The runner uses `instance/netease_setup_test` explicitly, a separate session coo
 
 ### Current port-5001 installation and task workflow
 
-The existing `instance/netease_setup_test` installation has been backed up and upgraded to migration `54b01c8d3e40` (task progress), following `49a01b7c2d30` (work venues). It has the five initial venues and a separately provisioned administrator. Start it with:
+The existing `instance/netease_setup_test` installation has been backed up and upgraded to migration `56b02e0f5a60` (worker account status), following `56a01d9e4f50` (worker display names), `54b01c8d3e40` (task progress) and `49a01b7c2d30` (work venues). It has the five initial venues and a separately provisioned administrator. Start it with:
 
 ```powershell
 python run_netease_test.py
@@ -188,7 +188,7 @@ This is an academic prototype with deployment preparation in progress. The origi
 
 ## Deployment preparation: Render and Neon
 
-Neon stores the PostgreSQL database; Render hosts the Flask website and saved ML inference. An earlier deployment reached the login page and supervisor dashboard successfully. The checks below describe that earlier setup; this issue does not update Neon or Render. Before deploying the current code, apply and verify the venue and task-progress migrations and directory setup on PostgreSQL separately. Do not point code that expects the new timestamp columns at a database without those columns.
+Neon stores the PostgreSQL database; Render hosts the Flask website and saved ML inference. An earlier deployment reached the login page and supervisor dashboard successfully. The checks below describe that earlier setup; this issue does not update Neon or Render. Before deploying the current code, apply and verify the venue, task-progress and worker-management migrations and directory setup on PostgreSQL separately. Current code requires the progress timestamps, profile_display_name and account_disabled columns; the local upgrade helpers must not be used against Neon.
 
 ### Database setup (new installations only)
 
@@ -308,7 +308,7 @@ These checks establish the tested prototype workflows, not full production readi
 
 ## Supervisor interface conventions
 
-Names shown for imported workers are synthetic demonstration aliases from the saved display profiles. Original source-worker IDs and database bindings remain unchanged. Aliases do not affect model scores or represent the real identities of NetEase workers.
+Names shown for imported workers default to synthetic demonstration aliases from the saved display profiles. Administrators may override the displayed name without replacing the original source identity. Original source-worker IDs and database bindings remain unchanged. Aliases do not affect model scores or represent the real identities of NetEase workers.
 
 The interface uses these approved demonstration skill labels:
 
@@ -354,3 +354,21 @@ Task creation refreshes the selected venue record before validation so an outdat
 The project owner confirmed saved preferences, error links, retained entries, keyboard navigation, dark mode and large-text checks on port 5001. A dedicated screen-reader review, wider mobile/browser coverage and a full accessibility audit remain pending; these checks do not establish formal accessibility conformance. Neon and Render have not been updated as part of issue #52.
 
 Further details: [settings and appearance](docs/SETTINGS_AND_APPEARANCE.md), [Create Task errors](docs/ACCESSIBLE_TASK_FORM.md), and [login and location form errors](docs/LOGIN_LOCATION_ERRORS.md).
+
+
+## Administrator worker management — issue #56 checkpoint
+
+Implemented locally:
+
+- Worker directory with search, availability filtering, pagination and worker profiles showing services, actual assignment counts and task history.
+- Administrator editing of display names only. Original names, emails, source IDs, bindings and recommendation features are retained.
+- Availability controls governing new assignments. Unavailable workers may still sign in and complete existing work.
+- Account deactivation/reactivation with confirmation, administrator-only access, form tokens and protection against stale submissions. Deactivation refuses unfinished or inconsistent task/assignment statuses. Completed history is preserved.
+- Deactivated workers are excluded from login, protected-page access and new assignment eligibility. Existing sessions are cleared when a disabled account makes a request; already-running requests are not interrupted. Reactivation retains existing credentials and leaves availability off until an administrator deliberately restores it. It does not provision credentials for imported accounts.
+- Assignment-time checks reject workers disabled after candidate selection. Source histories, mappings, task records and workload are not rewritten by the account controls. Eligible-worker scores remain based on the existing model; changing eligibility can change the recommendation list.
+
+The local database upgrades were backed up and rehearsed before application. Both worker migrations and local backup/rehearsal/apply helpers are committed for reproducibility. Retain the backups; do not run upgrade helpers as routine startup commands.
+
+Verification reported by the project owner on **31 October 2026**: **202 application and ML tests passed**, with 37 deprecation warnings, and **6 accessibility-preference JavaScript tests passed**. Worker listing, profiles, name edits, availability and deactivation/reactivation were manually confirmed on port 5001. These results do not certify PostgreSQL concurrency or the public deployment. Neon and Render remain unchanged.
+
+This is a progress checkpoint, not closure of all account-management work. Controlled new-worker creation, self-service email/password changes, verified account provisioning and recovery remain pending. Never link a new real account to an unrelated dataset worker's history. The production workflow helper and hosted migration path need review for the new worker columns before release.

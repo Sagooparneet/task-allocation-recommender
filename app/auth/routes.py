@@ -51,7 +51,7 @@ def login():
         if not user:
             user = Administrator.query.filter_by(email=email).first()
 
-        if user and user.check_password(password):
+        if user and user.is_active and user.check_password(password):
 
             login_user(user)
 

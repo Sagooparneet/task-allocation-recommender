@@ -79,7 +79,10 @@ def dashboard():
     page = filtered.order_by(Task.created_at.desc(), Task.id.desc()).paginate(
         page=page_number, per_page=10, error_out=False)
     profiles = load_dataset_profiles()
-    workers = [profiles[key] for key in sorted(profiles, key=int)[:5]]
+    from app.services.worker_directory import directory_names
+    _, profile_names = directory_names(include_sources=True)
+    workers = [{**profiles[key], 'display_name': profile_names.get(key, profiles[key]['display_name'])}
+               for key in sorted(profiles, key=int)[:5]]
     progress_details = {}
     # Fetch only assignments for this supervisor's visible tasks, not the
     # full task history. Unknown historical timestamps remain undisplayed.
@@ -100,7 +103,7 @@ def dashboard():
         completed_tasks=completed, other_tasks=other,
         progress_details=progress_details,
         overdue_tasks=overdue, due_today=due_today,
-        available_agents=OnboardingAgent.query.filter_by(availability=True).count(),
+        available_agents=OnboardingAgent.query.filter_by(availability=True, account_disabled=False).count(),
         completion_percent=round(100 * completed / total) if total else 0,
         completed_end=100 * completed / total if total else 0,
         in_progress_end=100 * (completed + in_progress) / total if total else 0,
@@ -308,7 +311,8 @@ def assign_task(task_id):
         agent_update = db.session.execute(
             update(OnboardingAgent).where(
                 OnboardingAgent.id == agent_id,
-                OnboardingAgent.availability.is_(True)
+                OnboardingAgent.availability.is_(True),
+                OnboardingAgent.account_disabled.is_(False)
             ).values(workload=func.coalesce(OnboardingAgent.workload, 0) + 1)
             .execution_options(synchronize_session=False)
         )
