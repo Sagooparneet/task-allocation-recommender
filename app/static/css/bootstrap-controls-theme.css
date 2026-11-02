@@ -1,0 +1,135 @@
+/* Bootstrap component variables follow IntelliTask's role and appearance. */
+body.it-theme {
+    --bs-body-color: var(--it-ink);
+    --bs-body-bg: var(--settings-surface, #fff);
+    --bs-border-color: var(--control-border);
+    --bs-secondary-bg: var(--role-soft);
+    --bs-secondary-color: var(--it-muted);
+    --bs-border-radius: .5rem;
+}
+body.it-theme .btn {
+    --bs-btn-color: var(--it-ink);
+    --bs-btn-bg: transparent;
+    --bs-btn-border-color: var(--control-border);
+    --bs-btn-hover-color: var(--it-ink);
+    --bs-btn-hover-bg: var(--role-soft);
+    --bs-btn-hover-border-color: var(--role-accent);
+    --bs-btn-active-color: var(--it-ink);
+    --bs-btn-active-bg: var(--role-soft);
+    --bs-btn-active-border-color: var(--role-accent);
+    --bs-btn-disabled-color: var(--it-muted);
+    --bs-btn-disabled-border-color: var(--control-border);
+    font-size: 1rem;
+    min-height: 44px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+body.it-theme :is(.form-control, .form-select) {
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.5;
+    min-height: 44px;
+    color: var(--it-ink);
+    background-color: var(--settings-surface, #fff);
+    border-color: var(--control-border);
+}
+body.it-theme .form-select { padding-right: 2.5rem; }
+html[data-appearance="dark"] body.it-theme .form-select {
+    /* Native arrows follow colour-scheme without a dark SVG on dark surfaces. */
+    appearance: auto; background-image: none;
+}
+body.it-theme .form-control::placeholder { color: var(--it-muted); opacity: 1; }
+body.it-theme :is(.form-control, .form-select):disabled { opacity: .75; }
+body.it-theme :is(.form-control, .form-select)[aria-invalid="true"] { border-width: 2px; }
+@media (forced-colors: active) {
+    body.it-theme .form-select { appearance: auto; background-image: none; }
+}
+
+/* Cards and tables retain role colours and the active appearance settings. */
+body.it-theme .card {
+    --bs-card-color: var(--it-ink);
+    --bs-card-bg: var(--settings-surface, #fff);
+    --bs-card-border-color: var(--it-line);
+    --bs-card-border-radius: var(--it-radius, 1rem);
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+body.it-theme .table {
+    --bs-table-color: var(--it-ink);
+    --bs-table-bg: var(--settings-surface, #fff);
+    --bs-table-border-color: var(--it-line);
+    --bs-table-hover-color: var(--it-ink);
+    --bs-table-hover-bg: var(--role-soft);
+    margin-bottom: 0;
+}
+body.it-theme .table thead { --bs-table-bg: var(--role-soft); }
+body.it-theme .table-responsive { max-width: 100%; min-width: 0; }
+body.it-theme .table :is(th, td) { overflow-wrap: anywhere; }
+@media (forced-colors: active) {
+    body.it-theme .card { border: 1px solid CanvasText; }
+    body.it-theme .table { --bs-table-color: CanvasText; --bs-table-bg: Canvas; --bs-table-border-color: CanvasText; }
+    body.it-theme .table thead { --bs-table-bg: Canvas; }
+}
+
+/* Status meaning still comes from existing text and semantic colour classes. */
+body.it-theme .badge { white-space: normal; line-height: 1.5; font-size: .875rem; }
+body.it-theme .badge.it-priority { color: var(--it-ink); background: transparent; }
+body.it-theme .pagination {
+    --bs-pagination-color: var(--role-accent);
+    --bs-pagination-bg: var(--settings-surface, #fff);
+    --bs-pagination-border-color: var(--control-border);
+    --bs-pagination-hover-color: var(--it-ink);
+    --bs-pagination-hover-bg: var(--role-soft);
+    --bs-pagination-hover-border-color: var(--role-accent);
+    --bs-pagination-focus-color: var(--it-ink);
+    --bs-pagination-focus-bg: var(--role-soft);
+    width: 100%; margin: 0; gap: .5rem; flex-wrap: wrap; align-items: center;
+}
+body.it-theme .pagination .page-link {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 44px; font-size: 1rem; margin: 0;
+    border-radius: .5rem; white-space: normal;
+    text-decoration: none; padding: .5rem .75rem;
+}
+body.it-theme .pagination .it-page-position {
+    color: var(--it-ink); background: transparent; border-color: transparent;
+}
+@media (forced-colors: active) {
+    body.it-theme .badge { border: 1px solid CanvasText; }
+    body.it-theme .pagination .page-link { border-color: ButtonText; }
+}
+
+/* Keep the existing role navigation and accessible mobile disclosure. */
+body.it-theme .it-nav.nav {
+    --bs-nav-link-color: #c8d9d8;
+    --bs-nav-link-hover-color: #ffffff;
+}
+body.it-theme .it-nav .nav-link {
+    min-height: 44px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+/* Messages stay visible until navigation; never disappear on a timer. */
+body.it-theme .it-feedback {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    border: 1px solid currentColor;
+    border-inline-start-width: 4px;
+}
+body.it-theme .it-feedback.info { color: #18466b; background: #edf5ff; }
+html[data-appearance="dark"] body.it-theme .it-feedback {
+    color: var(--it-ink);
+    background: var(--settings-surface);
+}
+html[data-contrast="strong"] body.it-theme .it-feedback {
+    color: var(--it-ink);
+    background: var(--settings-surface);
+    border: 2px solid currentColor;
+    border-inline-start-width: 4px;
+}
+@media (forced-colors: active) {
+    body.it-theme .it-feedback { color: CanvasText; background: Canvas; border-color: CanvasText; }
+}

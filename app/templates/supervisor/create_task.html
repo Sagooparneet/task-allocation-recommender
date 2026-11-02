@@ -6,6 +6,8 @@ Create New Task | IntelliTask
 
 
 {% block extra_styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/deadline-calendar.css') }}">
+<script src="{{ url_for('static', filename='js/deadline-calendar.js') }}" defer></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}">
 <script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/task-venues.css') }}">
@@ -68,7 +70,7 @@ Create New Task | IntelliTask
             <div class="form-group">
                 <label for="task_type">Task title <span class="required-mark">*</span></label>
                 <p class="field-help" id="task-title-help">Give this job a short, clear name. Choose the services it needs below.</p>
-                <input type="text" id="task_type" name="task_type" required maxlength="100"
+                <input class="form-control" type="text" id="task_type" name="task_type" required maxlength="100"
                     {{ error_attributes('task_type', 'task-title-help') }}
                     value="{{ request.form.get('custom_task_type', '') if request.form.get('task_type') == '__other__' else request.form.get('task_type', '') }}"
                     placeholder="e.g. Register new customers at KICC">
@@ -87,7 +89,7 @@ Create New Task | IntelliTask
                     Give the agent enough information to understand the task.
                 </p>
 
-                <textarea
+                <textarea class="form-control"
                     id="description"
                     name="description"
                     rows="5"
@@ -166,7 +168,7 @@ Create New Task | IntelliTask
                         Choose where this task will be carried out.
                     </p>
 
-                    <select id="location" name="location" required {{ error_attributes('location', '') }}>
+                    <select class="form-select" id="location" name="location" required {{ error_attributes('location', '') }}>
                         <option value="" disabled {% if request.form.get('location') not in locations %}selected{% endif %}>
                             Select a location
                         </option>
@@ -191,7 +193,7 @@ Create New Task | IntelliTask
                         Set the urgency of this task.
                     </p>
 
-                    <select
+                    <select class="form-select"
                         id="priority"
                         name="priority"
                      {{ error_attributes('priority', '') }}>
@@ -222,7 +224,7 @@ Create New Task | IntelliTask
                 <div class="form-group">
                     <label for="venue_id">Work location <span class="required-mark">*</span></label>
                     <p class="field-help">Choose a service point in your selected city.</p>
-                    <select id="venue_id" name="venue_id" required {{ error_attributes('venue_id', 'venue-hint') }}>
+                    <select class="form-select" id="venue_id" name="venue_id" required {{ error_attributes('venue_id', 'venue-hint') }}>
                         <option value="">Choose a work location</option>
                         {% for venue in venues %}
                         <option value="{{ venue.id }}" data-city="{{ venue.city }}" data-address="{{ venue.address }}" data-directions="{{ venue.directions or '' }}" {% if request.form.get('venue_id') == venue.id|string %}selected{% endif %}>{{ venue.name }} — {{ venue.city }}</option>
@@ -232,11 +234,11 @@ Create New Task | IntelliTask
                     <p id="venue-hint" class="field-help" aria-live="polite">{% if not venues %}No active work locations are available. Ask your administrator to add one.{% else %}Select a city, then a work location.{% endif %}</p>
                     <div id="venue-preview" class="tv-preview" hidden><strong>Address</strong><p id="venue-address"></p><p id="venue-directions"></p></div>
                 </div>
-                <div class="form-group"><label for="reporting_point">Reporting point <span class="required-mark">*</span></label><p class="field-help">Enter the confirmed desk, entrance or room where the agent should report.</p><input type="text" id="reporting_point" name="reporting_point" maxlength="200" required value="{{ request.form.get('reporting_point', '') }}" placeholder="e.g. Main reception" {{ error_attributes('reporting_point', '') }}>
+                <div class="form-group"><label for="reporting_point">Reporting point <span class="required-mark">*</span></label><p class="field-help">Enter the confirmed desk, entrance or room where the agent should report.</p><input class="form-control" type="text" id="reporting_point" name="reporting_point" maxlength="200" required value="{{ request.form.get('reporting_point', '') }}" placeholder="e.g. Main reception" {{ error_attributes('reporting_point', '') }}>
                 {{ field_error('reporting_point') }}</div>
-                <div class="form-group"><label for="location_instructions">Arrival instructions (optional)</label><textarea id="location_instructions" name="location_instructions" maxlength="2000" rows="3" {{ error_attributes('location_instructions', '') }}>{{ request.form.get('location_instructions', '') }}</textarea>
+                <div class="form-group"><label for="location_instructions">Arrival instructions (optional)</label><textarea class="form-control" id="location_instructions" name="location_instructions" maxlength="2000" rows="3" {{ error_attributes('location_instructions', '') }}>{{ request.form.get('location_instructions', '') }}</textarea>
                 {{ field_error('location_instructions') }}</div>
-                <div class="form-group"><label for="location_contact">Contact person or number (optional)</label><input type="text" id="location_contact" name="location_contact" maxlength="250" value="{{ request.form.get('location_contact', '') }}" {{ error_attributes('location_contact', '') }}>
+                <div class="form-group"><label for="location_contact">Contact person or number (optional)</label><input class="form-control" type="text" id="location_contact" name="location_contact" maxlength="250" value="{{ request.form.get('location_contact', '') }}" {{ error_attributes('location_contact', '') }}>
                 {{ field_error('location_contact') }}</div>
             </fieldset>
 
@@ -249,18 +251,20 @@ Create New Task | IntelliTask
                     <span class="required-mark">*</span>
                 </label>
 
-                <p class="field-help">
+                <p class="field-help" id="deadline-help">
                     Choose today or a later date. Times are in Kenya time (EAT).
                 </p>
 
-                <input
+                <input class="form-control"
                     type="datetime-local"
                     id="deadline"
                     name="deadline"
                     required
                     min="{{ deadline_min }}"
                     value="{{ request.form.get('deadline', '') }}"
-                 {{ error_attributes('deadline', '') }}>
+                 {{ error_attributes('deadline', 'deadline-help') }}>
+                <button class="btn it-button deadline-open" id="deadline-open" type="button" aria-haspopup="dialog" aria-controls="deadline-calendar" hidden>Choose date and time</button>
+                <p class="field-help" id="deadline-preview" aria-live="polite"></p>
                 {{ field_error('deadline') }}
 
             </div>
@@ -279,7 +283,7 @@ Create New Task | IntelliTask
 
                 <button
                     type="submit"
-                    class="create-task-submit"
+                    class="btn create-task-submit"
                 >
                     Create Task
                 </button>
@@ -310,4 +314,5 @@ Create New Task | IntelliTask
 
 
 
+{% include 'ui/deadline_calendar.html' %}
 {% endblock %}

@@ -4,7 +4,7 @@
 {% block content %}
 <div class="aw-directory">
 <div class="av-header"><div><p class="av-eyebrow">ADMINISTRATION</p><h1>A place for great work.</h1><p>Keep your team and work locations organised.</p></div></div>
-<section class="av-panel"><h2>Work locations</h2><p><strong>{{ active }}</strong> active locations · {{ total }} locations in total</p><p>Add a service point, update its address, or make it inactive when it is no longer in use.</p><a class="av-button" href="{{ url_for('admin.venues') }}">Manage work locations →</a></section>
-<section class="av-panel"><h2>Workers</h2><p>Find a worker, view their services and follow their assigned tasks.</p><a class="av-button" href="{{ url_for('admin.workers') }}">View workers →</a></section>
+<section class="card av-panel"><h2>Work locations</h2><p><strong>{{ active }}</strong> active locations · {{ total }} locations in total</p><p>Add a service point, update its address, or make it inactive when it is no longer in use.</p><a class="av-button" href="{{ url_for('admin.venues') }}">Manage work locations →</a></section>
+<section class="card av-panel"><h2>Workers</h2><p>Find a worker, view their services and follow their assigned tasks.</p><a class="av-button" href="{{ url_for('admin.workers') }}">View workers →</a></section>
 </div>
 {% endblock %}

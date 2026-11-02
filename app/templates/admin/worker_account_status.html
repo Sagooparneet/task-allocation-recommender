@@ -15,6 +15,6 @@
 {% if blocked %}<p><strong>This worker has unfinished tasks.</strong> They must finish their work before this account can be deactivated.</p>{% endif %}
 {% endif %}
 <div><label for="confirm"><input type="checkbox" name="confirm" id="confirm" value="yes" required {{ attributes(errors, 'confirm') }}> I confirm I want to {{ 'reactivate' if action == 'reactivate' else 'deactivate' }} this account.</label>{{ inline_error(errors, 'confirm') }}</div>
-<div class="av-actions"><button class="av-button" type="submit" {% if blocked and action == 'deactivate' %}disabled{% endif %}>{{ 'Reactivate account' if action == 'reactivate' else 'Deactivate account' }}</button><a href="{{ url_for('admin.worker_profile', worker_id=worker.id) }}">Cancel</a></div>
+<div class="av-actions"><button class="btn av-button" type="submit" {% if blocked and action == 'deactivate' %}disabled{% endif %}>{{ 'Reactivate account' if action == 'reactivate' else 'Deactivate account' }}</button><a href="{{ url_for('admin.worker_profile', worker_id=worker.id) }}">Cancel</a></div>
 </form>
 {% endblock %}
