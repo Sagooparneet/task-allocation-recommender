@@ -308,6 +308,30 @@ Node.js is needed for these JavaScript tests, not for running the Flask website.
 
 These checks establish the tested prototype workflows, not full production readiness or onboarding prediction accuracy.
 
+## Supervisor reports (issue #60)
+
+Supervisors can open **Reports** from their navigation to review their own tasks. The page reads application records; it does not run model inference or measure recommendation accuracy.
+
+- Totals show all tasks, waiting, assigned, in progress, completed and overdue. Overdue means unfinished work with a recorded deadline before the current Kenya time; it overlaps the status totals.
+- Optional **Created from** and **Created through** filters include both complete recorded calendar dates. Both fields allow today or earlier in Kenya time, with matching server validation and linked error messages. Blank dates show all tasks. Task deadlines still allow future dates.
+- Interactive doughnut charts show task progress and priority in responsive Bootstrap cards. The charts are custom SVG, not a Bootstrap chart plugin. Visible labels, counts, percentages and keyboard-accessible links provide equivalent information and selection without relying on colour or JavaScript.
+- Selecting a slice or label filters the task table to that category. Charts and headline totals keep showing the whole selected date period. **Show all tasks** clears the category while retaining dates; pagination preserves both dates and category.
+- The table shows task title, recorded assigned worker names, status and deadline, with ten tasks per page. Empty results, missing assignments/deadlines and older unknown status/priority values are handled explicitly.
+
+All report queries are restricted to the signed-in supervisor. Records and dataset mappings are unchanged. No migration, new dependency, external chart service or email action is required.
+
+Creation filters use the existing recorded `created_at` calendar dates. These legacy timestamps are timezone-naive server-local values; the report does not infer or rewrite historical timezone offsets. Statuses reflect the current state, not historical snapshots. Review timestamp consistency when deploying to PostgreSQL.
+
+### Local verification
+
+The project owner confirmed the report totals, date filters, charts, drill-down and rejection of future creation dates on port 5001. The latest focused report run passed **33 tests**, covering ownership, role access, read-only behavior, date boundaries, future-date rejection, chart proportions, category filtering, pagination and empty/legacy records. This is a focused result, not a new full-suite total. Wider browser/accessibility review and hosted PostgreSQL verification remain separate.
+
+```powershell
+python -m pytest tests/test_supervisor_reports.py tests/test_dashboard_overview.py tests/test_supervisor_progress.py tests/test_role_theme.py -q
+```
+
+See [report behavior and checks](docs/SUPERVISOR_REPORTS.md). Neon and Render have not been updated for this feature. CSV/PDF exports and historical trend reports are outside issue #60.
+
 ## Supervisor interface conventions
 
 Names shown for imported workers default to synthetic demonstration aliases from the saved display profiles. Administrators may override the displayed name without replacing the original source identity. Original source-worker IDs and database bindings remain unchanged. Aliases do not affect model scores or represent the real identities of NetEase workers.
@@ -402,7 +426,7 @@ Local migrations through `56d04a2b7c80` were applied with backup/rehearsal check
 
 Neon and Render remain unchanged. Hosted PostgreSQL migration/concurrency verification, hosted Gmail secret storage, public HTTPS invitation URLs and deployment checks are separate release work. The Windows encrypted credential file is not a Render credential. Google's external OAuth Testing mode can require reauthorization after seven days for Gmail scopes; production authorization requirements must be resolved before relying on unattended hosted delivery.
 
-Self-service profile/email/password changes, forgotten-password recovery, Google sign-in/OTP, supervisor administration, reports and service-catalogue management remain separate features. Issue #56 completion refers to the worker-management scope above, not those future features or a completed hosted release.
+Self-service profile/email/password changes, forgotten-password recovery, Google sign-in/OTP, supervisor administration and service-catalogue management remain separate features. Supervisor reports are implemented locally under issue #60. Issue #56 completion refers to the worker-management scope above, not those future features or a completed hosted release.
 
 
 ## Bootstrap frontend integration (issue #57)
