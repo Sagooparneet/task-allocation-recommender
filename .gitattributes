@@ -1,0 +1,5 @@
+# Keep checksum-pinned Bootstrap assets byte-stable on Windows and Linux.
+/app/static/vendor/bootstrap-5.3.8/bootstrap-grid.min.css text eol=lf
+/app/static/vendor/bootstrap-5.3.8/bootstrap.bundle.min.js text eol=lf
+/app/static/vendor/bootstrap-5.3.8/LICENSE text eol=lf
+/app/static/vendor/bootstrap-5.3.8/bootstrap-controls.min.css text eol=lf

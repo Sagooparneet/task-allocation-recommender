@@ -25,7 +25,9 @@ Supervisor opens a task
 
 The active hybrid uses **10% content, 50% collaborative, and 40% knowledge graph**. It loads saved artifacts rather than retraining during page requests. Knowledge-graph features and explanation evidence are precomputed from the saved training graph.
 
-The service checks source-worker bindings, recorded capabilities, and website availability. The assignment route checks task ownership, the form token, current eligibility, and duplicate assignment conditions. Workload is displayed but is not a component of the active website ranking. Completing a website task does not automatically retrain the model.
+The service checks source-worker bindings, recorded capabilities, and website availability. The assignment route checks task ownership, the form token, current eligibility, and duplicate assignment conditions. Actual active workload is capped at three assignments for new allocations; it is not a component of the active website ranking score. Completing a website task does not automatically retrain the model.
+
+Administrator-added independent workers use a separate service-matching list and never receive invented dataset scores or histories.
 
 Worker history and recommendation evidence come from saved training records. Dashboard task counts come from application records; neither is a new measure of model accuracy.
 
@@ -356,22 +358,51 @@ The project owner confirmed saved preferences, error links, retained entries, ke
 Further details: [settings and appearance](docs/SETTINGS_AND_APPEARANCE.md), [Create Task errors](docs/ACCESSIBLE_TASK_FORM.md), and [login and location form errors](docs/LOGIN_LOCATION_ERRORS.md).
 
 
-## Administrator worker management — issue #56 checkpoint
+## Administrator worker management — issue #56
 
-Implemented locally:
+Implemented and checked on the local port-5001 installation:
 
-- Worker directory with search, availability filtering, pagination and worker profiles showing services, actual assignment counts and task history.
-- Administrator editing of display names only. Original names, emails, source IDs, bindings and recommendation features are retained.
-- Availability controls governing new assignments. Unavailable workers may still sign in and complete existing work.
-- Account deactivation/reactivation with confirmation, administrator-only access, form tokens and protection against stale submissions. Deactivation refuses unfinished or inconsistent task/assignment statuses. Completed history is preserved.
-- Deactivated workers are excluded from login, protected-page access and new assignment eligibility. Existing sessions are cleared when a disabled account makes a request; already-running requests are not interrupted. Reactivation retains existing credentials and leaves availability off until an administrator deliberately restores it. It does not provision credentials for imported accounts.
-- Assignment-time checks reject workers disabled after candidate selection. Source histories, mappings, task records and workload are not rewritten by the account controls. Eligible-worker scores remain based on the existing model; changing eligibility can change the recommendation list.
+- Worker listing, search, availability filters, pagination, profiles, services and assignment history.
+- Editing display names while preserving original dataset identities and source bindings.
+- Availability controls for new assignments, and account deactivation/reactivation with administrator-only access, form tokens and confirmation. Deactivation refuses unfinished or inconsistent assignments; reactivation leaves availability off.
+- A maximum of **three actual active assignments** (Assigned or In progress) per worker. Eligibility and assignment-time checks enforce capacity without deleting existing assignments. Workload is an eligibility constraint, not a new ML scoring feature.
+- Administrator-created independent workers with validated, unique email addresses and administrator-confirmed services. They receive their own registration records, with no borrowed dataset identity, history or model score.
+- Expiring, single-use initial password invitations for pending independent workers. The database stores the token hash; successful redemption sets a hashed password and enables login while leaving availability off until an administrator enables it. Reissuing replaces the previous invitation. This is not password recovery for existing accounts.
+- A separate **New workers matching this task** list. Eligible independent workers must match all required service IDs and are listed alphabetically, not ranked by the NetEase model. Supervisors retain the assignment decision. Assignment, start, completion and workload updates use the existing protected workflow.
+- Gmail API email invitations, with manual sharing still available. The recipient comes from the worker record, and emailed links use a configured origin. Email reissues have a one-minute guard. Failed or uncertain submission preserves the new link for manual sharing and does not report successful delivery.
 
-The local database upgrades were backed up and rehearsed before application. Both worker migrations and local backup/rehearsal/apply helpers are committed for reproducibility. Retain the backups; do not run upgrade helpers as routine startup commands.
+Dataset-backed recommendation weights and historical evidence remain unchanged. Availability, disabled-account and capacity checks can change which workers are eligible. Completing website tasks does not retrain the model or turn an independent worker into a dataset worker.
 
-Verification reported by the project owner on **31 October 2026**: **202 application and ML tests passed**, with 37 deprecation warnings, and **6 accessibility-preference JavaScript tests passed**. Worker listing, profiles, name edits, availability and deactivation/reactivation were manually confirmed on port 5001. These results do not certify PostgreSQL concurrency or the public deployment. Neon and Render remain unchanged.
+### Local Gmail use
 
-This is a progress checkpoint, not closure of all account-management work. Controlled new-worker creation, self-service email/password changes, verified account provisioning and recovery remain pending. Never link a new real account to an unrelated dataset worker's history. The production workflow helper and hosted migration path need review for the new worker columns before release.
+The sending account is authorized with the Gmail sending-only scope. OAuth credentials are saved outside the project using Windows-user DPAPI encryption. They are never stored in the application database or committed to Git. Gmail authorization is separate from Google sign-in for website users, and sending an invitation does not set an email-verification flag.
+
+After completing the authorization helper, start the existing local installation with:
+
+```powershell
+python scripts/run_5001_with_gmail_api.py
+```
+
+This loads the saved authorization and enables email submission from the administrator's invitation form. The ordinary `python run_netease_test.py` launcher supports manual sharing but does not load the Gmail connection. No email is sent automatically on startup. Local emailed links must be opened on the computer running the website.
+
+See [local authorization](docs/GMAIL_LOCAL_AUTHORIZATION.md), [email invitations](docs/GMAIL_API_INVITATIONS.md), [password setup](docs/WORKER_PASSWORD_SETUP.md), [independent matching](docs/INDEPENDENT_WORKER_MATCHING.md) and [worker capacity](docs/WORKER_CAPACITY.md).
+
+### Verification and release boundaries
+
+The project owner confirmed actual inbox delivery, password setup and worker sign-in, then enabled availability and assigned a matching task to the new worker. Starting and completing that task updated supervisor totals and preserved completed history.
+
+Final checks reported by the project owner:
+
+- Full Python/application/ML run: **343 passed, 1 failed**, with 120 existing deprecation warnings. The failure was a Bootstrap manifest checksum mismatch caused solely by CRLF line endings.
+- After restoring the original LF bytes and adding targeted `.gitattributes` rules: **all 6 Bootstrap foundation tests passed**. The manifest and checksum test were not weakened or changed. The full suite was not rerun after this line-ending-only fix; these are separate verification results, not a claim of a fresh 344-pass run.
+- **16 JavaScript tests passed**, covering accessibility preferences, the deadline calendar and worker setup links.
+- `python -m pip check`: no broken requirements. `git diff --check`: no whitespace errors before the final documentation update.
+
+Local migrations through `56d04a2b7c80` were applied with backup/rehearsal checks. They cover display names, account deactivation, independent registrations and invitation storage. Keep the verified backups; upgrade helpers are not routine startup commands.
+
+Neon and Render remain unchanged. Hosted PostgreSQL migration/concurrency verification, hosted Gmail secret storage, public HTTPS invitation URLs and deployment checks are separate release work. The Windows encrypted credential file is not a Render credential. Google's external OAuth Testing mode can require reauthorization after seven days for Gmail scopes; production authorization requirements must be resolved before relying on unattended hosted delivery.
+
+Self-service profile/email/password changes, forgotten-password recovery, Google sign-in/OTP, supervisor administration, reports and service-catalogue management remain separate features. Issue #56 completion refers to the worker-management scope above, not those future features or a completed hosted release.
 
 
 ## Bootstrap frontend integration (issue #57)

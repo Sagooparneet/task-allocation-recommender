@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% from 'ui/form_errors.html' import summary, attributes, inline_error %}
+{% block title %}Add worker | IntelliTask{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-venues.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/worker-registration.css') }}"><script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script>{% endblock %}
+{% block content %}
+<a href="{{ url_for('admin.workers') }}">← Back to workers</a>
+<div class="av-header"><div><p class="av-eyebrow">GROW YOUR TEAM</p><h1>Add a worker</h1><p>Record their details and the services you have checked.</p></div></div>
+<form method="post" class="av-panel av-form accessible-form wr-form" novalidate>
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+{{ summary(errors, 'Please check the worker details') }}
+<div><label for="name">Full name *</label><input class="form-control" id="name" name="name" value="{{ values.name }}" maxlength="100" required autocomplete="off" {{ attributes(errors, 'name') }}>{{ inline_error(errors, 'name') }}</div>
+<div><label for="email">Email address *</label><input class="form-control" type="email" id="email" name="email" value="{{ values.email }}" maxlength="120" required autocomplete="off" {{ attributes(errors, 'email') }}>{{ inline_error(errors, 'email') }}</div>
+<div><label for="city">Base city *</label><select class="form-select" id="city" name="city" required {{ attributes(errors, 'city') }}><option value="">Choose a city</option>{% for city in cities %}<option value="{{ city }}" {% if values.city == city %}selected{% endif %}>{{ city }}</option>{% endfor %}</select>{{ inline_error(errors, 'city') }}</div>
+<fieldset id="services" tabindex="-1" {{ attributes(errors, 'services') }}><legend>Confirmed services *</legend><p>Select the services you have verified this worker can perform.</p><div class="wr-services">{% for skill in services %}<label class="wr-check" for="service-{{ skill.id }}"><input type="checkbox" id="service-{{ skill.id }}" name="services" value="{{ skill.id }}" {% if skill.id in selected_ids %}checked{% endif %}> <span>{{ skill.name | skill_label }}</span></label>{% else %}<p>No services are configured. Add a service before registering a worker.</p>{% endfor %}</div>{{ inline_error(errors, 'services') }}</fieldset>
+<div><label class="wr-check" for="confirmed"><input type="checkbox" id="confirmed" name="confirmed" value="yes" required {% if values.confirmed %}checked{% endif %} {{ attributes(errors, 'confirmed') }}> <span>I have checked this worker's selected services.</span></label>{{ inline_error(errors, 'confirmed') }}</div>
+<p class="wr-note"><strong>What happens next?</strong><br>The worker is saved with no task history. Sign-in and assignments remain unavailable until account setup is completed.</p>
+<div class="av-actions"><button class="btn av-button" type="submit" {% if not services %}disabled{% endif %}>Add worker</button><a href="{{ url_for('admin.workers') }}">Cancel</a></div>
+</form>
+{% endblock %}

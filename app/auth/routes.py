@@ -83,3 +83,48 @@ def logout():
     return redirect(
         url_for("auth.login")
     )
+
+
+@auth_bp.route('/worker-setup', methods=['GET', 'POST'])
+def worker_setup():
+    import secrets
+    from flask import abort, session
+    from sqlalchemy.exc import SQLAlchemyError
+    from app.services.independent_workers import valid_email
+    from app.services.worker_setup import redeem_invitation, private_response, SetupUnavailable, INVALID_INVITATION
+    if current_user.is_authenticated:
+        return private_response(render_template('auth/worker_setup.html', signed_in=True,
+            errors={}, email='', csrf_token=''), 403 if request.method == 'POST' else 200)
+    session.setdefault('worker_setup_public_csrf', secrets.token_urlsafe(32))
+    errors = {}
+    email = ''
+    if request.method == 'POST':
+        supplied = request.form.get('csrf_token', '')
+        if not secrets.compare_digest(session['worker_setup_public_csrf'].encode(), supplied.encode()):
+            abort(400, description='This form expired. Reload the setup page and try again.')
+        token = request.form.get('setup_token', '')
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        confirmation = request.form.get('password_confirm', '')
+        if not valid_email(email):
+            errors['email'] = 'Enter the email address your administrator registered.'
+        if not token:
+            errors['setup_token'] = 'Open your invitation link or paste your setup code.'
+        if not 12 <= len(password) <= 128 or not password.strip():
+            errors['password'] = 'Choose a password of 12 to 128 characters.'
+        if password != confirmation:
+            errors['password_confirm'] = 'Enter the same password again.'
+        if not errors:
+            try:
+                redeem_invitation(token, email, password)
+            except (SetupUnavailable, OSError, ValueError, TypeError, AttributeError):
+                errors['setup_token'] = INVALID_INVITATION
+            except SQLAlchemyError:
+                errors['setup_token'] = 'Setup could not be completed. Try again or contact your administrator.'
+            else:
+                session.clear()
+                flash('Your password is set. Sign in with your email and new password.', 'success')
+                return private_response(redirect(url_for('auth.login')))
+    # Passwords and tokens never return in response HTML or the session cookie.
+    return private_response(render_template('auth/worker_setup.html', signed_in=False,
+        errors=errors, email=email, csrf_token=session['worker_setup_public_csrf']), 422 if errors else 200)

@@ -32,7 +32,7 @@ Existing: login support, the improved assigned-task dashboard, starting work and
 
 ## Administrator: remaining issues to create
 
-1. **Finish onboarding-agent management (issue #56)**: listing, search, profiles, display-name editing, availability and account deactivation/reactivation are implemented locally. Controlled new-worker creation and production identity provisioning remain pending; preserve source identity bindings and never borrow dataset history for a new person.
+1. **Release verified worker management (issue #56)**: local listing, profiles, display names, availability, account controls, three-task capacity, independent registration, password setup, separate matching/assignment and Gmail invitations are implemented. The project owner confirmed real email delivery and the new worker's task lifecycle. Final documentation, staged-file review and merge are the remaining repository steps; hosted rollout stays separate.
 2. **Manage supervisors**: controlled account provisioning, role checks, deactivation and an audit trail.
 3. **Manage service catalogue**: controlled editing with validation. The task form now uses a free-text title rather than a task-type catalogue. Display labels alone must not create unsupported ML capabilities or silently change source mappings.
 
@@ -45,7 +45,7 @@ Existing under issue #49: administrator overview, venue listing/filtering, addin
 ## Delivery order
 
 1. Issue #49 venue integration and issue #52 accessibility changes have been merged.
-2. Issue #54 task progress has been merged. Issue #56 worker management is at a tested local checkpoint (202 Python tests and 6 JavaScript tests on 31 October 2026).
+2. Issue #54 task progress has been merged. Issue #57 Bootstrap was merged into the issue #56 branch. Issue #56 local behavior is verified; see README for the latest full-suite result, targeted checksum fix and 16 passing JavaScript tests.
 3. Implement remaining administrator account/service management.
 4. Implement verified signup and recovery.
 5. Add reporting and exports.
@@ -56,7 +56,7 @@ Create and link a GitHub issue for each feature before implementing it. Only exp
 
 ## Issue #56 checkpoint boundaries
 
-Availability controls new assignments; account deactivation controls access. Deactivation is refused for unfinished work. Reactivation leaves availability off and preserves existing credentials. Display-name edits are presentation changes only. Local migration revision is 56b02e0f5a60. Neon/Render upgrades, PostgreSQL concurrency testing, new-worker provisioning and self-service email/password management remain separate pending work. Keep issue #56 open while its remaining scope is reviewed.
+Availability controls new assignments; account deactivation controls access. Deactivation is refused for unfinished work. Reactivation leaves availability off and preserves existing credentials. Display-name edits are presentation changes only. Local schema is at 56d04a2b7c80. Independent-worker registration, initial password setup, Gmail delivery and separate matching are implemented and locally verified. Neon/Render upgrades, PostgreSQL concurrency testing, hosted email authorization, self-service email/password changes and recovery remain separate. Close issue #56 only after its final reviewed changes are merged.
 
 
 ## Issue #57: Bootstrap frontend integration

@@ -14,6 +14,7 @@
         {{ task_location(venue_details) }}
         {% if task.description %}<details class="it-rec-description"><summary>Task description</summary><p>{{ task.description }}</p></details>{% endif %}
     </section>
+    <p class="it-muted">Workers can have up to {{ max_active_tasks }} active tasks. Assigned and in-progress tasks both count.</p>
     {% if recommendation_error %}
     <div class="message warning" role="alert"><strong>Recommendations unavailable</strong><p>{{ recommendation_error }}</p></div>
     {% elif recommendations %}
@@ -49,6 +50,7 @@
         </article>
         {% endfor %}
     </div>
-    {% else %}<div class="card it-card it-empty">{{ icon('people') }}<h2>No available matches yet</h2><p>No available worker currently matches all the selected requirements.</p><a class="it-text-link" href="{{ url_for('supervisor.dashboard') }}">Back to your tasks</a></div>{% endif %}
+    {% else %}<div class="card it-card it-empty">{{ icon('people') }}<h2>No suggested workers available</h2><p>Check the matching workers below for another option.</p><a class="it-text-link" href="{{ url_for('supervisor.dashboard') }}">Back to your tasks</a></div>{% endif %}
+{% include 'supervisor/independent_worker_matches.html' %}
 </div>
 {% endblock %}

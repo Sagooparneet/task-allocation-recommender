@@ -6,8 +6,15 @@
 <a href="{{ url_for('admin.workers') }}">← Back to workers</a>
 <div class="av-header"><div><p class="av-eyebrow">WORKER #{{ worker.id }}</p><h1>{{ name }}</h1><p>{{ worker.email }}</p></div></div>
 <section class="card av-panel" aria-labelledby="worker-details-title"><h2 id="worker-details-title">Worker details</h2><p><a class="av-button" href="{{ url_for('admin.edit_worker', worker_id=worker.id) }}">Edit display name</a></p>
+{% if independent_registration %}<p><strong>Worker group:</strong> New worker · No recorded performance history</p>{% endif %}
+{% if setup_pending %}
+<p><strong>Account status:</strong> Awaiting account setup</p>
+<p><a class="btn av-button" href="{{ url_for('admin.worker_setup', worker_id=worker.id) }}">Create setup invitation</a></p>
+<p><strong>New assignments:</strong> Unavailable until account setup is completed.</p>
+{% else %}
 <p><strong>Account status:</strong> {{ 'Deactivated' if worker.account_disabled else 'Active' }} · <a href="{{ url_for('admin.worker_account_status', worker_id=worker.id) }}">{{ 'Reactivate account' if worker.account_disabled else 'Deactivate account' }}</a></p>
 <p><strong>New assignments:</strong> {{ 'Available' if worker.availability and not worker.account_disabled else 'Unavailable' }} {% if not worker.account_disabled %}· <a href="{{ url_for('admin.worker_availability', worker_id=worker.id) }}">Change availability</a>{% else %}· Reactivate the account before changing availability.{% endif %}</p>
+{% endif %}
 <p><strong>Services:</strong> {{ services|join(' · ') if services else 'No services recorded' }}</p></section>
 <section class="it-metrics" aria-label="Worker task totals">
 {% for label,value,note in [('All tasks',total,'Assigned to this worker'),('Assigned',counts.get('Assigned',0),'Not started yet'),('In progress',counts.get('In progress',0),'Work underway'),('Completed',counts.get('Completed',0),'Work finished')] %}

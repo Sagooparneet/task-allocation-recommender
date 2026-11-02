@@ -1,0 +1,7 @@
+.ws-panel { max-width: 760px; margin: 0 0 1.5rem; overflow-wrap: anywhere; }
+.ws-panel label { display: block; margin: .75rem 0 .5rem; font-weight: 600; }
+.ws-public { width: 100%; max-width: 640px; box-sizing: border-box; margin: 1rem auto; overflow-wrap: anywhere; }
+.ws-public h1 { margin: 1rem 0; }
+.ws-public .av-actions, .ws-panel .av-actions { flex-wrap: wrap; }
+.ws-public .btn, .ws-panel .btn { width: auto; margin: 0; }
+.ws-public .av-form { gap: 1rem; }

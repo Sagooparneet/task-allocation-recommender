@@ -3,7 +3,7 @@
 {% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-venues.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/admin-workers.css') }}">{% endblock %}
 {% block content %}
 <div class="aw-directory">
-<div class="av-header"><div><p class="av-eyebrow">YOUR TEAM</p><h1>Workers</h1><p>Find a worker and see how their work is progressing.</p></div></div>
+<div class="av-header"><div><p class="av-eyebrow">YOUR TEAM</p><h1>Workers</h1><p>Find a worker and see how their work is progressing.</p></div><a class="btn av-button" href="{{ url_for('admin.new_worker') }}">+ Add worker</a></div>
 <form method="get" class="av-filters av-panel aw-filters" role="search">
     <div><label for="worker-search">Name, email or worker number</label><input class="form-control" type="search" id="worker-search" name="q" value="{{ search }}" maxlength="100"></div>
     <div><label for="worker-availability">New assignments</label><select class="form-select" id="worker-availability" name="availability"><option value="">All workers</option><option value="available" {% if availability == 'available' %}selected{% endif %}>Available</option><option value="unavailable" {% if availability == 'unavailable' %}selected{% endif %}>Unavailable</option></select></div>
