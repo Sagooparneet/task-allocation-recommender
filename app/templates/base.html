@@ -8,10 +8,14 @@
     <meta name="theme-color" content="#102c35">
     <title>{% block title %}IntelliTask{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/intellitask-mark.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-5.3.8/bootstrap-grid.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-5.3.8/bootstrap-controls.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/intellitask-theme.css') }}">
+    <script src="{{ url_for('static', filename='vendor/bootstrap-5.3.8/bootstrap.bundle.min.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/intellitask-ui.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/accessibility-preferences.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-controls-theme.css') }}">
     {% block extra_styles %}{% endblock %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/role-accessibility.css') }}">
 </head>
@@ -27,17 +31,17 @@
             <span><strong>IntelliTask<span class="it-brand-dot">.</span></strong><small>Make every task count</small></span>
         </a>
         <p class="it-nav-label">{{ 'Worker' if role == 'agent' else role|title }} workspace</p>
-        <nav class="it-nav" id="it-navigation" aria-label="Main navigation">
-            <a href="{{ url_for(home_endpoint) }}" {% if request.endpoint == home_endpoint %}aria-current="page"{% endif %}>{{ icon('grid') }} {{ 'My tasks' if role == 'agent' else 'Overview' }}</a>
+        <nav class="nav it-nav" id="it-navigation" aria-label="Main navigation">
+            <a class="nav-link" href="{{ url_for(home_endpoint) }}" {% if request.endpoint == home_endpoint %}aria-current="page"{% endif %}>{{ icon('grid') }} {{ 'My tasks' if role == 'agent' else 'Overview' }}</a>
             {% if role == 'supervisor' %}
-            <a href="{{ url_for('supervisor.dashboard') }}#task-list">{{ icon('tasks') }} Your tasks</a>
-            <a href="{{ url_for('supervisor.create_task') }}" {% if request.endpoint == 'supervisor.create_task' %}aria-current="page"{% endif %}>{{ icon('plus') }} Create task</a>
+            <a class="nav-link" href="{{ url_for('supervisor.dashboard') }}#task-list">{{ icon('tasks') }} Your tasks</a>
+            <a class="nav-link" href="{{ url_for('supervisor.create_task') }}" {% if request.endpoint == 'supervisor.create_task' %}aria-current="page"{% endif %}>{{ icon('plus') }} Create task</a>
             {% endif %}
             {% if role == 'administrator' %}
-            <a href="{{ url_for('admin.workers') }}" {% if request.endpoint in ('admin.workers', 'admin.worker_profile', 'admin.edit_worker', 'admin.worker_availability', 'admin.worker_account_status') %}aria-current="page"{% endif %}>{{ icon('people') }} Workers</a>
-            <a href="{{ url_for('admin.venues') }}" {% if request.endpoint in ('admin.venues', 'admin.edit_venue') %}aria-current="page"{% endif %}>{{ icon('tasks') }} Work locations</a>
+            <a class="nav-link" href="{{ url_for('admin.workers') }}" {% if request.endpoint in ('admin.workers', 'admin.worker_profile', 'admin.edit_worker', 'admin.worker_availability', 'admin.worker_account_status') %}aria-current="page"{% endif %}>{{ icon('people') }} Workers</a>
+            <a class="nav-link" href="{{ url_for('admin.venues') }}" {% if request.endpoint in ('admin.venues', 'admin.edit_venue') %}aria-current="page"{% endif %}>{{ icon('tasks') }} Work locations</a>
             {% endif %}
-            <a class="it-mobile-only" href="{{ url_for('auth.logout') }}">{{ icon('logout') }} Sign out</a>
+            <a class="nav-link it-mobile-only" href="{{ url_for('auth.logout') }}">{{ icon('logout') }} Sign out</a>
         </nav>
         <div class="it-sidebar-note"><span class="it-dot"></span> A little clarity. A lot of progress.</div>
         <div class="it-account">
@@ -48,7 +52,7 @@
     </aside>
     <div class="it-workspace">
         <header class="it-topbar">
-            <button type="button" class="it-menu" aria-controls="it-navigation" aria-expanded="false" aria-label="Toggle navigation">{{ icon('menu') }}</button>
+            <button type="button" class="btn it-menu" aria-controls="it-navigation" aria-expanded="false" aria-label="Toggle navigation">{{ icon('menu') }}</button>
             <span class="it-breadcrumb">Your workspace <span>/</span> <strong>{% if request.endpoint == 'supervisor.create_task' %}Create task{% elif request.endpoint == 'supervisor.recommendations' %}Recommendations{% elif request.endpoint == 'agent.dashboard' %}My tasks{% elif request.endpoint in ('admin.workers', 'admin.worker_profile', 'admin.edit_worker', 'admin.worker_availability', 'admin.worker_account_status') %}Workers{% elif request.endpoint in ('admin.venues', 'admin.edit_venue') %}Work locations{% else %}Overview{% endif %}</strong></span>
             <span class="it-topbar-role">{{ 'Worker' if role == 'agent' else role|title }} portal</span>
             {{ accessibility_button() }}
@@ -60,7 +64,13 @@
 {% endif %}
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<div class="it-flashes" aria-live="polite">
-        {% for category, message in messages %}<div class="message {{ category }}">{{ message }}</div>{% endfor %}
+        {% for category, message in messages %}
+        {% set tone = category if category in ('success', 'warning', 'danger') else ('danger' if category == 'error' else 'info') %}
+        <div class="alert alert-{{ tone }} message {{ tone }} it-feedback">
+            <strong>{{ {'success': 'Success', 'warning': 'Please note', 'danger': 'Something went wrong', 'info': 'Information'}[tone] }}</strong>
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
     </div>{% endif %}
     {% endwith %}
     {% block content %}{% endblock %}

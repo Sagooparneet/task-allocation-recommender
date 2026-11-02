@@ -1,0 +1,12 @@
+/* Stage one: Bootstrap owns the metric grid; IntelliTask owns card colours. */
+.it-bootstrap-metrics { margin-bottom: 1.75rem; }
+.it-bootstrap-metrics > .col { min-width: 0; }
+.it-bootstrap-metrics .it-metric { height: 100%; overflow-wrap: anywhere; }
+/* A fixed five-column layout is too dense at the largest text settings. */
+@media (min-width: 576px) {
+  html[data-text-size="largest"] .it-bootstrap-metrics > *,
+  html[data-text-size="huge"] .it-bootstrap-metrics > * { width: 50%; }
+}
+@media (max-width: 575.98px) {
+  .it-bootstrap-metrics > * { width: 100%; }
+}

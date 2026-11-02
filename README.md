@@ -83,7 +83,7 @@ ml/reports/          Metrics and figures
 ml/tests/            ML package tests
 scripts/             Setup, migration, verification, and legacy demo utilities
 migrations/          Versioned database schema changes
-tests/               Flask application tests
+tests/               Flask application tests and frontend JavaScript tests
 instance/            Local database, backups, and bindings (not committed)
 config.py
 requirements.txt
@@ -299,7 +299,7 @@ Run the combined suite and browser-preference unit tests from the project root:
 
 ```powershell
 python -m pytest tests ml/tests -q
-node --test tests/js/accessibility_preferences.test.cjs
+node --test tests/js/accessibility_preferences.test.cjs tests/js/deadline_calendar.test.cjs
 ```
 
 Node.js is needed for these JavaScript tests, not for running the Flask website.
@@ -329,7 +329,7 @@ The shared IntelliTask theme uses a local SVG logo, stylesheet and small navigat
 
 Role navigation links to implemented pages, including administrator work locations. The agent dashboard supports task filtering, deadline sorting, details and the Assigned → In progress → Completed workflow. Reports, broader account management, Google signup and OTP verification remain future work. See [the role feature plan](docs/ROLE_FEATURE_PLAN.md).
 
-The latest project test total is recorded above. The user has reviewed the local supervisor and agent dashboards and administrator locations page. Current local changes have not yet been verified or published on Render.
+Historical test totals are recorded above; the latest Bootstrap verification is recorded in the issue #57 section below. The user has reviewed the local supervisor and agent dashboards and administrator locations page. Current local changes have not yet been verified or published on Render.
 
 
 ## Accessibility and role colours (issue #52)
@@ -372,3 +372,41 @@ The local database upgrades were backed up and rehearsed before application. Bot
 Verification reported by the project owner on **31 October 2026**: **202 application and ML tests passed**, with 37 deprecation warnings, and **6 accessibility-preference JavaScript tests passed**. Worker listing, profiles, name edits, availability and deactivation/reactivation were manually confirmed on port 5001. These results do not certify PostgreSQL concurrency or the public deployment. Neon and Render remain unchanged.
 
 This is a progress checkpoint, not closure of all account-management work. Controlled new-worker creation, self-service email/password changes, verified account provisioning and recovery remain pending. Never link a new real account to an unrelated dataset worker's history. The production workflow helper and hosted migration path need review for the new worker columns before release.
+
+
+## Bootstrap frontend integration (issue #57)
+
+The frontend uses **Bootstrap 5.3.8 with Flask-rendered Jinja2 templates**, alongside IntelliTask's custom theme. Bootstrap supplies layout and interface components; Flask handles routes, validation and permissions, SQLAlchemy handles application data, and the existing Python recommendation services provide rankings.
+
+Bootstrap assets are pinned and served locally from `app/static/vendor/bootstrap-5.3.8/`, including the MIT licence, grid CSS, JavaScript bundle, selective Sass source and compiled component CSS. Browsers do not need a CDN connection for these assets. The manifest records SHA-256 hashes. Flask runs with the committed assets; Node.js and Sass are only needed for frontend tests or rebuilding CSS.
+
+Implemented and reviewed on the local port-5001 website:
+
+- Responsive dashboard grids, buttons, text inputs, selects, cards and tables.
+- Status badges and pagination that retain existing labels, filters and links.
+- Shared navigation styling and labelled feedback messages; messages do not disappear on a timer.
+- A compact worker search/filter toolbar that wraps on smaller screens.
+- Normal body/control text of 1rem (normally 16px), with smaller secondary text at least .875rem (normally 14px). Saved accessibility choices still apply.
+- A custom deadline calendar with month navigation, keyboard controls and a separate time field. This is an IntelliTask component, not a Bootstrap calendar plugin. It preserves the original required date/time field as a fallback, submits the existing Kenya civil-time format and rejects dates before today. Backend validation still applies.
+
+The selective Bootstrap build includes forms, buttons, cards, tables, badges, pagination, navigation and alerts. Full Reboot, Bootstrap progress bars and replacement modal styles are not loaded, avoiding conflicts with existing charts and dialogs. Existing mobile navigation, Settings and calendar scripts retain control of their own interactions. There are no duplicate Bootstrap collapse or modal controllers.
+
+Teal supervisor, blue worker and purple administrator themes remain in place. Accessibility styles load last, retaining appearance preferences, enlarged text, high contrast, reduced motion, keyboard focus and accessible form errors. User-confirmed browser checks are not a formal accessibility certification or an exhaustive cross-browser audit.
+
+This issue changes presentation only: no new database migration, source-worker mappings, recommendation features or ranking weights. Neon and Render remain unchanged. The branch was created from the issue #56 worker-management checkpoint; review that dependency before merging into main, and keep unfinished issue #56 work open.
+
+### Verification and maintenance
+
+Final verification reported by the project owner on **2 November 2026**: **219 application and ML tests passed**, with 37 existing SQLAlchemy/Flask-SQLAlchemy deprecation warnings, and **12 JavaScript tests passed** (six saved-preference checks and six calendar checks). `git diff --check` reported no whitespace errors. These results come from the project checkout on `feature/57-bootstrap-integration`.
+
+The project owner confirmed the dashboard, forms, readable text, cards/tables, calendar, compact worker filter, shared navigation/messages and saved accessibility settings on port 5001. Deprecation warnings remain in existing SQLAlchemy/Flask-SQLAlchemy code. These checks do not verify the hosted deployment or PostgreSQL concurrency.
+
+Run the final checks from the project root:
+
+```powershell
+python -m pytest tests ml/tests -q
+node --test tests/js/accessibility_preferences.test.cjs tests/js/deadline_calendar.test.cjs
+git diff --check
+```
+
+Keep build folders and `node_modules` out of commits. Preserve the vendor licence, Sass source, generated CSS and matching manifest together. See [the integration overview](docs/BOOTSTRAP_INTEGRATION.md), [forms and build instructions](docs/BOOTSTRAP_CONTROLS.md), [cards and tables](docs/BOOTSTRAP_CARDS_TABLES.md), [status and pagination](docs/BOOTSTRAP_STATUS_PAGINATION.md), [deadline calendar](docs/DEADLINE_CALENDAR.md), and [navigation and messages](docs/BOOTSTRAP_NAVIGATION_MESSAGES.md).

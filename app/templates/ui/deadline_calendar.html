@@ -1,0 +1,17 @@
+<dialog id="deadline-calendar" class="deadline-dialog" aria-labelledby="deadline-calendar-title" aria-describedby="deadline-calendar-help">
+    <div class="deadline-heading"><div><h2 id="deadline-calendar-title">Choose a deadline</h2><p>Kenya time · EAT (UTC+3)</p></div><button class="btn" type="button" data-deadline-close aria-label="Close deadline calendar">×</button></div>
+    <p id="deadline-calendar-help">Choose a date, set the time, then apply. Use arrow keys to move between dates.</p>
+    <div class="deadline-month-nav">
+        <button class="btn" type="button" id="deadline-previous" aria-label="Previous month">‹</button>
+        <h3 id="deadline-month" aria-live="polite"></h3>
+        <button class="btn" type="button" id="deadline-next" aria-label="Next month">›</button>
+    </div>
+    <div class="deadline-weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+    <div class="deadline-days" id="deadline-days" role="group" aria-label="Choose a date"></div>
+    <p id="deadline-selection" aria-live="polite">No date selected</p>
+    <label for="deadline-picker-time">Time in Kenya (24-hour clock)</label>
+    <input class="form-control" type="time" id="deadline-picker-time" step="60" aria-describedby="deadline-time-help deadline-calendar-error">
+    <p id="deadline-time-help">For example, 17:00 means 5:00 pm.</p>
+    <p id="deadline-calendar-error" class="form-field-error" role="alert"></p>
+    <div class="deadline-actions"><button class="btn" type="button" data-deadline-close>Cancel</button><button class="btn it-button" type="button" id="deadline-apply">Use this deadline</button></div>
+</dialog>

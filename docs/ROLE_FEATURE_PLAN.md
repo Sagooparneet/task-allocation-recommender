@@ -57,3 +57,10 @@ Create and link a GitHub issue for each feature before implementing it. Only exp
 ## Issue #56 checkpoint boundaries
 
 Availability controls new assignments; account deactivation controls access. Deactivation is refused for unfinished work. Reactivation leaves availability off and preserves existing credentials. Display-name edits are presentation changes only. Local migration revision is 56b02e0f5a60. Neon/Render upgrades, PostgreSQL concurrency testing, new-worker provisioning and self-service email/password management remain separate pending work. Keep issue #56 open while its remaining scope is reviewed.
+
+
+## Issue #57: Bootstrap frontend integration
+
+Locally implemented: pinned Bootstrap 5.3.8 assets, responsive grids, forms/buttons, cards/tables, badges/pagination, navigation/messages, readable default text, a compact worker filter and a custom accessible deadline calendar. Existing role colours and saved accessibility preferences remain supported. See README for final test results and the Bootstrap component guides for build details.
+
+This presentation work adds no database migration or ML changes. It builds on the issue #56 checkpoint and does not close that issue's pending account-management work. Hosted release and PostgreSQL verification remain separate.

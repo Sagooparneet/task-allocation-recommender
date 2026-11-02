@@ -9,8 +9,8 @@
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 <input type="hidden" name="original_display_name" value="{{ original }}">
 {{ summary(errors, 'Please check the name before saving') }}
-<div><label for="display_name">Display name *</label><input id="display_name" name="display_name" value="{{ value }}" maxlength="100" required autocomplete="off" {{ attributes(errors, 'display_name') }}>{{ inline_error(errors, 'display_name') }}</div>
+<div><label for="display_name">Display name *</label><input class="form-control" id="display_name" name="display_name" value="{{ value }}" maxlength="100" required autocomplete="off" {{ attributes(errors, 'display_name') }}>{{ inline_error(errors, 'display_name') }}</div>
 <p><strong>Account email:</strong> {{ worker.email }}</p>
-<div class="av-actions"><button class="av-button" type="submit">Save changes</button><a href="{{ url_for('admin.worker_profile', worker_id=worker.id) }}">Cancel</a></div>
+<div class="av-actions"><button class="btn av-button" type="submit">Save changes</button><a href="{{ url_for('admin.worker_profile', worker_id=worker.id) }}">Cancel</a></div>
 </form>
 {% endblock %}
