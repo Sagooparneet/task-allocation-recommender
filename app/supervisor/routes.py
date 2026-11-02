@@ -374,3 +374,25 @@ def assign_task(task_id):
 
     flash(f"{selected_task_type} was assigned to {selected_name} successfully.", "success")
     return redirect(url_for("supervisor.dashboard"))
+
+
+@supervisor_bp.route('/reports', methods=['GET'])
+@login_required
+def reports():
+    if current_user.role != 'supervisor':
+        abort(403)
+    from app.services.supervisor_reports import build_report, parse_report_dates, kenya_now
+    report_today = kenya_now().date()
+    values, boundaries, errors = parse_report_dates(request.args, today=report_today)
+    report = None
+    if not errors:
+        page_number = max(1, request.args.get('page', 1, type=int) or 1)
+        try:
+            report = build_report(current_user.id, boundaries, page_number,
+                                  request.args.get('breakdown', ''), request.args.get('category', ''))
+        except ValueError:
+            abort(400)
+    response = current_app.make_response((render_template('supervisor/reports.html',
+        report=report, values=values, errors=errors, report_today=report_today.isoformat()), 422 if errors else 200))
+    response.headers['Cache-Control'] = 'no-store, private'
+    return response

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% from 'ui/form_errors.html' import summary, attributes, inline_error %}
+{% block title %}Reports | IntelliTask{% endblock %}
+{% block extra_styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-integration.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor-reports.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}">
+<script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script>
+{% endblock %}
+{% block content %}
+<div class="it-heading"><div><p class="it-eyebrow">YOUR TASK SUMMARY</p><h1>Reports</h1><p>See how your tasks are progressing.</p></div></div>
+<section class="card it-card report-filters" aria-labelledby="report-filter-title">
+    <h2 id="report-filter-title">Choose a period</h2>
+    <p id="report-filter-help">Filter by when tasks were created. Choose today or an earlier date, or leave the dates blank to show all your tasks.</p>
+    <form method="get" action="{{ url_for('supervisor.reports') }}" class="accessible-form" novalidate>
+        {{ summary(errors, 'Please check the report dates') }}
+        <div class="report-filter-fields">
+            <div><label for="start_date">Created from</label><input class="form-control" id="start_date" name="start_date" type="date" max="{{ report_today }}" value="{{ values.start_date }}" {{ attributes(errors, 'start_date') }}>{{ inline_error(errors, 'start_date') }}</div>
+            <div><label for="end_date">Created through</label><input class="form-control" id="end_date" name="end_date" type="date" max="{{ report_today }}" value="{{ values.end_date }}" {{ attributes(errors, 'end_date') }}>{{ inline_error(errors, 'end_date') }}</div>
+            <button class="btn it-button" type="submit">Show report</button>
+            <a class="it-text-link" href="{{ url_for('supervisor.reports') }}">Clear dates</a>
+        </div>
+    </form>
+</section>
+{% if report %}
+<p class="report-period">{% if values.start_date or values.end_date %}Tasks created {{ 'from ' ~ values.start_date if values.start_date else 'at any time' }}{{ ' through ' ~ values.end_date if values.end_date else ' onwards' }}.{% else %}All your tasks.{% endif %} Counts show their current status.</p>
+<section class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 it-bootstrap-metrics" aria-label="Task report totals">
+    {% for key,label,note in [('total','Total tasks','In this report'),('waiting','Waiting','Not assigned yet'),('assigned','Assigned','Not started yet'),('in_progress','In progress','Work underway'),('completed','Completed','Work finished'),('overdue','Overdue','Unfinished and past deadline')] %}
+    <div class="col"><article class="it-metric"><span>{{ label }}</span><strong data-report-count="{{ key }}">{{ report.counts[key] }}</strong><small>{{ note }}</small></article></div>
+    {% endfor %}
+</section>
+{% if report.counts.other %}<p>{{ report.counts.other }} task{{ 's' if report.counts.other != 1 else '' }} with another recorded status {{ 'are' if report.counts.other != 1 else 'is' }} included in the total.</p>{% endif %}
+<section class="row g-4 report-charts" aria-label="Interactive task charts">
+    {% for key,title in [('status','Task progress'),('priority','Task priorities')] %}
+    <div class="col-12 col-lg-6"><figure class="card it-card report-chart h-100" aria-labelledby="report-chart-{{ key }}">
+        <figcaption><p class="it-eyebrow">EXPLORE YOUR TASKS</p><h2 id="report-chart-{{ key }}">{{ title }}</h2><p class="it-muted">Select a slice or label to see its tasks below.</p></figcaption>
+        {% if report.counts.total %}
+        <div class="report-donut-layout">
+            <svg class="report-donut" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+                {% for row in report.charts[key] if row.count %}
+                <a href="{{ url_for('supervisor.reports', start_date=values.start_date, end_date=values.end_date, breakdown=key, category=row.value, _anchor='report-tasks-title') }}" tabindex="-1"><title>{{ row.label }}: {{ row.count }} tasks ({{ row.percent }}%)</title>
+                    <circle class="report-slice report-colour-{{ row.colour }}" cx="60" cy="60" r="43" pathLength="100" fill="none" stroke-width="18" stroke-dasharray="{{ row.arc }} {{ row.gap }}" stroke-dashoffset="{{ row.offset }}" transform="rotate(-90 60 60)" />
+                </a>
+                {% endfor %}
+                <text x="60" y="59" text-anchor="middle" class="report-donut-total">{{ report.counts.total }}</text>
+                <text x="60" y="70" text-anchor="middle" class="report-donut-caption">tasks</text>
+            </svg>
+            <ul class="report-chart-list">
+            {% for row in report.charts[key] %}
+                <li><a class="report-legend-link" href="{{ url_for('supervisor.reports', start_date=values.start_date, end_date=values.end_date, breakdown=key, category=row.value, _anchor='report-tasks-title') }}"{% if report.breakdown == key and report.category == row.value %} aria-current="true"{% endif %}>
+                    <span class="report-legend-label"><span class="report-swatch report-colour-{{ row.colour }}" aria-hidden="true"></span>{{ row.label }}</span>
+                    <span><strong>{{ row.count }}</strong> <small>({{ row.percent }}%)</small></span>
+                </a></li>
+            {% endfor %}
+            </ul>
+        </div>
+        <p class="report-chart-footnote it-muted">All {{ report.counts.total }} tasks in the selected period.</p>
+        {% else %}<div class="report-chart-empty"><p>No tasks to chart yet.</p><p class="it-muted">Choose another period or create your first task.</p></div>{% endif %}
+    </figure></div>
+    {% endfor %}
+</section>
+{% if report.selection_label %}
+<div class="report-drilldown"><p>Showing <strong>{{ report.selection_label }}</strong> tasks ({{ report.page.total }}). Charts and totals still show the whole selected period.</p><a class="btn it-button" href="{{ url_for('supervisor.reports', start_date=values.start_date, end_date=values.end_date, _anchor='report-tasks-title') }}">Show all tasks</a></div>
+{% endif %}
+<section class="card it-card it-task-card" aria-labelledby="report-tasks-title">
+    <div class="it-card-heading"><div><h2 id="report-tasks-title" tabindex="-1">Tasks in this report</h2><p class="it-muted">Deadlines use Kenya time. Overdue tasks also count under their current status.</p></div><span class="badge it-count">{{ report.page.total }} task{{ 's' if report.page.total != 1 else '' }}</span></div>
+    {% if report.page.items %}
+    <div class="table-responsive it-table-scroll" tabindex="0" role="region" aria-label="Task report table">
+        <table class="table it-table"><caption class="it-sr-only">Your tasks for the selected creation dates, with current assignments, statuses and deadlines.</caption><thead><tr><th scope="col">Task</th><th scope="col">Assigned worker</th><th scope="col">Status</th><th scope="col">Deadline</th></tr></thead><tbody>
+        {% for task in report.page.items %}
+        <tr><td><strong>{{ task.task_type | skill_label }}</strong><small>Task #{{ task.id }}</small></td>
+            <td>{% for name in report.workers.get(task.id, []) %}<span class="report-worker">{{ name }}</span>{% else %}Not assigned{% endfor %}</td>
+            <td><span class="badge it-status {{ {'Pending':'pending','Assigned':'assigned','In progress':'in-progress','Completed':'completed'}.get(task.status, '') }}">{{ 'Waiting' if task.status == 'Pending' else task.status or 'Not recorded' }}</span></td>
+            <td>{% if task.deadline %}{{ task.deadline.strftime('%d %b %Y') }}<small>{{ task.deadline.strftime('%H:%M') }} EAT{% if task.status != 'Completed' and task.deadline < report.now %} Â· <span class="it-overdue">Overdue</span>{% endif %}</small>{% else %}Not set{% endif %}</td></tr>
+        {% endfor %}
+        </tbody></table>
+    </div>
+    {% elif report.page.total %}<div class="report-empty"><p>No tasks on this page.</p><a href="{{ url_for('supervisor.reports', start_date=values.start_date, end_date=values.end_date, breakdown=report.breakdown, category=report.category) }}">Go to the first page</a></div>
+    {% else %}<div class="report-empty"><p>{{ "No tasks match this category." if report.selection_label else "No tasks found for this period." }}</p><p>{{ "Select another slice or choose Show all tasks." if report.selection_label else "Try different dates or clear the dates to view all your tasks." }}</p></div>{% endif %}
+    {% if report.page.pages > 1 and report.page.items %}
+    <nav class="report-pagination" aria-label="Report pages">
+        {% if report.page.has_prev %}<a class="btn it-button" href="{{ url_for('supervisor.reports', start_date=values.start_date, end_date=values.end_date, breakdown=report.breakdown, category=report.category, page=report.page.prev_num) }}">Previous</a>{% endif %}
+        <span>Page {{ report.page.page }} of {{ report.page.pages }}</span>
+        {% if report.page.has_next %}<a class="btn it-button" href="{{ url_for('supervisor.reports', start_date=values.start_date, end_date=values.end_date, breakdown=report.breakdown, category=report.category, page=report.page.next_num) }}">Next</a>{% endif %}
+    </nav>
+    {% endif %}
+</section>
+{% endif %}
+{% endblock %}

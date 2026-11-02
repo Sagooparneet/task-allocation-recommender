@@ -34,6 +34,7 @@
         <nav class="nav it-nav" id="it-navigation" aria-label="Main navigation">
             <a class="nav-link" href="{{ url_for(home_endpoint) }}" {% if request.endpoint == home_endpoint %}aria-current="page"{% endif %}>{{ icon('grid') }} {{ 'My tasks' if role == 'agent' else 'Overview' }}</a>
             {% if role == 'supervisor' %}
+            <a class="nav-link" href="{{ url_for('supervisor.reports') }}" {% if request.endpoint == 'supervisor.reports' %}aria-current="page"{% endif %}>{{ icon('tasks') }} Reports</a>
             <a class="nav-link" href="{{ url_for('supervisor.dashboard') }}#task-list">{{ icon('tasks') }} Your tasks</a>
             <a class="nav-link" href="{{ url_for('supervisor.create_task') }}" {% if request.endpoint == 'supervisor.create_task' %}aria-current="page"{% endif %}>{{ icon('plus') }} Create task</a>
             {% endif %}
@@ -53,7 +54,7 @@
     <div class="it-workspace">
         <header class="it-topbar">
             <button type="button" class="btn it-menu" aria-controls="it-navigation" aria-expanded="false" aria-label="Toggle navigation">{{ icon('menu') }}</button>
-            <span class="it-breadcrumb">Your workspace <span>/</span> <strong>{% if request.endpoint == 'supervisor.create_task' %}Create task{% elif request.endpoint == 'supervisor.recommendations' %}Recommendations{% elif request.endpoint == 'agent.dashboard' %}My tasks{% elif request.endpoint in ('admin.workers', 'admin.new_worker', 'admin.worker_setup', 'admin.worker_profile', 'admin.edit_worker', 'admin.worker_availability', 'admin.worker_account_status') %}Workers{% elif request.endpoint in ('admin.venues', 'admin.edit_venue') %}Work locations{% else %}Overview{% endif %}</strong></span>
+            <span class="it-breadcrumb">Your workspace <span>/</span> <strong>{% if request.endpoint == 'supervisor.create_task' %}Create task{% elif request.endpoint == 'supervisor.reports' %}Reports{% elif request.endpoint == 'supervisor.recommendations' %}Recommendations{% elif request.endpoint == 'agent.dashboard' %}My tasks{% elif request.endpoint in ('admin.workers', 'admin.new_worker', 'admin.worker_setup', 'admin.worker_profile', 'admin.edit_worker', 'admin.worker_availability', 'admin.worker_account_status') %}Workers{% elif request.endpoint in ('admin.venues', 'admin.edit_venue') %}Work locations{% else %}Overview{% endif %}</strong></span>
             <span class="it-topbar-role">{{ 'Worker' if role == 'agent' else role|title }} portal</span>
             {{ accessibility_button() }}
         </header>
