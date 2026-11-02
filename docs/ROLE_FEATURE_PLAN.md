@@ -32,7 +32,7 @@ Existing: login support, the improved assigned-task dashboard, starting work and
 
 ## Administrator: remaining issues to create
 
-1. **Manage onboarding agents**: listing, search, controlled creation/editing and deactivation, preserving source identity bindings.
+1. **Release verified worker management (issue #56)**: local listing, profiles, display names, availability, account controls, three-task capacity, independent registration, password setup, separate matching/assignment and Gmail invitations are implemented. The project owner confirmed real email delivery and the new worker's task lifecycle. Final documentation, staged-file review and merge are the remaining repository steps; hosted rollout stays separate.
 2. **Manage supervisors**: controlled account provisioning, role checks, deactivation and an audit trail.
 3. **Manage service catalogue**: controlled editing with validation. The task form now uses a free-text title rather than a task-type catalogue. Display labels alone must not create unsupported ML capabilities or silently change source mappings.
 
@@ -45,10 +45,22 @@ Existing under issue #49: administrator overview, venue listing/filtering, addin
 ## Delivery order
 
 1. Issue #49 venue integration and issue #52 accessibility changes have been merged.
-2. Finish full-suite verification, documentation and review of issue #54 task progress before merging.
+2. Issue #54 task progress has been merged. Issue #57 Bootstrap was merged into the issue #56 branch. Issue #56 local behavior is verified; see README for the latest full-suite result, targeted checksum fix and 16 passing JavaScript tests.
 3. Implement remaining administrator account/service management.
 4. Implement verified signup and recovery.
 5. Add reporting and exports.
 6. Separately review PostgreSQL migration, hosted configuration and release verification.
 
 Create and link a GitHub issue for each feature before implementing it. Only expose navigation items when their pages and permission checks work. Keep the current Render deployment unchanged while local UI work is reviewed.
+
+
+## Issue #56 checkpoint boundaries
+
+Availability controls new assignments; account deactivation controls access. Deactivation is refused for unfinished work. Reactivation leaves availability off and preserves existing credentials. Display-name edits are presentation changes only. Local schema is at 56d04a2b7c80. Independent-worker registration, initial password setup, Gmail delivery and separate matching are implemented and locally verified. Neon/Render upgrades, PostgreSQL concurrency testing, hosted email authorization, self-service email/password changes and recovery remain separate. Close issue #56 only after its final reviewed changes are merged.
+
+
+## Issue #57: Bootstrap frontend integration
+
+Locally implemented: pinned Bootstrap 5.3.8 assets, responsive grids, forms/buttons, cards/tables, badges/pagination, navigation/messages, readable default text, a compact worker filter and a custom accessible deadline calendar. Existing role colours and saved accessibility preferences remain supported. See README for final test results and the Bootstrap component guides for build details.
+
+This presentation work adds no database migration or ML changes. It builds on the issue #56 checkpoint and does not close that issue's pending account-management work. Hosted release and PostgreSQL verification remain separate.

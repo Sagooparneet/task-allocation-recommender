@@ -1,3 +1,4 @@
+from app.services.worker_capacity import MAX_ACTIVE_TASKS, active_task_counts
 from app.services.recommendation_presentation import worker_summary
 from app.services.worker_display_names import worker_display_name
 
@@ -87,8 +88,11 @@ class NetEaseRecommendationService:
         ).all():
             skills_by_agent.setdefault(agent_id, set()).add(skill_name)
 
+        counts = active_task_counts()
         candidates = {}
-        for agent in OnboardingAgent.query.filter_by(availability=True).all():
+        for agent in OnboardingAgent.query.filter_by(availability=True, account_disabled=False).all():
+            if counts.get(agent.id, 0) >= MAX_ACTIVE_TASKS:
+                continue
             source_id = bindings.get(str(agent.id))
             if source_id is None:
                 continue
@@ -117,6 +121,7 @@ class NetEaseRecommendationService:
         }, top_k=limit)
         artifacts = load_artifacts()
         weights = artifacts['model']['weights']
+        counts = active_task_counts()
         results = []
         for row in ranked:
             agent = candidates[row['source_worker_id']]
@@ -131,7 +136,7 @@ class NetEaseRecommendationService:
                 **row,
                 'agent_display_id': row['agent_id'],
                 'agent_id': agent.id,  # Existing assignment endpoint expects the DB primary key.
-                'agent_name': worker_display_name(row['source_worker_id']),
+                'agent_name': agent.profile_display_name or worker_display_name(row['source_worker_id']),
                 'task_id': task.id,
                 'task_type': task.task_type,
                 'match_percentage': round(row['score'] * 100, 2),
@@ -140,7 +145,7 @@ class NetEaseRecommendationService:
                 'kg_score': row['components']['knowledge_graph'],
                 'decision': 'Supervisor review required',
                 'availability': agent.availability,
-                'workload': agent.workload,
+                'workload': counts.get(agent.id, 0),
                 'performance_score': None if rate is None else rate * 100,
                 'explanation': ' '.join(reasons),
                 'explanations': reasons,

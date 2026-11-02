@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% from 'ui/form_errors.html' import summary, attributes, inline_error %}
+{% block title %}Worker account status | IntelliTask{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-venues.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}"><script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script>{% endblock %}
+{% block content %}
+<a href="{{ url_for('admin.worker_profile', worker_id=worker.id) }}">← Back to worker profile</a>
+<div class="av-header"><div><p class="av-eyebrow">{{ name }}</p><h1>{{ 'Reactivate' if action == 'reactivate' else 'Deactivate' }} worker account</h1></div></div>
+<form method="post" class="av-panel av-form accessible-form" novalidate>
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="{{ action }}">
+{{ summary(errors, 'Please check this account change') }}
+{% if action == 'reactivate' %}
+<p>This restores account access using the existing sign-in details. The worker will remain unavailable for new assignments until you change their availability.</p>
+{% else %}
+<p>This blocks sign-in and new assignments. The worker's details and task history will be kept.</p>
+{% if blocked %}<p><strong>This worker has unfinished tasks.</strong> They must finish their work before this account can be deactivated.</p>{% endif %}
+{% endif %}
+<div><label for="confirm"><input type="checkbox" name="confirm" id="confirm" value="yes" required {{ attributes(errors, 'confirm') }}> I confirm I want to {{ 'reactivate' if action == 'reactivate' else 'deactivate' }} this account.</label>{{ inline_error(errors, 'confirm') }}</div>
+<div class="av-actions"><button class="btn av-button" type="submit" {% if blocked and action == 'deactivate' %}disabled{% endif %}>{{ 'Reactivate account' if action == 'reactivate' else 'Deactivate account' }}</button><a href="{{ url_for('admin.worker_profile', worker_id=worker.id) }}">Cancel</a></div>
+</form>
+{% endblock %}

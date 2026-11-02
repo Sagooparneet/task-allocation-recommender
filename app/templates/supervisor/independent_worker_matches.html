@@ -1,0 +1,20 @@
+<section id="new-worker-matches" class="mt-4" aria-labelledby="new-worker-heading">
+    <div class="it-rec-list-heading"><h2 id="new-worker-heading">New workers matching this task</h2><span class="it-muted">{{ new_match_count }} match{{ '' if new_match_count == 1 else 'es' }} · alphabetical order</span></div>
+    <p>These workers have all the services needed for this task confirmed by an administrator. Choose a worker to give them an assignment.</p>
+    {% if new_matches %}<div class="it-rec-list">
+    {% for worker in new_matches %}
+    <article class="card it-rec-card" aria-labelledby="new-worker-{{ worker.agent_id }}">
+        <div class="it-rec-top"><span class="it-rec-avatar" aria-hidden="true">{{ worker.name[:1] }}</span>
+        <div class="it-rec-person"><h3 id="new-worker-{{ worker.agent_id }}">{{ worker.name }}</h3><p><span class="it-rec-availability">Available</span> · {{ worker.active_tasks }} of {{ max_active_tasks }} active tasks</p></div></div>
+        <div class="it-rec-body"><div><span class="it-rec-field-label">Services matched</span><div class="it-rec-chips">{% for link in task.task_skills %}<span>{{ link.skill.name | skill_label }}</span>{% endfor %}</div></div><div><span class="it-rec-field-label">Based in</span><strong>{{ worker.city or 'Not specified' }}</strong></div></div>
+        <div class="it-rec-footer"><p class="it-muted">Confirm they can report to the task's work location.</p>
+        {% if new_assignments_enabled %}<form method="post" action="{{ url_for('supervisor.assign_independent_worker', task_id=task.id) }}"><input type="hidden" name="agent_id" value="{{ worker.agent_id }}"><input type="hidden" name="assignment_csrf_token" value="{{ assignment_csrf_token }}"><button class="btn it-button" type="submit" aria-label="Assign {{ worker.name }} to this task">Assign worker</button></form>{% endif %}</div>
+    </article>
+    {% endfor %}</div>
+    {% if new_page_count > 1 %}<nav aria-label="Matching workers pages"><ul class="pagination mt-3">
+        {% if new_page > 1 %}<li class="page-item"><a class="page-link" href="{{ url_for('supervisor.recommendations', task_id=task.id, new_page=new_page-1) }}#new-worker-matches">Previous</a></li>{% endif %}
+        <li class="page-item"><span class="page-link" aria-current="page">Page {{ new_page }} of {{ new_page_count }}</span></li>
+        {% if new_page < new_page_count %}<li class="page-item"><a class="page-link" href="{{ url_for('supervisor.recommendations', task_id=task.id, new_page=new_page+1) }}#new-worker-matches">Next</a></li>{% endif %}
+    </ul></nav>{% endif %}
+    {% else %}<div class="card it-card it-empty"><p>No new workers are currently available with all the required services.</p></div>{% endif %}
+</section>

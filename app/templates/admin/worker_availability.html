@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% from 'ui/form_errors.html' import summary, attributes, inline_error %}
+{% block title %}Worker availability | IntelliTask{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-venues.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}"><script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script>{% endblock %}
+{% block content %}
+<a href="{{ url_for('admin.worker_profile', worker_id=worker.id) }}">← Back to worker profile</a>
+<div class="av-header"><div><p class="av-eyebrow">{{ name }}</p><h1>Availability for new assignments</h1><p>Choose whether this worker can receive more work.</p></div></div>
+<form method="post" class="av-panel av-form accessible-form" novalidate>
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="original_availability" value="{{ original }}">
+{{ summary(errors, 'Please check availability before saving') }}
+<div><label for="availability">New assignments *</label><select class="form-select" id="availability" name="availability" required {{ attributes(errors, 'availability') }}><option value="">Choose availability</option><option value="available" {% if value == 'available' %}selected{% endif %}>Available — can receive new assignments</option><option value="unavailable" {% if value == 'unavailable' %}selected{% endif %}>Unavailable — no new assignments</option></select>{{ inline_error(errors, 'availability') }}</div>
+<p>This worker has <strong>{{ active }} active task{{ '' if active == 1 else 's' }}</strong>. Existing tasks stay assigned and can still be completed. Sign-in access stays the same.</p>
+<div class="av-actions"><button class="btn av-button" type="submit">Save availability</button><a href="{{ url_for('admin.worker_profile', worker_id=worker.id) }}">Cancel</a></div>
+</form>
+{% endblock %}

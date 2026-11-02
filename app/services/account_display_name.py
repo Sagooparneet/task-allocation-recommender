@@ -11,6 +11,8 @@ from app.services.worker_display_names import worker_display_name
 def account_display_name(user):
     if user.role != 'agent':
         return user.name
+    if user.profile_display_name:
+        return user.profile_display_name
     storage = current_app.config.get('NETEASE_BINDING_STORAGE', 'file')
     try:
         if storage == 'database':

@@ -1,0 +1,46 @@
+.aw-directory .av-panel { margin-bottom: 24px; }
+.aw-directory .av-filters input[type="search"] { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--it-line); border-radius: 9px; font: inherit; color: var(--it-ink); background: var(--settings-surface, #fff); }
+.aw-directory .it-table th[scope="row"] { font-weight: 600; color: var(--it-ink); }
+.aw-directory .it-table th[scope="row"] small { display: block; font-weight: normal; }
+.aw-directory .av-pagination { flex-wrap: wrap; }
+.aw-directory .av-panel p, .aw-directory .av-header p { overflow-wrap: anywhere; }
+.aw-directory .it-table th, .aw-directory .it-table td { overflow-wrap: anywhere; }
+
+/* Compact directory filters; keep card flex layout out of this form. */
+.aw-directory .aw-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, .55fr) auto;
+    align-items: end;
+    gap: 1rem;
+    padding: 1.25rem;
+}
+.aw-directory .aw-filters > div { min-width: 0; }
+.aw-directory .aw-filters label { text-align: left; }
+.aw-directory .aw-filters .form-control,
+.aw-directory .aw-filters .form-select { min-height: 3rem; margin-bottom: 0; }
+.aw-directory .aw-filter-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+.aw-directory .aw-filter-actions .av-button {
+    width: auto;
+    min-height: 3rem;
+    margin: 0;
+}
+.aw-directory .aw-filter-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3rem;
+    padding: .5rem;
+    text-underline-offset: .2em;
+}
+@media (max-width: 70rem) {
+    .aw-directory .aw-filters { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .aw-directory .aw-filter-actions { grid-column: 1 / -1; }
+}
+@media (max-width: 40rem) {
+    .aw-directory .aw-filters { grid-template-columns: minmax(0, 1fr); }
+}

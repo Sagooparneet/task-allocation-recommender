@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% from 'ui/form_errors.html' import summary, attributes, inline_error %}
+{% block title %}Set your password | IntelliTask{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-venues.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/worker-setup.css') }}"><script src="{{ url_for('static', filename='js/worker-setup.js') }}" defer></script><script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script>{% endblock %}
+{% block content %}
+<section class="av-panel ws-public" aria-labelledby="setup-title">
+<img src="{{ url_for('static', filename='img/intellitask-mark.svg') }}" alt="IntelliTask" width="48" height="48">
+<h1 id="setup-title">Set your password</h1>
+{% if signed_in %}<p>You are already signed in. Open your invitation in a private browser window, or sign out before setting up the new worker account.</p><a href="{{ url_for('auth.logout') }}">Sign out</a>
+{% else %}
+<p>Use the invitation from your administrator and your registered email address.</p>
+<form method="post" class="av-form accessible-form" novalidate>
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+{{ summary(errors, 'Please check your setup details') }}
+{% if errors %}<p>For privacy, your setup code and passwords have been cleared. Reopen the invitation link or paste the code again.</p>{% endif %}
+<div><label for="setup_token">Setup code *</label><input class="form-control" type="password" id="setup_token" name="setup_token" maxlength="100" autocomplete="off" required {{ attributes(errors, 'setup_token') }}>{{ inline_error(errors, 'setup_token') }}</div>
+<div><label for="email">Registered email *</label><input class="form-control" type="email" id="email" name="email" value="{{ email }}" maxlength="120" autocomplete="username" required {{ attributes(errors, 'email') }}>{{ inline_error(errors, 'email') }}</div>
+<div><label for="password">New password *</label><input class="form-control" type="password" id="password" name="password" minlength="12" maxlength="128" autocomplete="new-password" required {{ attributes(errors, 'password') }}><p>Use 12 to 128 characters. A long, unique passphrase is a good choice.</p>{{ inline_error(errors, 'password') }}</div>
+<div><label for="password_confirm">Confirm password *</label><input class="form-control" type="password" id="password_confirm" name="password_confirm" minlength="12" maxlength="128" autocomplete="new-password" required {{ attributes(errors, 'password_confirm') }}>{{ inline_error(errors, 'password_confirm') }}</div>
+<div class="av-actions"><button class="btn av-button" type="submit">Set password</button><a href="{{ url_for('auth.login') }}">Back to sign in</a></div>
+</form>
+{% endif %}
+</section>
+{% endblock %}

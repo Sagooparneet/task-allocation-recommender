@@ -25,7 +25,9 @@ Supervisor opens a task
 
 The active hybrid uses **10% content, 50% collaborative, and 40% knowledge graph**. It loads saved artifacts rather than retraining during page requests. Knowledge-graph features and explanation evidence are precomputed from the saved training graph.
 
-The service checks source-worker bindings, recorded capabilities, and website availability. The assignment route checks task ownership, the form token, current eligibility, and duplicate assignment conditions. Workload is displayed but is not a component of the active website ranking. Completing a website task does not automatically retrain the model.
+The service checks source-worker bindings, recorded capabilities, and website availability. The assignment route checks task ownership, the form token, current eligibility, and duplicate assignment conditions. Actual active workload is capped at three assignments for new allocations; it is not a component of the active website ranking score. Completing a website task does not automatically retrain the model.
+
+Administrator-added independent workers use a separate service-matching list and never receive invented dataset scores or histories.
 
 Worker history and recommendation evidence come from saved training records. Dashboard task counts come from application records; neither is a new measure of model accuracy.
 
@@ -83,7 +85,7 @@ ml/reports/          Metrics and figures
 ml/tests/            ML package tests
 scripts/             Setup, migration, verification, and legacy demo utilities
 migrations/          Versioned database schema changes
-tests/               Flask application tests
+tests/               Flask application tests and frontend JavaScript tests
 instance/            Local database, backups, and bindings (not committed)
 config.py
 requirements.txt
@@ -122,7 +124,7 @@ The runner uses `instance/netease_setup_test` explicitly, a separate session coo
 
 ### Current port-5001 installation and task workflow
 
-The existing `instance/netease_setup_test` installation has been backed up and upgraded to migration `54b01c8d3e40` (task progress), following `49a01b7c2d30` (work venues). It has the five initial venues and a separately provisioned administrator. Start it with:
+The existing `instance/netease_setup_test` installation has been backed up and upgraded to migration `56b02e0f5a60` (worker account status), following `56a01d9e4f50` (worker display names), `54b01c8d3e40` (task progress) and `49a01b7c2d30` (work venues). It has the five initial venues and a separately provisioned administrator. Start it with:
 
 ```powershell
 python run_netease_test.py
@@ -188,7 +190,7 @@ This is an academic prototype with deployment preparation in progress. The origi
 
 ## Deployment preparation: Render and Neon
 
-Neon stores the PostgreSQL database; Render hosts the Flask website and saved ML inference. An earlier deployment reached the login page and supervisor dashboard successfully. The checks below describe that earlier setup; this issue does not update Neon or Render. Before deploying the current code, apply and verify the venue and task-progress migrations and directory setup on PostgreSQL separately. Do not point code that expects the new timestamp columns at a database without those columns.
+Neon stores the PostgreSQL database; Render hosts the Flask website and saved ML inference. An earlier deployment reached the login page and supervisor dashboard successfully. The checks below describe that earlier setup; this issue does not update Neon or Render. Before deploying the current code, apply and verify the venue, task-progress and worker-management migrations and directory setup on PostgreSQL separately. Current code requires the progress timestamps, profile_display_name and account_disabled columns; the local upgrade helpers must not be used against Neon.
 
 ### Database setup (new installations only)
 
@@ -299,7 +301,7 @@ Run the combined suite and browser-preference unit tests from the project root:
 
 ```powershell
 python -m pytest tests ml/tests -q
-node --test tests/js/accessibility_preferences.test.cjs
+node --test tests/js/accessibility_preferences.test.cjs tests/js/deadline_calendar.test.cjs
 ```
 
 Node.js is needed for these JavaScript tests, not for running the Flask website.
@@ -308,7 +310,7 @@ These checks establish the tested prototype workflows, not full production readi
 
 ## Supervisor interface conventions
 
-Names shown for imported workers are synthetic demonstration aliases from the saved display profiles. Original source-worker IDs and database bindings remain unchanged. Aliases do not affect model scores or represent the real identities of NetEase workers.
+Names shown for imported workers default to synthetic demonstration aliases from the saved display profiles. Administrators may override the displayed name without replacing the original source identity. Original source-worker IDs and database bindings remain unchanged. Aliases do not affect model scores or represent the real identities of NetEase workers.
 
 The interface uses these approved demonstration skill labels:
 
@@ -329,7 +331,7 @@ The shared IntelliTask theme uses a local SVG logo, stylesheet and small navigat
 
 Role navigation links to implemented pages, including administrator work locations. The agent dashboard supports task filtering, deadline sorting, details and the Assigned → In progress → Completed workflow. Reports, broader account management, Google signup and OTP verification remain future work. See [the role feature plan](docs/ROLE_FEATURE_PLAN.md).
 
-The latest project test total is recorded above. The user has reviewed the local supervisor and agent dashboards and administrator locations page. Current local changes have not yet been verified or published on Render.
+Historical test totals are recorded above; the latest Bootstrap verification is recorded in the issue #57 section below. The user has reviewed the local supervisor and agent dashboards and administrator locations page. Current local changes have not yet been verified or published on Render.
 
 
 ## Accessibility and role colours (issue #52)
@@ -354,3 +356,88 @@ Task creation refreshes the selected venue record before validation so an outdat
 The project owner confirmed saved preferences, error links, retained entries, keyboard navigation, dark mode and large-text checks on port 5001. A dedicated screen-reader review, wider mobile/browser coverage and a full accessibility audit remain pending; these checks do not establish formal accessibility conformance. Neon and Render have not been updated as part of issue #52.
 
 Further details: [settings and appearance](docs/SETTINGS_AND_APPEARANCE.md), [Create Task errors](docs/ACCESSIBLE_TASK_FORM.md), and [login and location form errors](docs/LOGIN_LOCATION_ERRORS.md).
+
+
+## Administrator worker management — issue #56
+
+Implemented and checked on the local port-5001 installation:
+
+- Worker listing, search, availability filters, pagination, profiles, services and assignment history.
+- Editing display names while preserving original dataset identities and source bindings.
+- Availability controls for new assignments, and account deactivation/reactivation with administrator-only access, form tokens and confirmation. Deactivation refuses unfinished or inconsistent assignments; reactivation leaves availability off.
+- A maximum of **three actual active assignments** (Assigned or In progress) per worker. Eligibility and assignment-time checks enforce capacity without deleting existing assignments. Workload is an eligibility constraint, not a new ML scoring feature.
+- Administrator-created independent workers with validated, unique email addresses and administrator-confirmed services. They receive their own registration records, with no borrowed dataset identity, history or model score.
+- Expiring, single-use initial password invitations for pending independent workers. The database stores the token hash; successful redemption sets a hashed password and enables login while leaving availability off until an administrator enables it. Reissuing replaces the previous invitation. This is not password recovery for existing accounts.
+- A separate **New workers matching this task** list. Eligible independent workers must match all required service IDs and are listed alphabetically, not ranked by the NetEase model. Supervisors retain the assignment decision. Assignment, start, completion and workload updates use the existing protected workflow.
+- Gmail API email invitations, with manual sharing still available. The recipient comes from the worker record, and emailed links use a configured origin. Email reissues have a one-minute guard. Failed or uncertain submission preserves the new link for manual sharing and does not report successful delivery.
+
+Dataset-backed recommendation weights and historical evidence remain unchanged. Availability, disabled-account and capacity checks can change which workers are eligible. Completing website tasks does not retrain the model or turn an independent worker into a dataset worker.
+
+### Local Gmail use
+
+The sending account is authorized with the Gmail sending-only scope. OAuth credentials are saved outside the project using Windows-user DPAPI encryption. They are never stored in the application database or committed to Git. Gmail authorization is separate from Google sign-in for website users, and sending an invitation does not set an email-verification flag.
+
+After completing the authorization helper, start the existing local installation with:
+
+```powershell
+python scripts/run_5001_with_gmail_api.py
+```
+
+This loads the saved authorization and enables email submission from the administrator's invitation form. The ordinary `python run_netease_test.py` launcher supports manual sharing but does not load the Gmail connection. No email is sent automatically on startup. Local emailed links must be opened on the computer running the website.
+
+See [local authorization](docs/GMAIL_LOCAL_AUTHORIZATION.md), [email invitations](docs/GMAIL_API_INVITATIONS.md), [password setup](docs/WORKER_PASSWORD_SETUP.md), [independent matching](docs/INDEPENDENT_WORKER_MATCHING.md) and [worker capacity](docs/WORKER_CAPACITY.md).
+
+### Verification and release boundaries
+
+The project owner confirmed actual inbox delivery, password setup and worker sign-in, then enabled availability and assigned a matching task to the new worker. Starting and completing that task updated supervisor totals and preserved completed history.
+
+Final checks reported by the project owner:
+
+- Full Python/application/ML run: **343 passed, 1 failed**, with 120 existing deprecation warnings. The failure was a Bootstrap manifest checksum mismatch caused solely by CRLF line endings.
+- After restoring the original LF bytes and adding targeted `.gitattributes` rules: **all 6 Bootstrap foundation tests passed**. The manifest and checksum test were not weakened or changed. The full suite was not rerun after this line-ending-only fix; these are separate verification results, not a claim of a fresh 344-pass run.
+- **16 JavaScript tests passed**, covering accessibility preferences, the deadline calendar and worker setup links.
+- `python -m pip check`: no broken requirements. `git diff --check`: no whitespace errors before the final documentation update.
+
+Local migrations through `56d04a2b7c80` were applied with backup/rehearsal checks. They cover display names, account deactivation, independent registrations and invitation storage. Keep the verified backups; upgrade helpers are not routine startup commands.
+
+Neon and Render remain unchanged. Hosted PostgreSQL migration/concurrency verification, hosted Gmail secret storage, public HTTPS invitation URLs and deployment checks are separate release work. The Windows encrypted credential file is not a Render credential. Google's external OAuth Testing mode can require reauthorization after seven days for Gmail scopes; production authorization requirements must be resolved before relying on unattended hosted delivery.
+
+Self-service profile/email/password changes, forgotten-password recovery, Google sign-in/OTP, supervisor administration, reports and service-catalogue management remain separate features. Issue #56 completion refers to the worker-management scope above, not those future features or a completed hosted release.
+
+
+## Bootstrap frontend integration (issue #57)
+
+The frontend uses **Bootstrap 5.3.8 with Flask-rendered Jinja2 templates**, alongside IntelliTask's custom theme. Bootstrap supplies layout and interface components; Flask handles routes, validation and permissions, SQLAlchemy handles application data, and the existing Python recommendation services provide rankings.
+
+Bootstrap assets are pinned and served locally from `app/static/vendor/bootstrap-5.3.8/`, including the MIT licence, grid CSS, JavaScript bundle, selective Sass source and compiled component CSS. Browsers do not need a CDN connection for these assets. The manifest records SHA-256 hashes. Flask runs with the committed assets; Node.js and Sass are only needed for frontend tests or rebuilding CSS.
+
+Implemented and reviewed on the local port-5001 website:
+
+- Responsive dashboard grids, buttons, text inputs, selects, cards and tables.
+- Status badges and pagination that retain existing labels, filters and links.
+- Shared navigation styling and labelled feedback messages; messages do not disappear on a timer.
+- A compact worker search/filter toolbar that wraps on smaller screens.
+- Normal body/control text of 1rem (normally 16px), with smaller secondary text at least .875rem (normally 14px). Saved accessibility choices still apply.
+- A custom deadline calendar with month navigation, keyboard controls and a separate time field. This is an IntelliTask component, not a Bootstrap calendar plugin. It preserves the original required date/time field as a fallback, submits the existing Kenya civil-time format and rejects dates before today. Backend validation still applies.
+
+The selective Bootstrap build includes forms, buttons, cards, tables, badges, pagination, navigation and alerts. Full Reboot, Bootstrap progress bars and replacement modal styles are not loaded, avoiding conflicts with existing charts and dialogs. Existing mobile navigation, Settings and calendar scripts retain control of their own interactions. There are no duplicate Bootstrap collapse or modal controllers.
+
+Teal supervisor, blue worker and purple administrator themes remain in place. Accessibility styles load last, retaining appearance preferences, enlarged text, high contrast, reduced motion, keyboard focus and accessible form errors. User-confirmed browser checks are not a formal accessibility certification or an exhaustive cross-browser audit.
+
+This issue changes presentation only: no new database migration, source-worker mappings, recommendation features or ranking weights. Neon and Render remain unchanged. The branch was created from the issue #56 worker-management checkpoint; review that dependency before merging into main, and keep unfinished issue #56 work open.
+
+### Verification and maintenance
+
+Final verification reported by the project owner on **2 November 2026**: **219 application and ML tests passed**, with 37 existing SQLAlchemy/Flask-SQLAlchemy deprecation warnings, and **12 JavaScript tests passed** (six saved-preference checks and six calendar checks). `git diff --check` reported no whitespace errors. These results come from the project checkout on `feature/57-bootstrap-integration`.
+
+The project owner confirmed the dashboard, forms, readable text, cards/tables, calendar, compact worker filter, shared navigation/messages and saved accessibility settings on port 5001. Deprecation warnings remain in existing SQLAlchemy/Flask-SQLAlchemy code. These checks do not verify the hosted deployment or PostgreSQL concurrency.
+
+Run the final checks from the project root:
+
+```powershell
+python -m pytest tests ml/tests -q
+node --test tests/js/accessibility_preferences.test.cjs tests/js/deadline_calendar.test.cjs
+git diff --check
+```
+
+Keep build folders and `node_modules` out of commits. Preserve the vendor licence, Sass source, generated CSS and matching manifest together. See [the integration overview](docs/BOOTSTRAP_INTEGRATION.md), [forms and build instructions](docs/BOOTSTRAP_CONTROLS.md), [cards and tables](docs/BOOTSTRAP_CARDS_TABLES.md), [status and pagination](docs/BOOTSTRAP_STATUS_PAGINATION.md), [deadline calendar](docs/DEADLINE_CALENDAR.md), and [navigation and messages](docs/BOOTSTRAP_NAVIGATION_MESSAGES.md).

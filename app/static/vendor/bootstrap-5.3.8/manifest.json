@@ -1,0 +1,22 @@
+{
+  "bootstrap-grid.min.css": {
+    "source": "https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap-grid.min.css",
+    "sha256": "8d09c629f0198c538a1f46908e742b247d2b1398e95669c4a820ab3d65c92ffc"
+  },
+  "bootstrap.bundle.min.js": {
+    "source": "https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js",
+    "sha256": "e4fd49181388c48ec5040bd3fe66f57c29c8e67fcd8502b3354b96ec7ab47cc7"
+  },
+  "LICENSE": {
+    "source": "https://raw.githubusercontent.com/twbs/bootstrap/v5.3.8/LICENSE",
+    "sha256": "4620c84ad5ce8602ff65640ed6b7c8b78ebb9e036584f0ebc1ccc88206a4bb51"
+  },
+  "bootstrap-controls.min.css": {
+    "source": "Bootstrap 5.3.8 selective build with Sass 1.93.2; see docs/BOOTSTRAP_NAVIGATION_MESSAGES.md",
+    "sha256": "7200307191e4dceb1d0a66c7ca15960829fe8648fe06b3685462f2f42af690e4"
+  },
+  "bootstrap-controls.scss": {
+    "source": "Bootstrap 5.3.8 selective build with Sass 1.93.2; see docs/BOOTSTRAP_NAVIGATION_MESSAGES.md",
+    "sha256": "a5c2228e938df06e3ca13117d17c0229a7bcc85485d4382bf57b0abbd6a60c60"
+  }
+}

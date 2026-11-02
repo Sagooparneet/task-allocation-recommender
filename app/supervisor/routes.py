@@ -1,3 +1,5 @@
+from app.services.independent_worker_matching import matching_workers
+from app.services.worker_capacity import MAX_ACTIVE_TASKS, active_task_count
 from app.services.worker_display_names import worker_display_name
 import secrets
 
@@ -79,7 +81,10 @@ def dashboard():
     page = filtered.order_by(Task.created_at.desc(), Task.id.desc()).paginate(
         page=page_number, per_page=10, error_out=False)
     profiles = load_dataset_profiles()
-    workers = [profiles[key] for key in sorted(profiles, key=int)[:5]]
+    from app.services.worker_directory import directory_names
+    _, profile_names = directory_names(include_sources=True)
+    workers = [{**profiles[key], 'display_name': profile_names.get(key, profiles[key]['display_name'])}
+               for key in sorted(profiles, key=int)[:5]]
     progress_details = {}
     # Fetch only assignments for this supervisor's visible tasks, not the
     # full task history. Unknown historical timestamps remain undisplayed.
@@ -100,7 +105,7 @@ def dashboard():
         completed_tasks=completed, other_tasks=other,
         progress_details=progress_details,
         overdue_tasks=overdue, due_today=due_today,
-        available_agents=OnboardingAgent.query.filter_by(availability=True).count(),
+        available_agents=OnboardingAgent.query.filter_by(availability=True, account_disabled=False).count(),
         completion_percent=round(100 * completed / total) if total else 0,
         completed_end=100 * completed / total if total else 0,
         in_progress_end=100 * (completed + in_progress) / total if total else 0,
@@ -241,6 +246,9 @@ def recommendations(task_id):
         session["assignment_csrf_token"] = secrets.token_urlsafe(32)
 
     already_assigned = TaskAssignment.query.filter_by(task_id=task.id).first() is not None
+    new_matches = matching_workers(task.id)
+    new_page_count = max(1, (len(new_matches) + 9) // 10)
+    new_page = min(new_page_count, max(1, request.args.get('new_page', 1, type=int) or 1))
     return render_template(
         "supervisor/recommendations.html",
         task=task,
@@ -248,10 +256,15 @@ def recommendations(task_id):
         recommendations=recommended_agents,
         recommendation_error=recommendation_error,
         assignment_csrf_token=session["assignment_csrf_token"],
+        max_active_tasks=MAX_ACTIVE_TASKS,
+        new_matches=new_matches[(new_page - 1) * 10:new_page * 10],
+        new_match_count=len(new_matches), new_page=new_page, new_page_count=new_page_count,
+        new_assignments_enabled=(task.status == 'Pending' and not already_assigned),
         assignments_enabled=(task.status == "Pending" and not already_assigned and recommendation_error is None)
     )
 
 
+@supervisor_bp.route('/task/<int:task_id>/assign-new-worker', methods=['POST'], endpoint='assign_independent_worker')
 @supervisor_bp.route("/task/<int:task_id>/assign", methods=["POST"])
 @login_required
 def assign_task(task_id):
@@ -273,21 +286,29 @@ def assign_task(task_id):
         return redirect(url_for("supervisor.recommendations", task_id=task.id))
 
     agent_id = request.form.get("agent_id", type=int)
-    try:
-        _, _, candidates = NetEaseRecommendationService().get_eligible_candidates(task.id)
-    except (ValueError, OSError):
-        flash("Eligibility could not be checked. Please contact your administrator.", "warning")
-        return redirect(url_for("supervisor.recommendations", task_id=task.id))
+    independent = request.endpoint == 'supervisor.assign_independent_worker'
+    if independent:
+        choices = matching_workers(task.id, agent_id) if agent_id is not None else []
+        if not choices:
+            flash('This worker is no longer eligible. Choose an available worker who matches every service and has fewer than 3 active tasks.', 'warning')
+            return redirect(url_for('supervisor.recommendations', task_id=task.id))
+        selected_name = choices[0]['name']
+    else:
+        try:
+            _, _, candidates = NetEaseRecommendationService().get_eligible_candidates(task.id)
+        except (ValueError, OSError):
+            flash("Eligibility could not be checked. Please contact your administrator.", "warning")
+            return redirect(url_for("supervisor.recommendations", task_id=task.id))
 
-    selected = next((agent for agent in candidates.values() if agent.id == agent_id), None)
-    if selected is None:
-        flash("This agent is no longer available or does not meet all mapped task requirements.", "warning")
-        return redirect(url_for("supervisor.recommendations", task_id=task.id))
+        selected = next((agent for agent in candidates.values() if agent.id == agent_id), None)
+        if selected is None:
+            flash("This agent is no longer available or does not meet all mapped task requirements. Workers at the 3-active-task limit cannot receive another task.", "warning")
+            return redirect(url_for("supervisor.recommendations", task_id=task.id))
 
-    selected_source_id = next(
-        source_id for source_id, agent in candidates.items() if agent.id == selected.id
-    )
-    selected_name = worker_display_name(selected_source_id)
+        selected_source_id = next(
+            source_id for source_id, agent in candidates.items() if agent.id == selected.id
+        )
+        selected_name = worker_display_name(selected_source_id)
     selected_task_type = task.task_type
     supervisor_id = current_user.id
     try:
@@ -305,17 +326,38 @@ def assign_task(task_id):
             flash("Another request changed or assigned this task. Please refresh.", "warning")
             return redirect(url_for("supervisor.recommendations", task_id=task_id))
 
+        # Serialize assignment reservations for this worker. The no-op UPDATE
+        # takes a row lock on PostgreSQL and a write lock on SQLite. Count in a
+        # subsequent statement, after any competing reservation has committed.
         agent_update = db.session.execute(
             update(OnboardingAgent).where(
                 OnboardingAgent.id == agent_id,
-                OnboardingAgent.availability.is_(True)
-            ).values(workload=func.coalesce(OnboardingAgent.workload, 0) + 1)
+                OnboardingAgent.availability.is_(True),
+                OnboardingAgent.account_disabled.is_(False)
+            ).values(workload=OnboardingAgent.workload)
             .execution_options(synchronize_session=False)
         )
         if agent_update.rowcount != 1:
             db.session.rollback()
             flash("The agent's availability changed. Please refresh recommendations.", "warning")
             return redirect(url_for("supervisor.recommendations", task_id=task_id))
+
+        if active_task_count(agent_id) >= MAX_ACTIVE_TASKS:
+            db.session.rollback()
+            flash(f'This worker already has {MAX_ACTIVE_TASKS} active tasks. Choose another worker or wait for a task to be completed.', 'warning')
+            return redirect(url_for('supervisor.recommendations', task_id=task_id))
+
+        # Recheck registration, all confirmed services and source identity after
+        # taking the worker lock; a stale page never authorizes assignment.
+        if independent and not matching_workers(task_id, agent_id):
+            db.session.rollback()
+            flash('The worker details changed. Refresh the matching workers list and choose again.', 'warning')
+            return redirect(url_for('supervisor.recommendations', task_id=task_id))
+
+        db.session.execute(update(OnboardingAgent).where(
+            OnboardingAgent.id == agent_id
+        ).values(workload=func.coalesce(OnboardingAgent.workload, 0) + 1)
+         .execution_options(synchronize_session=False))
 
         db.session.add(TaskAssignment(
             task_id=task_id,

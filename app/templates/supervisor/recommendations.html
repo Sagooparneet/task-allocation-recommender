@@ -14,6 +14,7 @@
         {{ task_location(venue_details) }}
         {% if task.description %}<details class="it-rec-description"><summary>Task description</summary><p>{{ task.description }}</p></details>{% endif %}
     </section>
+    <p class="it-muted">Workers can have up to {{ max_active_tasks }} active tasks. Assigned and in-progress tasks both count.</p>
     {% if recommendation_error %}
     <div class="message warning" role="alert"><strong>Recommendations unavailable</strong><p>{{ recommendation_error }}</p></div>
     {% elif recommendations %}
@@ -21,7 +22,7 @@
     {% if task.status != 'Pending' %}<div class="message info">This task is {{ task.status|lower }}. You can review the suggestions here.</div>{% endif %}
     <div class="it-rec-list">
         {% for recommendation in recommendations %}{% set summary = recommendation.summary %}
-        <article class="it-rec-card {% if loop.first %}it-rec-first{% endif %}" aria-labelledby="worker-{{ recommendation.agent_id }}">
+        <article class="card it-rec-card {% if loop.first %}it-rec-first{% endif %}" aria-labelledby="worker-{{ recommendation.agent_id }}">
             <div class="it-rec-top">
                 <span class="it-rec-avatar">{{ recommendation.agent_name[:1] }}</span>
                 <div class="it-rec-person"><div class="it-rec-title"><h3 id="worker-{{ recommendation.agent_id }}">{{ recommendation.agent_name }}</h3>{% if loop.first %}<span class="it-rec-top-label">Top ranked</span>{% else %}<span class="it-rec-position">#{{ recommendation.rank }}</span>{% endif %}</div><p><span class="it-rec-availability">{{ 'Available' if recommendation.availability else 'Unavailable' }}</span><span class="it-rec-separator">·</span>{{ recommendation.workload }} active task{{ '' if recommendation.workload == 1 else 's' }}</p></div>
@@ -36,19 +37,20 @@
                     <summary>Why this recommendation?</summary>
                     <div class="it-rec-evidence">
                         {% if summary.with_history %}<p>Past results are available for {{ summary.with_history }} of {{ summary.skills|length }} selected service{{ 's' if summary.skills|length != 1 else '' }}.</p>{% else %}<p>There is limited past history for the selected services.</p>{% endif %}
-                        <table><caption class="it-sr-only">Past responses by selected service for {{ recommendation.agent_name }}</caption><thead><tr><th scope="col">Service</th><th scope="col">Successful / recorded</th></tr></thead><tbody>{% for skill in summary.skills %}<tr><td>{{ skill.label }}</td><td>{% if skill.total %}{{ skill.successful }} / {{ skill.total }}{% else %}No past results{% endif %}</td></tr>{% endfor %}</tbody></table>
+                        <div class="table-responsive" tabindex="0" role="region" aria-label="Past responses by service"><table class="table"><caption class="it-sr-only">Past responses by selected service for {{ recommendation.agent_name }}</caption><thead><tr><th scope="col">Service</th><th scope="col">Successful / recorded</th></tr></thead><tbody>{% for skill in summary.skills %}<tr><td>{{ skill.label }}</td><td>{% if skill.total %}{{ skill.successful }} / {{ skill.total }}{% else %}No past results{% endif %}</td></tr>{% endfor %}</tbody></table></div>
                         {% if summary.shared_history_used %}<p>Patterns from shared task history also contribute to this ranking.</p>{% endif %}
                         <p class="it-muted">Detailed ranking score: {{ '%.2f'|format(recommendation.match_percentage) }}/100</p>
                     </div>
                 </details>
                 {% if task.status == 'Pending' %}<div class="it-rec-action">
-                    {% if assignments_enabled %}<form method="POST" action="{{ url_for('supervisor.assign_task', task_id=task.id) }}"><input type="hidden" name="agent_id" value="{{ recommendation.agent_id }}"><input type="hidden" name="assignment_csrf_token" value="{{ assignment_csrf_token }}"><button class="it-button" type="submit" aria-label="Assign {{ recommendation.agent_name }} to this task">Assign worker {{ icon('arrow') }}</button></form>
-                    {% else %}<button class="it-button" type="button" disabled>Assignment unavailable</button>{% endif %}
+                    {% if assignments_enabled %}<form method="POST" action="{{ url_for('supervisor.assign_task', task_id=task.id) }}"><input type="hidden" name="agent_id" value="{{ recommendation.agent_id }}"><input type="hidden" name="assignment_csrf_token" value="{{ assignment_csrf_token }}"><button class="btn it-button" type="submit" aria-label="Assign {{ recommendation.agent_name }} to this task">Assign worker {{ icon('arrow') }}</button></form>
+                    {% else %}<button class="btn it-button" type="button" disabled>Assignment unavailable</button>{% endif %}
                 </div>{% endif %}
             </div>
         </article>
         {% endfor %}
     </div>
-    {% else %}<div class="it-card it-empty">{{ icon('people') }}<h2>No available matches yet</h2><p>No available worker currently matches all the selected requirements.</p><a class="it-text-link" href="{{ url_for('supervisor.dashboard') }}">Back to your tasks</a></div>{% endif %}
+    {% else %}<div class="card it-card it-empty">{{ icon('people') }}<h2>No suggested workers available</h2><p>Check the matching workers below for another option.</p><a class="it-text-link" href="{{ url_for('supervisor.dashboard') }}">Back to your tasks</a></div>{% endif %}
+{% include 'supervisor/independent_worker_matches.html' %}
 </div>
 {% endblock %}
