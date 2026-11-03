@@ -96,7 +96,7 @@ run.py
 seed.py
 ```
 
-The older top-level Jira and synthetic experiment folders have been removed from the active working tree and preserved separately by the project owner. They are not inputs to the current NetEase integration.
+The older top-level Jira and synthetic experiment folders are not inputs to the current NetEase integration.
 
 ## Account bootstrap for a fresh installation (Windows PowerShell)
 
@@ -124,7 +124,7 @@ The runner uses `instance/netease_setup_test` explicitly, a separate session coo
 
 ### Current port-5001 installation and task workflow
 
-The existing `instance/netease_setup_test` installation has been backed up and upgraded through migration `62b06c4d9e01` (supervisor setup invitations), following `62a05b3c8d90` (supervisor account status), `56d04a2b7c80` (worker setup invitations), `54b01c8d3e40` (task progress) and `49a01b7c2d30` (work venues). It has the five initial venues and a separately provisioned administrator. For the normal local website, start it with:
+The existing `instance/netease_setup_test` installation has been backed up and upgraded through migration `66c09f702b34` (Google identities), including email verification, password recovery, supervisor invitations, worker invitations, task progress and work venues. It has the five initial venues and a separately provisioned administrator. Start the normal local website with:
 
 ```powershell
 python run_netease_test.py
@@ -208,7 +208,7 @@ Each script prompts privately for the connection string. Initialisation also pro
 
 `create_neon_tables.py` applies the committed initial migration to an empty database. `initialize_neon.py` refuses nonempty application tables and creates one supervisor, 1,653 source-ID worker accounts, four capability skills, and database worker mappings. It creates no tasks or assignments. Worker logins remain disabled. Unknown historical performance remains unknown.
 
-The project owner's Neon database has already completed these steps. Do not rerun schema creation or initialisation against that populated database. Future schema changes require new reviewed migrations; do not reset the database or rerun `db init`.
+If Neon already contains the initial workers and supervisor, skip schema creation and initialisation. For later changes, apply reviewed migrations to that database; do not reset it or rerun `db init`.
 
 The existing local databases are separate installations. This process does not transfer their tasks, assignments, accounts, or JSON binding files to Neon.
 
@@ -244,16 +244,15 @@ Do not run setup or initialisation scripts in the build or start command. Databa
 
 Provider documentation: [Render Flask hosting](https://render.com/docs/deploy-flask), [Python version configuration](https://render.com/docs/python-version), [Render free service limits](https://render.com/docs/free), and [Neon plans](https://neon.com/pricing).
 
-### Earlier deployment checks (24 October 2026)
+### Before deploying the current code
 
-- Combined Flask and ML tests: **26 passed**, with 14 SQLAlchemy legacy-API warnings.
-- Installed dependency consistency: `python -m pip check` reported no broken requirements. This is not a clean Linux installation test.
-- The production workflow check passed task creation, saved-model inference, recommendation display, assignment, duplicate protection, workload changes, and completion using a temporary SQLite copy. The source databases were unchanged.
-- The read-only Neon application check verified all 1,653 worker identities, database-backed ML configuration, supervisor login, session-cookie protections, and the authenticated dashboard.
-- The read-only Neon check did not create or assign a task. Separately, the user confirmed the Render login page and supervisor dashboard opened. A complete hosted task-to-completion workflow for the current changes remains pending.
-- Worker completion tests simulate an authenticated worker session. Real hosted worker login has not been enabled or verified.
+1. Back up Neon and apply the versioned migrations that are missing from its current revision. Rehearse the PostgreSQL upgrade on a disposable copy first. Do not run the port-5001 SQLite upgrade helpers against Neon.
+2. Configure Render with the production variables below, a stable secret key, and a public HTTPS URL. Register that URL as the Google sign-in callback.
+3. Configure hosted email delivery separately. The Windows-protected local Gmail authorization file cannot be used by Render.
+4. Test HTTPS sign-in, first-time setup, password reset, Google sign-in, task creation, recommendations, assignment, worker start/completion and supervisor totals against the hosted database.
+5. Check the Linux build, saved-model loading, memory use and session-cookie protections before demonstrating the public site.
 
-Before declaring the public demo ready, verify the Linux build and model loading, run the task/assignment workflow against the hosted database, review authentication and form protections, and test HTTPS login and session behaviour in a browser. These checks do not establish model accuracy on real onboarding tasks.
+The earlier hosted deployment reached the login page and supervisor dashboard. Treat the full hosted workflow as unverified until the steps above pass. Website task outcomes do not establish model accuracy on real onboarding work.
 
 ## Research notebooks
 
@@ -268,45 +267,17 @@ The six notebooks are under `ml/notebooks/`:
 
 Saved outputs can be viewed without executing them. Reproduction instructions and notebook dependencies are included in the ML package. Run notebooks in numerical order in an isolated research environment; executing them can regenerate model artifacts and reports.
 
-## Tests and verification status
+## Tests
 
-From the project root:
-
-```powershell
-python -m pytest ml/tests -q
-python -m pytest tests -q
-```
-
-Earlier local verification reported by the project owner on **26 October 2026**:
-
-- **112 application and ML tests passed** after the task-title/services update. Existing SQLAlchemy deprecation notices remain.
-- Local administrator login and location management, task title and service selection were manually confirmed on port 5001.
-- Tests cover role restrictions, venue validation, city/venue mismatch, inactive venues, form tokens, task creation rollback, preserved snapshots, owner-only location display, legacy city-only tasks and duplicate names.
-- Recommendation regression checks confirm different titles with identical service IDs produce identical ranked worker IDs, scores and component scores; venue edits also preserve scores.
-- Existing assignment, workload, completion, deadline, dashboard and ML tests remain in the suite. Test fixtures use disposable databases.
-- Mobile visual review and a full manual task creation/assignment/location/completion walkthrough remain useful release checks. These results do not certify the hosted deployment.
-
-For issue #52, the project owner subsequently confirmed the test suite and local login, administrator location forms and accessibility checks were working. Focused verification of the login/location error changes passed **26 tests**, including Create Task error regressions. The preference JavaScript tests passed **6 tests**. Use the current test run output for the full-suite total; the 112-test result above is a historical milestone.
-
-For issue #54 (30 October 2026), the project owner confirmed:
-
-- The migration rehearsal and port-5001 upgrade preserved all existing records, with integrity and foreign-key checks passing.
-- **39 focused tests passed** for protected completion, starting tasks, the worker dashboard and existing workflow checks.
-- **26 focused tests passed** for supervisor progress, dashboard overview, completion and starting tasks. These groups overlap and must not be added together as a full-suite total.
-- Worker start/completion times and supervisor totals/status displays work on port 5001.
-
-Final local verification for issue #54: **159 application and ML tests passed**, with 31 existing SQLAlchemy/Flask-SQLAlchemy deprecation warnings; **6 accessibility-preference JavaScript tests passed**. `git diff --check` reported no whitespace errors. The venue schema check now compares current models after applying the latest migration, while retaining historical venue and rollback checks. Focused tests cover ownership, form tokens, invalid transitions, repeat requests, workload boundaries, timestamp preservation, Kenya-time display, supervisor scoping and status filtering. The updated production workflow helper now starts work and supplies progress form tokens; its updated integration run remains pending. PostgreSQL migration verification and a public hosted workflow test remain separate release work.
-
-Run the combined suite and browser-preference unit tests from the project root:
+From the project root, run:
 
 ```powershell
 python -m pytest tests ml/tests -q
-node --test tests/js/accessibility_preferences.test.cjs tests/js/deadline_calendar.test.cjs
+node --test tests/js/accessibility_preferences.test.cjs tests/js/deadline_calendar.test.cjs tests/js/worker_setup.test.cjs
+python -m pip check
 ```
 
-Node.js is needed for these JavaScript tests, not for running the Flask website.
-
-These checks establish the tested prototype workflows, not full production readiness or onboarding prediction accuracy.
+The latest full local check passed **433 Python tests** and **16 JavaScript tests**. The Python run reported 120 SQLAlchemy and Flask-SQLAlchemy deprecation warnings. Tests use disposable databases; they do not verify the public website or Neon. Run the hosted workflow checks above before deploying new changes. Node.js is needed for the JavaScript tests, not for running Flask.
 
 ## Supervisor reports (issue #60)
 
@@ -322,15 +293,15 @@ All report queries are restricted to the signed-in supervisor. Records and datas
 
 Creation filters use the existing recorded `created_at` calendar dates. These legacy timestamps are timezone-naive server-local values; the report does not infer or rewrite historical timezone offsets. Statuses reflect the current state, not historical snapshots. Review timestamp consistency when deploying to PostgreSQL.
 
-### Local verification
+### Check reports
 
-The project owner confirmed the report totals, date filters, charts, drill-down and rejection of future creation dates on port 5001. The latest focused report run passed **33 tests**, covering ownership, role access, read-only behavior, date boundaries, future-date rejection, chart proportions, category filtering, pagination and empty/legacy records. This is a focused result, not a new full-suite total. Wider browser/accessibility review and hosted PostgreSQL verification remain separate.
+Sign in as a supervisor, open **Reports**, and check the totals, date filters, chart drill-down and task table against that supervisor's tasks. Future creation dates should be rejected; task deadlines may still be in the future. Then run:
 
 ```powershell
 python -m pytest tests/test_supervisor_reports.py tests/test_dashboard_overview.py tests/test_supervisor_progress.py tests/test_role_theme.py -q
 ```
 
-See [report behavior and checks](docs/SUPERVISOR_REPORTS.md). Neon and Render have not been updated for this feature. CSV/PDF exports and historical trend reports are outside issue #60.
+See [report behavior and checks](docs/SUPERVISOR_REPORTS.md). CSV/PDF exports and historical trend reports are outside issue #60.
 
 ## Supervisor interface conventions
 
@@ -355,7 +326,7 @@ The shared IntelliTask theme uses a local SVG logo, stylesheet and small navigat
 
 Role navigation links to implemented pages, including administrator work locations and supervisor management. The agent dashboard supports task filtering, deadline sorting, details and the Assigned → In progress → Completed workflow. Supervisor reports are implemented locally. First-time email verification, password recovery and Google sign-in are implemented locally under issue #66. See [the role feature plan](docs/ROLE_FEATURE_PLAN.md).
 
-Historical test totals are recorded above; the latest Bootstrap verification is recorded in the issue #57 section below. The user has reviewed the local supervisor and agent dashboards and administrator locations page. Current local changes have not yet been verified or published on Render.
+Check the supervisor and worker dashboards and the administrator locations page in the local browser after changing shared styles. Deploy current local changes only after completing the hosted checklist above.
 
 
 ## Accessibility and role colours (issue #52)
@@ -377,7 +348,7 @@ Create Task, login and administrator Add/Edit work location forms provide error 
 
 Task creation refreshes the selected venue record before validation so an outdated cached active flag does not bypass the inactive-location check. Recommendation inputs, dataset bindings and existing task snapshots are unchanged by these interface improvements.
 
-The project owner confirmed saved preferences, error links, retained entries, keyboard navigation, dark mode and large-text checks on port 5001. A dedicated screen-reader review, wider mobile/browser coverage and a full accessibility audit remain pending; these checks do not establish formal accessibility conformance. Neon and Render have not been updated as part of issue #52.
+Check saved preferences, form-error links, retained entries, keyboard navigation, dark mode and enlarged text on port 5001. Include a screen-reader review and wider mobile/browser coverage before claiming accessibility conformance. The local settings do not update Neon or Render.
 
 Further details: [settings and appearance](docs/SETTINGS_AND_APPEARANCE.md), [Create Task errors](docs/ACCESSIBLE_TASK_FORM.md), and [login and location form errors](docs/LOGIN_LOCATION_ERRORS.md).
 
@@ -417,23 +388,11 @@ This loads the saved authorization and enables email submission from the adminis
 
 See [local authorization](docs/GMAIL_LOCAL_AUTHORIZATION.md), [email invitations](docs/GMAIL_API_INVITATIONS.md), [password setup](docs/WORKER_PASSWORD_SETUP.md), [independent matching](docs/INDEPENDENT_WORKER_MATCHING.md) and [worker capacity](docs/WORKER_CAPACITY.md).
 
-### Verification and release boundaries
+### Check worker management
 
-The project owner confirmed actual inbox delivery, password setup and worker sign-in, then enabled availability and assigned a matching task to the new worker. Starting and completing that task updated supervisor totals and preserved completed history.
+Use the administrator portal to create an independent worker, choose services, send or privately share a setup invitation, and keep availability off until the account is ready. After password setup, enable availability and assign a matching task. Sign in as that worker to start and complete it, then refresh the supervisor dashboard to confirm the totals. Run the full test commands in [Tests](#tests).
 
-Final checks reported by the project owner:
-
-- Full Python/application/ML run: **343 passed, 1 failed**, with 120 existing deprecation warnings. The failure was a Bootstrap manifest checksum mismatch caused solely by CRLF line endings.
-- After restoring the original LF bytes and adding targeted `.gitattributes` rules: **all 6 Bootstrap foundation tests passed**. The manifest and checksum test were not weakened or changed. The full suite was not rerun after this line-ending-only fix; these are separate verification results, not a claim of a fresh 344-pass run.
-- **16 JavaScript tests passed**, covering accessibility preferences, the deadline calendar and worker setup links.
-- `python -m pip check`: no broken requirements. `git diff --check`: no whitespace errors before the final documentation update.
-
-Local migrations through `56d04a2b7c80` were applied with backup/rehearsal checks. They cover display names, account deactivation, independent registrations and invitation storage. Keep the verified backups; upgrade helpers are not routine startup commands.
-
-Neon and Render remain unchanged. Hosted PostgreSQL migration/concurrency verification, hosted Gmail secret storage, public HTTPS invitation URLs and deployment checks are separate release work. The Windows encrypted credential file is not a Render credential. Google's external OAuth Testing mode can require reauthorization after seven days for Gmail scopes; production authorization requirements must be resolved before relying on unattended hosted delivery.
-
-Self-service profile/email/password changes and service-catalogue management remain separate features. Password recovery, Google sign-in and first-time email verification are implemented locally under issue #66. Supervisor reports are implemented locally under issue #60, and supervisor administration under issue #62. Issue #56 completion refers to the worker-management scope above, not those later features or a completed hosted release.
-
+Keep verified local database backups. The local upgrade helpers are installation-specific and are not routine startup commands. Neon and Render require their own migration and hosted email checks before receiving these features. The Windows encrypted Gmail credential file is not a Render credential. Self-service account edits and service-catalogue management remain separate work.
 
 ## Administrator supervisor management — issue #62
 
@@ -443,7 +402,7 @@ For a pending supervisor, the administrator can create a one-time setup invitati
 
 Email uses the existing Gmail sender configuration and fixed invitation website address. On port 5001, start with `python scripts/run_5001_with_gmail_api.py` to enable Gmail delivery. `python run_netease_test.py` supports manual sharing only. The email option sends only when the administrator selects it and confirms the invitation. Repeated email requests within one minute are refused. If Gmail submission cannot be confirmed, the new link remains available for manual sharing and the page does not claim successful delivery. Localhost links must be opened on the computer running the website.
 
-The local upgrade was backed up and rehearsed before applying `62a05b3c8d90` and `62b06c4d9e01`. Existing supervisors, workers, tasks, assignments and configuration were preserved. The project owner confirmed the administrator controls and live Gmail invitation delivery. Focused supervisor and worker invitation tests passed; run the full suite before merging. These changes do not affect NetEase worker mappings, training evidence, recommendation scoring or task history.
+For a new installation, apply migrations `62a05b3c8d90` and `62b06c4d9e01` before using supervisor management. Back up and rehearse upgrades on an existing database. To check the workflow, add a supervisor, send a setup invitation, complete password setup, sign in, and test deactivation/reactivation. These actions do not change NetEase worker mappings, training evidence, recommendation scoring or task history.
 
 Neon and Render have not been upgraded for issue #62. The local port-5001 backup and upgrade scripts are installation-specific and must not be run against Neon. Hosted rollout requires separate PostgreSQL migration and verification, a public HTTPS invitation address, and hosted Gmail authorization. The Windows encrypted Gmail credential file is not available to Render.
 
@@ -454,7 +413,7 @@ The frontend uses **Bootstrap 5.3.8 with Flask-rendered Jinja2 templates**, alon
 
 Bootstrap assets are pinned and served locally from `app/static/vendor/bootstrap-5.3.8/`, including the MIT licence, grid CSS, JavaScript bundle, selective Sass source and compiled component CSS. Browsers do not need a CDN connection for these assets. The manifest records SHA-256 hashes. Flask runs with the committed assets; Node.js and Sass are only needed for frontend tests or rebuilding CSS.
 
-Implemented and reviewed on the local port-5001 website:
+The frontend includes:
 
 - Responsive dashboard grids, buttons, text inputs, selects, cards and tables.
 - Status badges and pagination that retain existing labels, filters and links.
@@ -465,36 +424,25 @@ Implemented and reviewed on the local port-5001 website:
 
 The selective Bootstrap build includes forms, buttons, cards, tables, badges, pagination, navigation and alerts. Full Reboot, Bootstrap progress bars and replacement modal styles are not loaded, avoiding conflicts with existing charts and dialogs. Existing mobile navigation, Settings and calendar scripts retain control of their own interactions. There are no duplicate Bootstrap collapse or modal controllers.
 
-Teal supervisor, blue worker and purple administrator themes remain in place. Accessibility styles load last, retaining appearance preferences, enlarged text, high contrast, reduced motion, keyboard focus and accessible form errors. User-confirmed browser checks are not a formal accessibility certification or an exhaustive cross-browser audit.
+Teal supervisor, blue worker and purple administrator themes remain in place. Accessibility styles load last, retaining appearance preferences, enlarged text, high contrast, reduced motion, keyboard focus and accessible form errors. Check these behaviors across supported browsers and with assistive technology before claiming accessibility conformance.
 
-This issue changes presentation only: no new database migration, source-worker mappings, recommendation features or ranking weights. Neon and Render remain unchanged. The branch was created from the issue #56 worker-management checkpoint; review that dependency before merging into main, and keep unfinished issue #56 work open.
+These frontend changes do not require a database migration or alter source-worker mappings, recommendation features or ranking weights. Deploy the current frontend only after the hosted database is compatible with the current application code.
 
-### Verification and maintenance
+### Maintain the frontend
 
-Final verification reported by the project owner on **2 November 2026**: **219 application and ML tests passed**, with 37 existing SQLAlchemy/Flask-SQLAlchemy deprecation warnings, and **12 JavaScript tests passed** (six saved-preference checks and six calendar checks). `git diff --check` reported no whitespace errors. These results come from the project checkout on `feature/57-bootstrap-integration`.
+Run the commands in [Tests](#tests) after changing Bootstrap assets or shared styles. Keep build folders and `node_modules` out of commits. Preserve the vendor licence, Sass source, generated CSS and matching manifest together. Check the dashboard, forms, calendar and accessibility settings at normal and enlarged text sizes in a browser.
 
-The project owner confirmed the dashboard, forms, readable text, cards/tables, calendar, compact worker filter, shared navigation/messages and saved accessibility settings on port 5001. Deprecation warnings remain in existing SQLAlchemy/Flask-SQLAlchemy code. These checks do not verify the hosted deployment or PostgreSQL concurrency.
-
-Run the final checks from the project root:
-
-```powershell
-python -m pytest tests ml/tests -q
-node --test tests/js/accessibility_preferences.test.cjs tests/js/deadline_calendar.test.cjs
-git diff --check
-```
-
-Keep build folders and `node_modules` out of commits. Preserve the vendor licence, Sass source, generated CSS and matching manifest together. See [the integration overview](docs/BOOTSTRAP_INTEGRATION.md), [forms and build instructions](docs/BOOTSTRAP_CONTROLS.md), [cards and tables](docs/BOOTSTRAP_CARDS_TABLES.md), [status and pagination](docs/BOOTSTRAP_STATUS_PAGINATION.md), [deadline calendar](docs/DEADLINE_CALENDAR.md), and [navigation and messages](docs/BOOTSTRAP_NAVIGATION_MESSAGES.md).
-
+See [the integration overview](docs/BOOTSTRAP_INTEGRATION.md), [forms and build instructions](docs/BOOTSTRAP_CONTROLS.md), [cards and tables](docs/BOOTSTRAP_CARDS_TABLES.md), [status and pagination](docs/BOOTSTRAP_STATUS_PAGINATION.md), [deadline calendar](docs/DEADLINE_CALENDAR.md), and [navigation and messages](docs/BOOTSTRAP_NAVIGATION_MESSAGES.md).
 
 ## Account sign-in and recovery (issue #66)
 
-The login page keeps password sign-in for administrators, supervisors and workers and adds an accessible show/hide control beside the password. Its desktop layout keeps the form compact when a sign-out message appears, while larger accessibility text can still scroll. Administrator-invited supervisors and independent workers must verify a six-digit code emailed to their registered address before choosing their first password. Codes expire after ten minutes. Existing accounts retain their passwords. Account creation remains administrator-controlled.
+To sign in, enter the email and password for an existing administrator, supervisor or worker account. Use the eye button to show or hide the password. The compact desktop form can scroll when larger accessibility text is selected. For a newly invited supervisor or independent worker, open the setup link, request the six-digit code sent to the registered email, enter it within ten minutes, and then choose a first password. Existing accounts keep their passwords. Administrators control account creation.
 
-**Forgot password** sends an expiring, single-use reset link for an eligible active account. The request page gives the same response for known and unknown addresses. The database stores a token hash and private request counters; a link expires after 30 minutes. Changing a password invalidates prior login sessions and attempts to send a confirmation email. Local email delivery uses the existing Gmail sender connection; no email is sent merely by opening the website.
+To recover an account, choose **Forgot password**, enter its registered email and follow the link sent to that address within 30 minutes. The request page gives the same response for known and unknown addresses. Reset links are single-use, stored as hashes, and subject to request limits. Changing a password invalidates prior login sessions and attempts to send a confirmation email. Local delivery requires the Gmail sender connection.
 
-**Continue with Google** uses a separate Google OAuth Web application client with `openid email` only. The server checks the signed ID token, client audience, one-time state and nonce before linking Google's stable subject to an already approved, active IntelliTask account with the same verified Gmail or Google Workspace address. It does not create accounts, enable a disabled account, accept a pending invitation, or grant a dataset worker login. The original password sign-in remains available. This sign-in client does not request Gmail sending permission.
+To use **Continue with Google**, first have an approved, active IntelliTask account with the same verified Gmail or Google Workspace address. Google sign-in uses a separate OAuth Web application client with `openid email` only. It does not create accounts, enable disabled accounts, accept pending invitations or grant dataset workers login access. Password sign-in remains available. This client does not request Gmail sending permission.
 
-For the verified local port-5001 installation, configure a separate Google Web client with the exact authorized callback `http://127.0.0.1:5001/auth/google/callback`. Keep its downloaded JSON outside the repository. In the same PowerShell terminal used to start the local website:
+For port 5001, configure a separate Google Web client with the exact authorized callback `http://127.0.0.1:5001/auth/google/callback`. Keep its downloaded JSON outside the repository. In the PowerShell terminal used to start the local website:
 
 ```powershell
 $env:INTELLITASK_GOOGLE_SIGNIN_CLIENT_FILE = "C:\path\outside\project\sign-in-client.json"
@@ -502,10 +450,10 @@ $env:INTELLITASK_GOOGLE_SIGNIN_REDIRECT_URI = "http://127.0.0.1:5001/auth/google
 python scripts/run_5001_with_gmail_api.py
 ```
 
-The Google button appears only when the client is configured. If Google's authorization screen is in Testing mode, the chosen Google account must be an allowed test user. Its email must match an existing active IntelliTask account. The project owner confirmed local Google sign-in opened that account's dashboard. The client JSON and Gmail sender credentials must never be committed or pasted into documentation.
+The Google button appears only when the client is configured. If Google's authorization screen is in Testing mode, add the chosen Google account as an allowed test user. Its email must match an existing active IntelliTask account. Keep the client JSON and Gmail sender credentials outside the repository and out of documentation.
 
-Local migrations `66a07d5e0f12` (first-time email verification), `66b08e6f1a23` (password reset) and `66c09f702b34` (Google identity) were each backed up, rehearsed and applied to port 5001 with account, task and assignment preservation checks. The Google client validator passed, and the project owner confirmed a browser sign-in. These features do not change NetEase source bindings or recommendation scoring.
+For a new installation, apply migrations `66a07d5e0f12` (first-time email verification), `66b08e6f1a23` (password reset) and `66c09f702b34` (Google identity) before using these flows. Back up and rehearse upgrades for an existing database. The port-5001 installation already has these migrations; do not rerun its upgrade helpers on startup. These features do not change NetEase source bindings or recommendation scoring.
 
-Final verification on the matching application and test files in an isolated project copy: **433 Python application and ML tests passed** and **16 JavaScript tests passed**. The Python run reported 120 existing SQLAlchemy and Flask-SQLAlchemy deprecation warnings. The earlier Google sign-in configuration test failure was fixed by clearing its own environment settings. The default body and shared control text was reduced slightly, and the login spacing was tightened after browser review. The hosted site and database were not changed by these checks.
+Run the commands in [Tests](#tests) after changing authentication code. Check password sign-in, first-time email verification, password reset and Google sign-in in the local browser. The login form supports a compact desktop layout and saved accessibility text sizes. These local checks do not verify hosted authentication or database compatibility.
 
 Neon and Render have **not** received these migrations or the current authentication code. Hosted rollout requires a separate reviewed PostgreSQL upgrade, a public HTTPS Google callback registered with Google, private hosting variables `INTELLITASK_GOOGLE_SIGNIN_CLIENT_ID`, `INTELLITASK_GOOGLE_SIGNIN_CLIENT_SECRET` and `INTELLITASK_GOOGLE_SIGNIN_REDIRECT_URI`, and hosted email-delivery credentials. The local Windows-protected Gmail authorization is not available on Render. Do not run the port-5001 migration helpers against Neon.
