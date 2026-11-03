@@ -397,6 +397,12 @@ Implemented and checked on the local port-5001 installation:
 
 Dataset-backed recommendation weights and historical evidence remain unchanged. Availability, disabled-account and capacity checks can change which workers are eligible. Completing website tasks does not retrain the model or turn an independent worker into a dataset worker.
 
+### Editing independent worker services — issue #64
+
+An administrator can open **Workers → an independently added worker → Edit services** and choose from the configured service labels. The form requires at least one service, an administrator confirmation and a valid form token. It rejects stale changes and refuses dataset-backed worker identities. A source worker's observed capabilities remain read-only.
+
+The saved selection changes **future** matches in the separate new-worker list. Previously assigned tasks and their statuses remain in place, including when a service is removed. The edit does not change source bindings, training records, model scores or the service catalogue. Legacy and current skill rows with the same displayed service label are kept together so tasks using either row can match. No database migration or model retraining is needed for this feature. The administrator should review a worker's services before making them available for new assignments.
+
 ### Local Gmail use
 
 The sending account is authorized with the Gmail sending-only scope. OAuth credentials are saved outside the project using Windows-user DPAPI encryption. They are never stored in the application database or committed to Git. Gmail authorization is separate from Google sign-in for website users, and sending an invitation does not set an email-verification flag.

@@ -464,6 +464,99 @@ def worker_account_status(worker_id):
         errors=errors, csrf_token=session['worker_account_csrf_token']), (422 if errors else 200)
 
 
+@admin_bp.route('/workers/<int:worker_id>/services', methods=['GET', 'POST'])
+@login_required
+def edit_worker_services(worker_id):
+    """Change future service matching for an independently registered worker."""
+    from sqlalchemy import select
+    from app.services.independent_workers import registration_services, require_unbound_identity
+    from app.services.skill_display_labels import SKILL_LABELS, skill_label
+    from app.services.worker_directory import directory_names
+
+    require_admin()
+    worker = db.session.get(OnboardingAgent, worker_id)
+    if worker is None or db.session.get(IndependentWorkerRegistration, worker_id) is None:
+        abort(404)
+    try:
+        require_unbound_identity(worker_id)
+    except (OSError, ValueError, TypeError, AttributeError):
+        abort(409, description='This worker identity cannot be verified for editing.')
+
+    # Both legacy and current skill rows can describe the same service.
+    # Show four choices, and keep both IDs in sync so either task format matches.
+    choices = {label: set() for label in SKILL_LABELS.values()}
+    for skill in registration_services():
+        label = skill_label(skill.name)
+        if label in choices:
+            choices[label].add(skill.id)
+    choices = {label: ids for label, ids in choices.items() if ids}
+    allowed_ids = set().union(*choices.values())
+    if not choices:
+        abort(409, description='Services must be configured before editing a worker.')
+
+    def current_links():
+        return AgentSkill.query.filter_by(agent_id=worker_id,
+            proficiency_level='Administrator confirmed').order_by(AgentSkill.id).all()
+
+    links = current_links()
+    current_ids = {link.skill_id for link in links if link.skill_id in allowed_ids}
+    selected = {label for label, ids in choices.items() if current_ids & ids}
+    original = ','.join(str(value) for value in sorted(current_ids))
+    errors = {}
+    session.setdefault('worker_services_csrf_token', secrets.token_urlsafe(32))
+
+    if request.method == 'POST':
+        expected = session['worker_services_csrf_token']
+        supplied = request.form.get('csrf_token', '')
+        if not secrets.compare_digest(expected.encode(), supplied.encode()):
+            abort(400, description='This form expired. Reload the page and try again.')
+        raw = request.form.getlist('services')
+        selected = set(raw)
+        if not raw or len(raw) > len(choices) or len(raw) != len(selected) or not selected.issubset(choices):
+            errors['services'] = 'Select one or more of the listed services.'
+        if request.form.get('confirmed') != 'yes':
+            errors['confirmed'] = "Confirm that you have checked the worker's selected services."
+        if not errors:
+            # Lock the worker row so simultaneous edits cannot silently overwrite
+            # each other on PostgreSQL. The original selection catches stale forms.
+            db.session.execute(select(OnboardingAgent.id).where(
+                OnboardingAgent.id == worker_id).with_for_update()).scalar_one()
+            if db.session.get(IndependentWorkerRegistration, worker_id) is None:
+                db.session.rollback()
+                abort(404)
+            try:
+                require_unbound_identity(worker_id)
+            except (OSError, ValueError, TypeError, AttributeError):
+                db.session.rollback()
+                abort(409, description='This worker identity cannot be verified for editing.')
+            links = current_links()
+            latest_ids = {link.skill_id for link in links if link.skill_id in allowed_ids}
+            latest = ','.join(str(value) for value in sorted(latest_ids))
+            if request.form.get('original_services', '') != latest:
+                db.session.rollback()
+                errors['services'] = 'These services changed in another session. Reload the page before saving.'
+            elif any(link.skill_id not in allowed_ids for link in links):
+                db.session.rollback()
+                errors['services'] = 'This worker has an unexpected service. Ask an administrator to check the record.'
+            else:
+                wanted_ids = set().union(*(choices[label] for label in selected))
+                for link in links:
+                    if link.skill_id not in wanted_ids:
+                        db.session.delete(link)
+                for skill_id in sorted(wanted_ids - latest_ids):
+                    db.session.add(AgentSkill(agent_id=worker_id, skill_id=skill_id,
+                        proficiency_level='Administrator confirmed'))
+                db.session.commit()
+                session.pop('worker_services_csrf_token', None)
+                flash('Worker services updated for future task matching.', 'success')
+                return redirect(url_for('admin.worker_profile', worker_id=worker_id))
+
+    return render_template('admin/worker_services.html', worker=worker,
+        name=directory_names()[worker_id], choices=choices, selected=selected,
+        original=original, errors=errors,
+        csrf_token=session['worker_services_csrf_token']), (422 if errors else 200)
+
+
 @admin_bp.route('/workers/new', methods=['GET', 'POST'])
 @login_required
 def new_worker():
