@@ -2,7 +2,7 @@
 {% from 'ui/icons.html' import icon %}
 {% from 'ui/form_errors.html' import summary, attributes, inline_error %}
 {% block title %}Sign in | IntelliTask{% endblock %}
-{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}"><script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script>{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/auth-login.css') }}"><script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script><script src="{{ url_for('static', filename='js/password-visibility.js') }}" defer></script>{% endblock %}
 {% block content %}
 <div class="it-login">
     <section class="it-login-story" aria-label="Welcome to IntelliTask">
@@ -13,11 +13,13 @@
     <section class="it-login-form">
         <span class="it-eyebrow">YOUR WORKSPACE AWAITS</span><h1>Welcome back.</h1><p>Sign in to pick up where you left off.</p>
         {{ summary(errors, 'Please check your sign-in details') }}
+        {% if google_signin_available %}<a class="it-google-signin" href="{{ url_for('auth.google_start') }}"><span class="it-google-mark" aria-hidden="true">G</span> Continue with Google</a><div class="it-login-divider"><span>or sign in with email</span></div>{% endif %}
         <form method="POST" class="accessible-form" novalidate>
             <label for="email">Email address</label><input class="form-control" id="email" {{ attributes(errors, 'email') }} type="email" name="email" autocomplete="username" placeholder="you@example.com" value="{{ request.form.get('email','') }}" required>
             {{ inline_error(errors, 'email') }}
-            <label for="password">Password</label><input class="form-control" id="password" {{ attributes(errors, 'password') }} type="password" name="password" autocomplete="current-password" required>
+            <label for="password">Password</label><div class="it-password-field"><input class="form-control" id="password" {{ attributes(errors, 'password') }} type="password" name="password" autocomplete="current-password" required><button class="it-password-toggle" type="button" aria-controls="password" aria-pressed="false" aria-label="Show password" title="Show password" data-password-toggle><svg class="it-eye-closed" aria-hidden="true" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.8 10.8 0 0 1 12 5c6.5 0 10 7 10 7a13 13 0 0 1-3.3 4.1"/><path d="M6.1 6.1C3.4 8.1 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.5 4.5-1.2"/><path d="M10 10a3 3 0 0 0 4 4"/></svg><svg class="it-eye-open" aria-hidden="true" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
             {{ inline_error(errors, 'password') }}
+            <a class="it-forgot-link" href="{{ url_for('auth.forgot_password') }}">Forgot password?</a>
             <button class="btn it-button" type="submit">Sign in {{ icon('arrow') }}</button>
         </form>
         <small>Need access? Contact your administrator.</small>

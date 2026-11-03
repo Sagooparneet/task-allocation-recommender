@@ -24,9 +24,9 @@ def main():
     app.config.update(INTELLITASK_GMAIL_ADDRESS=SENDER,
                       INTELLITASK_INVITATION_BASE_URL='http://127.0.0.1:5001')
     app.extensions['intellitask_gmail_credentials'] = credentials
-    print('Starting the existing port-5001 website with Gmail API invitations.')
+    print('Starting the existing port-5001 website with Gmail email delivery.')
     print('Configured sender: ' + SENDER)
-    print('No email is sent until an administrator selects Email in a worker invitation form.')
+    print('Invitations and first-time verification codes are sent only when requested in the website.')
     print('Local invitation links must be opened on this computer. Neon is unchanged.')
     try:
         app.run(host='127.0.0.1', port=5001, debug=False, use_reloader=False)

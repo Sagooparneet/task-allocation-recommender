@@ -19,3 +19,6 @@ from app.models.independent_worker_registration import IndependentWorkerRegistra
 
 from app.models.worker_setup_invitation import WorkerSetupInvitation
 from app.models.supervisor_setup_invitation import SupervisorSetupInvitation
+from app.models.setup_email_verification import SetupEmailVerification
+from app.models.password_reset import PasswordResetToken, PasswordResetRequest
+from app.models.google_identity import GoogleIdentity

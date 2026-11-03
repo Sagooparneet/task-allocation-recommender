@@ -1,0 +1,65 @@
+.it-login-form .it-password-field { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.it-login-form .it-password-field input { grid-area: 1 / 1 / 2 / 3; width: 100%; padding-inline-end: 3.5rem; }
+.it-login-form .it-password-toggle {
+    grid-area: 1 / 2 / 2 / 3;
+    justify-self: end;
+    align-self: center;
+    margin-inline-end: .25rem;
+    position: relative;
+    z-index: 1;
+    width: 2.75rem;
+    min-height: 2.75rem;
+    border: 0;
+    border-radius: .5rem;
+    background: transparent;
+    color: var(--it-teal);
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+}
+.it-login-form .it-password-toggle:hover { background: var(--it-mint); }
+.it-login-form .it-forgot-link { display: inline-block; margin: .5rem 0 1.25rem; }
+.it-google-signin { display: flex; align-items: center; justify-content: center; gap: .8rem; width: 100%; min-height: 3.25rem; margin: 1.5rem 0 1rem; border: 1px solid var(--it-border); border-radius: .75rem; color: var(--it-ink); background: #fff; font-weight: 700; text-decoration: none; }
+.it-google-signin:hover, .it-google-signin:focus-visible { border-color: var(--it-teal); color: var(--it-ink); background: var(--it-mint); }
+.it-google-mark { font-weight: 800; font-size: 1.3rem; color: #4285f4; }
+.it-login-divider { display: flex; align-items: center; gap: .8rem; margin: 0 0 1rem; color: var(--it-muted); text-align: center; }
+.it-login-divider::before, .it-login-divider::after { content: ''; flex: 1; border-top: 1px solid var(--it-border); }
+.it-login-form .it-password-toggle[aria-pressed="false"] .it-eye-open,
+.it-login-form .it-password-toggle[aria-pressed="true"] .it-eye-closed { display: none; }
+
+/* Keep the full sign-in form in view on ordinary desktop screens, including
+   the signed-out message. Larger accessibility text can still grow and scroll. */
+@media (min-width: 641px) {
+    body.it-public .it-public-main {
+        min-height: calc(100dvh - 4rem);
+        padding: 1rem 1.25rem;
+        gap: .75rem;
+    }
+    body.it-public .it-login-story {
+        min-height: 0;
+        padding: 1.5rem 2rem;
+    }
+    body.it-public .it-login-story h2 {
+        font-size: 2.125rem;
+        margin: 1rem 0 .5rem;
+    }
+    body.it-public .it-login-story p { line-height: 1.5; margin: 0; }
+    body.it-public .it-login-form { padding: 1rem 1.75rem; }
+    body.it-public .it-login-form h1 { margin: .2rem 0 .4rem; }
+    body.it-public .it-login-form > p { margin-bottom: .4rem; }
+    body.it-public .it-google-signin {
+        min-height: 2.75rem;
+        margin: .4rem 0 .3rem;
+        border-color: var(--it-line);
+    }
+    body.it-public .it-login-divider { margin-bottom: .25rem; }
+    body.it-public .it-login-form label { margin: .45rem 0 .25rem; }
+    body.it-public .it-login-form input { min-height: 2.75rem; padding: .5rem .75rem; }
+    body.it-public .it-login-form .it-forgot-link { margin: .25rem 0 .5rem; }
+    body.it-public .it-login-form .it-button { margin-top: .25rem; }
+    body.it-public .it-login-form > small { margin-top: .5rem; }
+}
+
+@media (forced-colors: active) {
+    .it-login-form .it-password-toggle { border: 1px solid ButtonText; }
+}

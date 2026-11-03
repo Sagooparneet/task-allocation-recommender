@@ -40,15 +40,20 @@ def create_app(test_config=None):
     def load_user(user_id):
 
         try:
-            role, record_id = user_id.split(":")
+            role, record_id, proof = user_id.split(":")
             record_id = int(record_id)
 
         except (ValueError, TypeError):
+            for key in ('_user_id', '_fresh', '_id'):
+                session.pop(key, None)
+            session['_remember'] = 'clear'
             return None
+
+        from app.services.auth_session import session_id_matches
 
         if role == "supervisor":
             supervisor = db.session.get(Supervisor, record_id, populate_existing=True)
-            if supervisor is not None and supervisor.account_disabled:
+            if supervisor is not None and (supervisor.account_disabled or not session_id_matches(supervisor, user_id)):
                 for key in ('_user_id', '_fresh', '_id'):
                     session.pop(key, None)
                 session['_remember'] = 'clear'
@@ -57,7 +62,7 @@ def create_app(test_config=None):
 
         if role == "agent":
             worker = db.session.get(OnboardingAgent, record_id, populate_existing=True)
-            if worker is not None and worker.account_disabled:
+            if worker is not None and (worker.account_disabled or not session_id_matches(worker, user_id)):
                 # Revoke the browser session when its account is deactivated.
                 for key in ('_user_id', '_fresh', '_id'):
                     session.pop(key, None)
@@ -66,10 +71,17 @@ def create_app(test_config=None):
             return worker
 
         if role == "administrator":
-            return db.session.get(
+            administrator = db.session.get(
                 Administrator,
-                record_id
+                record_id,
+                populate_existing=True,
             )
+            if administrator is not None and not session_id_matches(administrator, user_id):
+                for key in ('_user_id', '_fresh', '_id'):
+                    session.pop(key, None)
+                session['_remember'] = 'clear'
+                return None
+            return administrator
 
         return None
 

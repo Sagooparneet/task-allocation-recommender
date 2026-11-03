@@ -19,14 +19,14 @@ body.it-theme .btn {
     --bs-btn-active-border-color: var(--role-accent);
     --bs-btn-disabled-color: var(--it-muted);
     --bs-btn-disabled-border-color: var(--control-border);
-    font-size: 1rem;
+    font-size: .9375rem;
     min-height: 44px;
     white-space: normal;
     overflow-wrap: anywhere;
 }
 body.it-theme :is(.form-control, .form-select) {
     font-family: inherit;
-    font-size: 1rem;
+    font-size: .9375rem;
     line-height: 1.5;
     min-height: 44px;
     color: var(--it-ink);
@@ -87,7 +87,7 @@ body.it-theme .pagination {
 }
 body.it-theme .pagination .page-link {
     display: inline-flex; align-items: center; justify-content: center;
-    min-height: 44px; font-size: 1rem; margin: 0;
+    min-height: 44px; font-size: .9375rem; margin: 0;
     border-radius: .5rem; white-space: normal;
     text-decoration: none; padding: .5rem .75rem;
 }

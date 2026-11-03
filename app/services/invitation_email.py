@@ -47,6 +47,88 @@ def send_supervisor_setup_email(recipient, name, token, expiry, settings):
     return _send_invitation_email(recipient, name, token, expiry, settings, 'supervisor')
 
 
+def send_verification_code(recipient, name, code, expiry, settings):
+    """Send only a first-time setup code to the registered account email."""
+    sender, credentials, _base = settings
+    if not valid_email(recipient) or not re.fullmatch(r'\d{6}', code or ''):
+        raise EmailConfigurationError('The registered recipient or verification code is invalid.')
+    expiry_eat = (expiry + timedelta(hours=3)).strftime('%d %b %Y at %H:%M EAT')
+    message = EmailMessage()
+    message['Subject'] = 'Your IntelliTask verification code'
+    message['From'] = sender
+    message['To'] = recipient
+    message.set_content(
+        f'Hello {name},\n\nYour code for setting up your IntelliTask account is {code}.\n'
+        f'It expires on {expiry_eat}. Enter it on the setup page along with a new password.\n\n'
+        'If you did not request this code, you can ignore this email. Never share the code.\n'
+    )
+    try:
+        endpoint = 'https://gmail.googleapis.com/gmail/v1/users/' + quote(sender, safe='') + '/messages/send'
+        raw = base64.urlsafe_b64encode(message.as_bytes()).decode('ascii')
+        with _send_lock:
+            with _authorized_session(credentials) as transport:
+                response = transport.post(endpoint, json={'raw': raw},
+                    timeout=20, allow_redirects=False, max_allowed_time=40)
+                if response.status_code != 200:
+                    raise EmailDeliveryError('Email submission was not confirmed.')
+                result = response.json()
+                if not isinstance(result, dict) or not isinstance(result.get('id'), str) or not result['id']:
+                    raise EmailDeliveryError('Email submission was not confirmed.')
+    except Exception:
+        raise EmailDeliveryError('Email submission was not confirmed.') from None
+
+
+def send_password_reset_email(recipient, name, token, expiry, settings):
+    """Send a short-lived reset link using only the configured website origin."""
+    sender, credentials, base = settings
+    if not valid_email(recipient) or not re.fullmatch(r'[A-Za-z0-9_-]{43}', token or ''):
+        raise EmailConfigurationError('The registered recipient or reset link is invalid.')
+    link = base + '/auth/reset-password#' + token
+    expiry_eat = (expiry + timedelta(hours=3)).strftime('%d %b %Y at %H:%M EAT')
+    message = EmailMessage()
+    message['Subject'] = 'Reset your IntelliTask password'
+    message['From'] = sender
+    message['To'] = recipient
+    message.set_content(
+        f'Hello {name},\n\nUse this one-time link to choose a new IntelliTask password:\n\n'
+        f'{link}\n\nThe link expires on {expiry_eat}. A new request invalidates earlier links.\n\n'
+        'If you did not request this, you can ignore this email. Do not share this link.\n'
+    )
+    _send_private_email(message, sender, credentials)
+
+
+def send_password_changed_email(recipient, name, settings):
+    sender, credentials, _base = settings
+    if not valid_email(recipient):
+        raise EmailConfigurationError('The registered recipient is invalid.')
+    message = EmailMessage()
+    message['Subject'] = 'Your IntelliTask password changed'
+    message['From'] = sender
+    message['To'] = recipient
+    message.set_content(
+        f'Hello {name},\n\nYour IntelliTask password was changed. '
+        'If you did not make this change, contact your administrator immediately.\n'
+    )
+    _send_private_email(message, sender, credentials)
+
+
+def _send_private_email(message, sender, credentials):
+    try:
+        endpoint = 'https://gmail.googleapis.com/gmail/v1/users/' + quote(sender, safe='') + '/messages/send'
+        raw = base64.urlsafe_b64encode(message.as_bytes()).decode('ascii')
+        with _send_lock:
+            with _authorized_session(credentials) as transport:
+                response = transport.post(endpoint, json={'raw': raw},
+                    timeout=20, allow_redirects=False, max_allowed_time=40)
+                if response.status_code != 200:
+                    raise EmailDeliveryError('Email submission was not confirmed.')
+                result = response.json()
+                if not isinstance(result, dict) or not isinstance(result.get('id'), str) or not result['id']:
+                    raise EmailDeliveryError('Email submission was not confirmed.')
+    except Exception:
+        raise EmailDeliveryError('Email submission was not confirmed.') from None
+
+
 def _send_invitation_email(recipient, name, token, expiry, settings, role):
     sender, credentials, base = settings
     if not valid_email(recipient) or not re.fullmatch(r'[A-Za-z0-9_-]{43}', token):

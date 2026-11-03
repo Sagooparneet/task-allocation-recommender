@@ -12,6 +12,7 @@ from app.services.independent_workers import PENDING_PASSWORD
 import app.services.worker_setup as setup
 
 PASSWORD = 'my-new-worker-passphrase-123'
+pytestmark = pytest.mark.usefixtures('legacy_setup_code')
 
 
 @pytest.fixture()
@@ -51,7 +52,8 @@ def setup_form(client,token,**changes):
     assert response.status_code == 200
     with client.session_transaction() as session:
         data={'csrf_token':session['worker_setup_public_csrf'], 'setup_token':token,
-              'email':'independent@example.com','password':PASSWORD,'password_confirm':PASSWORD}
+              'email':'independent@example.com','password':PASSWORD,'password_confirm':PASSWORD,
+              'action':'complete','verification_code':'123456'}
     data.update(changes)
     return data
 

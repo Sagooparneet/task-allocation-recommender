@@ -353,7 +353,7 @@ Application task cities are Nairobi, Mombasa, Kisumu, Nakuru, and Eldoret, with 
 
 The shared IntelliTask theme uses a local SVG logo, stylesheet and small navigation script. No chart service, CDN or additional Python package is required. Task charts use real application counts. The supervisor overview shows only that supervisor's tasks and supports name search, status filters, overdue indicators and ten-row pagination. Deadline comparisons use Kenya time. Worker names and service labels retain their source bindings as described above.
 
-Role navigation links to implemented pages, including administrator work locations and supervisor management. The agent dashboard supports task filtering, deadline sorting, details and the Assigned → In progress → Completed workflow. Supervisor reports are implemented locally. Google sign-in and OTP verification remain future work. See [the role feature plan](docs/ROLE_FEATURE_PLAN.md).
+Role navigation links to implemented pages, including administrator work locations and supervisor management. The agent dashboard supports task filtering, deadline sorting, details and the Assigned → In progress → Completed workflow. Supervisor reports are implemented locally. First-time email verification, password recovery and Google sign-in are implemented locally under issue #66. See [the role feature plan](docs/ROLE_FEATURE_PLAN.md).
 
 Historical test totals are recorded above; the latest Bootstrap verification is recorded in the issue #57 section below. The user has reviewed the local supervisor and agent dashboards and administrator locations page. Current local changes have not yet been verified or published on Render.
 
@@ -432,7 +432,7 @@ Local migrations through `56d04a2b7c80` were applied with backup/rehearsal check
 
 Neon and Render remain unchanged. Hosted PostgreSQL migration/concurrency verification, hosted Gmail secret storage, public HTTPS invitation URLs and deployment checks are separate release work. The Windows encrypted credential file is not a Render credential. Google's external OAuth Testing mode can require reauthorization after seven days for Gmail scopes; production authorization requirements must be resolved before relying on unattended hosted delivery.
 
-Self-service profile/email/password changes, forgotten-password recovery, Google sign-in/OTP and service-catalogue management remain separate features. Supervisor reports are implemented locally under issue #60, and supervisor administration is implemented locally under issue #62. Issue #56 completion refers to the worker-management scope above, not those later features or a completed hosted release.
+Self-service profile/email/password changes and service-catalogue management remain separate features. Password recovery, Google sign-in and first-time email verification are implemented locally under issue #66. Supervisor reports are implemented locally under issue #60, and supervisor administration under issue #62. Issue #56 completion refers to the worker-management scope above, not those later features or a completed hosted release.
 
 
 ## Administrator supervisor management — issue #62
@@ -460,7 +460,7 @@ Implemented and reviewed on the local port-5001 website:
 - Status badges and pagination that retain existing labels, filters and links.
 - Shared navigation styling and labelled feedback messages; messages do not disappear on a timer.
 - A compact worker search/filter toolbar that wraps on smaller screens.
-- Normal body/control text of 1rem (normally 16px), with smaller secondary text at least .875rem (normally 14px). Saved accessibility choices still apply.
+- Normal body and shared control text now use .9375rem (normally 15px); smaller secondary text stays at .875rem (normally 14px). Saved accessibility choices still apply.
 - A custom deadline calendar with month navigation, keyboard controls and a separate time field. This is an IntelliTask component, not a Bootstrap calendar plugin. It preserves the original required date/time field as a fallback, submits the existing Kenya civil-time format and rejects dates before today. Backend validation still applies.
 
 The selective Bootstrap build includes forms, buttons, cards, tables, badges, pagination, navigation and alerts. Full Reboot, Bootstrap progress bars and replacement modal styles are not loaded, avoiding conflicts with existing charts and dialogs. Existing mobile navigation, Settings and calendar scripts retain control of their own interactions. There are no duplicate Bootstrap collapse or modal controllers.
@@ -484,3 +484,28 @@ git diff --check
 ```
 
 Keep build folders and `node_modules` out of commits. Preserve the vendor licence, Sass source, generated CSS and matching manifest together. See [the integration overview](docs/BOOTSTRAP_INTEGRATION.md), [forms and build instructions](docs/BOOTSTRAP_CONTROLS.md), [cards and tables](docs/BOOTSTRAP_CARDS_TABLES.md), [status and pagination](docs/BOOTSTRAP_STATUS_PAGINATION.md), [deadline calendar](docs/DEADLINE_CALENDAR.md), and [navigation and messages](docs/BOOTSTRAP_NAVIGATION_MESSAGES.md).
+
+
+## Account sign-in and recovery (issue #66)
+
+The login page keeps password sign-in for administrators, supervisors and workers and adds an accessible show/hide control beside the password. Its desktop layout keeps the form compact when a sign-out message appears, while larger accessibility text can still scroll. Administrator-invited supervisors and independent workers must verify a six-digit code emailed to their registered address before choosing their first password. Codes expire after ten minutes. Existing accounts retain their passwords. Account creation remains administrator-controlled.
+
+**Forgot password** sends an expiring, single-use reset link for an eligible active account. The request page gives the same response for known and unknown addresses. The database stores a token hash and private request counters; a link expires after 30 minutes. Changing a password invalidates prior login sessions and attempts to send a confirmation email. Local email delivery uses the existing Gmail sender connection; no email is sent merely by opening the website.
+
+**Continue with Google** uses a separate Google OAuth Web application client with `openid email` only. The server checks the signed ID token, client audience, one-time state and nonce before linking Google's stable subject to an already approved, active IntelliTask account with the same verified Gmail or Google Workspace address. It does not create accounts, enable a disabled account, accept a pending invitation, or grant a dataset worker login. The original password sign-in remains available. This sign-in client does not request Gmail sending permission.
+
+For the verified local port-5001 installation, configure a separate Google Web client with the exact authorized callback `http://127.0.0.1:5001/auth/google/callback`. Keep its downloaded JSON outside the repository. In the same PowerShell terminal used to start the local website:
+
+```powershell
+$env:INTELLITASK_GOOGLE_SIGNIN_CLIENT_FILE = "C:\path\outside\project\sign-in-client.json"
+$env:INTELLITASK_GOOGLE_SIGNIN_REDIRECT_URI = "http://127.0.0.1:5001/auth/google/callback"
+python scripts/run_5001_with_gmail_api.py
+```
+
+The Google button appears only when the client is configured. If Google's authorization screen is in Testing mode, the chosen Google account must be an allowed test user. Its email must match an existing active IntelliTask account. The project owner confirmed local Google sign-in opened that account's dashboard. The client JSON and Gmail sender credentials must never be committed or pasted into documentation.
+
+Local migrations `66a07d5e0f12` (first-time email verification), `66b08e6f1a23` (password reset) and `66c09f702b34` (Google identity) were each backed up, rehearsed and applied to port 5001 with account, task and assignment preservation checks. The Google client validator passed, and the project owner confirmed a browser sign-in. These features do not change NetEase source bindings or recommendation scoring.
+
+Final verification on the matching application and test files in an isolated project copy: **433 Python application and ML tests passed** and **16 JavaScript tests passed**. The Python run reported 120 existing SQLAlchemy and Flask-SQLAlchemy deprecation warnings. The earlier Google sign-in configuration test failure was fixed by clearing its own environment settings. The default body and shared control text was reduced slightly, and the login spacing was tightened after browser review. The hosted site and database were not changed by these checks.
+
+Neon and Render have **not** received these migrations or the current authentication code. Hosted rollout requires a separate reviewed PostgreSQL upgrade, a public HTTPS Google callback registered with Google, private hosting variables `INTELLITASK_GOOGLE_SIGNIN_CLIENT_ID`, `INTELLITASK_GOOGLE_SIGNIN_CLIENT_SECRET` and `INTELLITASK_GOOGLE_SIGNIN_REDIRECT_URI`, and hosted email-delivery credentials. The local Windows-protected Gmail authorization is not available on Render. Do not run the port-5001 migration helpers against Neon.

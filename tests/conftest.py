@@ -197,3 +197,13 @@ def task_venue_fields(client, location="Nairobi"):
     with client.session_transaction() as session:
         token = session['task_create_csrf_token']
     return dict(venue_id=str(venue_id), reporting_point='Test reception', task_create_csrf_token=token)
+
+
+@pytest.fixture()
+def legacy_setup_code(monkeypatch):
+    """Keep older invitation lifecycle tests focused on invitation redemption.
+
+    The real email-code checks are exercised in test_setup_email_verification.
+    """
+    import app.auth.setup_flow as flow
+    monkeypatch.setattr(flow, 'check_verification_code', lambda role, token, email, code: None)
