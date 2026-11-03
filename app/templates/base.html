@@ -39,6 +39,7 @@
             <a class="nav-link" href="{{ url_for('supervisor.create_task') }}" {% if request.endpoint == 'supervisor.create_task' %}aria-current="page"{% endif %}>{{ icon('plus') }} Create task</a>
             {% endif %}
             {% if role == 'administrator' %}
+            <a class="nav-link" href="{{ url_for('admin.supervisors') }}" {% if request.endpoint in ('admin.supervisors', 'admin.edit_supervisor', 'admin.supervisor_account_status') %}aria-current="page"{% endif %}>{{ icon('people') }} Supervisors</a>
             <a class="nav-link" href="{{ url_for('admin.workers') }}" {% if request.endpoint in ('admin.workers', 'admin.new_worker', 'admin.worker_setup', 'admin.worker_profile', 'admin.edit_worker', 'admin.worker_availability', 'admin.worker_account_status') %}aria-current="page"{% endif %}>{{ icon('people') }} Workers</a>
             <a class="nav-link" href="{{ url_for('admin.venues') }}" {% if request.endpoint in ('admin.venues', 'admin.edit_venue') %}aria-current="page"{% endif %}>{{ icon('tasks') }} Work locations</a>
             {% endif %}
@@ -54,7 +55,7 @@
     <div class="it-workspace">
         <header class="it-topbar">
             <button type="button" class="btn it-menu" aria-controls="it-navigation" aria-expanded="false" aria-label="Toggle navigation">{{ icon('menu') }}</button>
-            <span class="it-breadcrumb">Your workspace <span>/</span> <strong>{% if request.endpoint == 'supervisor.create_task' %}Create task{% elif request.endpoint == 'supervisor.reports' %}Reports{% elif request.endpoint == 'supervisor.recommendations' %}Recommendations{% elif request.endpoint == 'agent.dashboard' %}My tasks{% elif request.endpoint in ('admin.workers', 'admin.new_worker', 'admin.worker_setup', 'admin.worker_profile', 'admin.edit_worker', 'admin.worker_availability', 'admin.worker_account_status') %}Workers{% elif request.endpoint in ('admin.venues', 'admin.edit_venue') %}Work locations{% else %}Overview{% endif %}</strong></span>
+            <span class="it-breadcrumb">Your workspace <span>/</span> <strong>{% if request.endpoint == 'supervisor.create_task' %}Create task{% elif request.endpoint == 'supervisor.reports' %}Reports{% elif request.endpoint == 'supervisor.recommendations' %}Recommendations{% elif request.endpoint == 'agent.dashboard' %}My tasks{% elif request.endpoint in ('admin.workers', 'admin.new_worker', 'admin.worker_setup', 'admin.worker_profile', 'admin.edit_worker', 'admin.worker_availability', 'admin.worker_account_status') %}Workers{% elif request.endpoint in ('admin.supervisors', 'admin.edit_supervisor', 'admin.supervisor_account_status') %}Supervisors{% elif request.endpoint in ('admin.venues', 'admin.edit_venue') %}Work locations{% else %}Overview{% endif %}</strong></span>
             <span class="it-topbar-role">{{ 'Worker' if role == 'agent' else role|title }} portal</span>
             {{ accessibility_button() }}
         </header>

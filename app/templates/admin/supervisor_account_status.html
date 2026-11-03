@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% from 'ui/form_errors.html' import summary, attributes, inline_error %}
+{% block title %}Supervisor account access | IntelliTask{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-venues.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}"><script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script>{% endblock %}
+{% block content %}
+<a href="{{ url_for('admin.supervisors') }}">← Back to supervisors</a>
+<div class="av-header"><div><p class="av-eyebrow">{{ record.name }}</p><h1>{{ 'Reactivate' if action == 'reactivate' else 'Deactivate' }} supervisor account</h1></div></div>
+<form method="post" class="av-panel av-form accessible-form" novalidate>
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="{{ action }}">
+{{ summary(errors, 'Please check this account change') }}
+{% if action == 'reactivate' %}<p>This restores sign-in with the existing password. The supervisor's tasks remain unchanged.</p>
+{% else %}<p>This blocks sign-in without removing the supervisor or task history.</p>
+{% if blocked %}<p><strong>This supervisor has unfinished tasks.</strong> Complete those tasks before deactivating this account.</p>{% endif %}{% endif %}
+<div><label for="confirm"><input type="checkbox" name="confirm" id="confirm" value="yes" required {{ attributes(errors, 'confirm') }}> I confirm I want to {{ 'reactivate' if action == 'reactivate' else 'deactivate' }} this account.</label>{{ inline_error(errors, 'confirm') }}</div>
+<div class="av-actions"><button class="btn av-button" type="submit" {% if blocked and action == 'deactivate' %}disabled{% endif %}>{{ 'Reactivate account' if action == 'reactivate' else 'Deactivate account' }}</button><a href="{{ url_for('admin.supervisors') }}">Cancel</a></div>
+</form>{% endblock %}

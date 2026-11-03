@@ -31,10 +31,10 @@ Completed locally under issue #48: worker dashboard with deadline sorting, task 
 
 Existing: login support, the improved assigned-task dashboard, starting work and protected completion. Selected local demonstration logins can be enabled explicitly; fresh imported accounts remain disabled for login. Production worker identity provisioning is separate work. Never attach a real new account to an unrelated dataset worker's history.
 
-## Administrator: remaining issues to create
+## Administrator features
 
 1. **Worker management (issue #56, merged)**: local listing, profiles, display names, availability, account controls, three-task capacity, independent registration, password setup, separate matching/assignment and Gmail invitations are implemented. The project owner confirmed real email delivery and the new worker's task lifecycle. The changes and documentation are merged into main; hosted rollout stays separate.
-2. **Manage supervisors**: controlled account provisioning, role checks, deactivation and an audit trail.
+2. **Manage supervisors (issue #62, implemented locally)**: administrator-only listing, name edits, guarded account deactivation/reactivation, registration and expiring initial password setup by manual link or Gmail. An audit trail is outside this issue.
 3. **Manage service catalogue**: controlled editing with validation. The task form now uses a free-text title rather than a task-type catalogue. Display labels alone must not create unsupported ML capabilities or silently change source mappings.
 
 Existing under issue #49: administrator overview, venue listing/filtering, adding/editing and deactivation/reactivation with role checks and form-token protection. A local administrator has been provisioned on port 5001. Fresh setup does not provision an administrator account.
@@ -47,10 +47,12 @@ Existing under issue #49: administrator overview, venue listing/filtering, addin
 
 1. Issue #49 venue integration and issue #52 accessibility changes have been merged.
 2. Issue #54 task progress has been merged. Issue #57 Bootstrap was merged into the issue #56 branch. Issue #56 is merged and its local behavior is verified; see README for the latest full-suite result, targeted checksum fix and 16 passing JavaScript tests.
-3. Implement remaining administrator account/service management.
+3. Issue #62 supervisor management is implemented locally. Service catalogue management remains separate.
 4. Implement verified signup and recovery.
 5. Issue #60 simple supervisor reports are locally implemented and verified; finish repository review and merge. Exports are outside the agreed scope.
 6. Separately review PostgreSQL migration, hosted configuration and release verification.
+
+Issue #62 local schema is at `62b06c4d9e01`. The project owner confirmed the supervisor invitation email works on port 5001. Neon and Render remain unchanged; hosted migration and Gmail authorization require a separate rollout.
 
 Create and link a GitHub issue for each feature before implementing it. Only expose navigation items when their pages and permission checks work. Keep the current Render deployment unchanged while local UI work is reviewed.
 

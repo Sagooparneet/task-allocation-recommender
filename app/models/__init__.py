@@ -18,3 +18,4 @@ from app.models.work_venue import WorkVenue, TaskVenueDetails
 from app.models.independent_worker_registration import IndependentWorkerRegistration
 
 from app.models.worker_setup_invitation import WorkerSetupInvitation
+from app.models.supervisor_setup_invitation import SupervisorSetupInvitation

@@ -124,7 +124,7 @@ The runner uses `instance/netease_setup_test` explicitly, a separate session coo
 
 ### Current port-5001 installation and task workflow
 
-The existing `instance/netease_setup_test` installation has been backed up and upgraded to migration `56b02e0f5a60` (worker account status), following `56a01d9e4f50` (worker display names), `54b01c8d3e40` (task progress) and `49a01b7c2d30` (work venues). It has the five initial venues and a separately provisioned administrator. Start it with:
+The existing `instance/netease_setup_test` installation has been backed up and upgraded through migration `62b06c4d9e01` (supervisor setup invitations), following `62a05b3c8d90` (supervisor account status), `56d04a2b7c80` (worker setup invitations), `54b01c8d3e40` (task progress) and `49a01b7c2d30` (work venues). It has the five initial venues and a separately provisioned administrator. For the normal local website, start it with:
 
 ```powershell
 python run_netease_test.py
@@ -353,7 +353,7 @@ Application task cities are Nairobi, Mombasa, Kisumu, Nakuru, and Eldoret, with 
 
 The shared IntelliTask theme uses a local SVG logo, stylesheet and small navigation script. No chart service, CDN or additional Python package is required. Task charts use real application counts. The supervisor overview shows only that supervisor's tasks and supports name search, status filters, overdue indicators and ten-row pagination. Deadline comparisons use Kenya time. Worker names and service labels retain their source bindings as described above.
 
-Role navigation links to implemented pages, including administrator work locations. The agent dashboard supports task filtering, deadline sorting, details and the Assigned → In progress → Completed workflow. Reports, broader account management, Google signup and OTP verification remain future work. See [the role feature plan](docs/ROLE_FEATURE_PLAN.md).
+Role navigation links to implemented pages, including administrator work locations and supervisor management. The agent dashboard supports task filtering, deadline sorting, details and the Assigned → In progress → Completed workflow. Supervisor reports are implemented locally. Google sign-in and OTP verification remain future work. See [the role feature plan](docs/ROLE_FEATURE_PLAN.md).
 
 Historical test totals are recorded above; the latest Bootstrap verification is recorded in the issue #57 section below. The user has reviewed the local supervisor and agent dashboards and administrator locations page. Current local changes have not yet been verified or published on Render.
 
@@ -426,7 +426,20 @@ Local migrations through `56d04a2b7c80` were applied with backup/rehearsal check
 
 Neon and Render remain unchanged. Hosted PostgreSQL migration/concurrency verification, hosted Gmail secret storage, public HTTPS invitation URLs and deployment checks are separate release work. The Windows encrypted credential file is not a Render credential. Google's external OAuth Testing mode can require reauthorization after seven days for Gmail scopes; production authorization requirements must be resolved before relying on unattended hosted delivery.
 
-Self-service profile/email/password changes, forgotten-password recovery, Google sign-in/OTP, supervisor administration and service-catalogue management remain separate features. Supervisor reports are implemented locally under issue #60. Issue #56 completion refers to the worker-management scope above, not those future features or a completed hosted release.
+Self-service profile/email/password changes, forgotten-password recovery, Google sign-in/OTP and service-catalogue management remain separate features. Supervisor reports are implemented locally under issue #60, and supervisor administration is implemented locally under issue #62. Issue #56 completion refers to the worker-management scope above, not those later features or a completed hosted release.
+
+
+## Administrator supervisor management — issue #62
+
+On the local port-5001 installation, administrators can list and search supervisors, edit their names, and deactivate or reactivate accounts. Deactivation refuses supervisors with unfinished tasks and preserves their account, task and assignment records. New supervisors are registered with a name and unique email address; they cannot sign in until they complete initial password setup. Existing supervisors are not asked to reset their passwords.
+
+For a pending supervisor, the administrator can create a one-time setup invitation and choose **Email to [registered address]** or private manual sharing. The invitation expires after 24 hours; the database stores its hash, not the plain setup code. Issuing a replacement invalidates the previous link. The supervisor enters their registered email and chooses a password of 12–128 characters. Successful setup enables their supervisor sign-in. This is initial setup, not password recovery or public self-registration.
+
+Email uses the existing Gmail sender configuration and fixed invitation website address. On port 5001, start with `python scripts/run_5001_with_gmail_api.py` to enable Gmail delivery. `python run_netease_test.py` supports manual sharing only. The email option sends only when the administrator selects it and confirms the invitation. Repeated email requests within one minute are refused. If Gmail submission cannot be confirmed, the new link remains available for manual sharing and the page does not claim successful delivery. Localhost links must be opened on the computer running the website.
+
+The local upgrade was backed up and rehearsed before applying `62a05b3c8d90` and `62b06c4d9e01`. Existing supervisors, workers, tasks, assignments and configuration were preserved. The project owner confirmed the administrator controls and live Gmail invitation delivery. Focused supervisor and worker invitation tests passed; run the full suite before merging. These changes do not affect NetEase worker mappings, training evidence, recommendation scoring or task history.
+
+Neon and Render have not been upgraded for issue #62. The local port-5001 backup and upgrade scripts are installation-specific and must not be run against Neon. Hosted rollout requires separate PostgreSQL migration and verification, a public HTTPS invitation address, and hosted Gmail authorization. The Windows encrypted Gmail credential file is not available to Render.
 
 
 ## Bootstrap frontend integration (issue #57)
