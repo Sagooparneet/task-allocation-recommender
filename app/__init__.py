@@ -47,10 +47,13 @@ def create_app(test_config=None):
             return None
 
         if role == "supervisor":
-            return db.session.get(
-                Supervisor,
-                record_id
-            )
+            supervisor = db.session.get(Supervisor, record_id, populate_existing=True)
+            if supervisor is not None and supervisor.account_disabled:
+                for key in ('_user_id', '_fresh', '_id'):
+                    session.pop(key, None)
+                session['_remember'] = 'clear'
+                return None
+            return supervisor
 
         if role == "agent":
             worker = db.session.get(OnboardingAgent, record_id, populate_existing=True)

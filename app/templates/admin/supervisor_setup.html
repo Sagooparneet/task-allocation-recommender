@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% from 'ui/form_errors.html' import summary, attributes, inline_error %}
+{% block title %}Supervisor setup invitation | IntelliTask{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-venues.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/worker-setup.css') }}"><script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script><script src="{{ url_for('static', filename='js/worker-setup.js') }}" defer></script>{% endblock %}
+{% block content %}
+<a href="{{ url_for('admin.supervisors') }}">← Back to supervisors</a>
+<div class="av-header"><div><p class="av-eyebrow">ACCOUNT SETUP</p><h1>Invite {{ record.name }}</h1><p>{{ record.email }}</p></div></div>
+{% if setup_token %}
+<section class="av-panel ws-panel" aria-labelledby="invitation-title"><h2 id="invitation-title">Invitation ready</h2><p>Share this invitation privately with {{ record.name }}. They will choose their own password. It expires {{ expiry }} EAT.</p>
+<label for="invitation-link">Setup link</label><input class="form-control" id="invitation-link" readonly value="{{ setup_path }}#{{ setup_token }}" data-setup-path="{{ setup_path }}#{{ setup_token }}" autocomplete="off">
+<label for="invitation-code">Setup code</label><input class="form-control" id="invitation-code" readonly value="{{ setup_token }}" autocomplete="off">
+{% if email_submitted %}<p role="status"><strong>Invitation submitted to Gmail for {{ record.email }}.</strong> Ask the supervisor to check their inbox and spam folder.</p>
+{% elif email_failed %}<p role="alert"><strong>Email submission could not be confirmed.</strong> Check the inbox before retrying. You can share the link above privately; it remains valid.</p>
+{% else %}<p>No email has been sent.</p>{% endif %}
+<p>The link and code are shown only here. Copy them before leaving if you need to share them manually.</p>
+<p>For testing on this computer, open the link in a private browser window. A localhost link will not work from another device.</p>
+<noscript><p>Add the website address before the link above, or open {{ setup_path }} and paste the setup code.</p></noscript>
+</section>
+{% endif %}
+<form method="post" class="av-panel av-form accessible-form ws-panel" novalidate>
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+{{ summary(errors, 'Please check this invitation') }}
+<p>This invitation is for initial account setup only. Creating another invitation replaces the previous one.</p>
+{% if active_invitation %}<p><strong>An unused invitation already exists.</strong> Create a new one only if you need to replace it.</p>{% endif %}
+<div><label for="delivery">Share invitation by</label><select class="form-select" id="delivery" name="delivery" {{ attributes(errors, 'delivery') }}><option value="manual" {% if delivery != 'email' %}selected{% endif %}>Copy link and share privately</option><option value="email" {% if delivery == 'email' %}selected{% endif %}>Email to {{ record.email }}</option></select>{{ inline_error(errors, 'delivery') }}</div>
+<div><label for="confirm"><input type="checkbox" id="confirm" name="confirm" value="yes" required {{ attributes(errors, 'confirm') }}> I confirm this invitation is for this supervisor and their registered email is correct.</label>{{ inline_error(errors, 'confirm') }}</div>
+<div class="av-actions"><button class="btn av-button" type="submit">{{ 'Create replacement invitation' if active_invitation else 'Create invitation' }}</button><a href="{{ url_for('admin.supervisors') }}">Back to supervisors</a></div>
+</form>
+{% endblock %}

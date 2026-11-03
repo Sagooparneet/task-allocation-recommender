@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% from 'ui/form_errors.html' import summary, attributes, inline_error %}
+{% block title %}Add supervisor | IntelliTask{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-venues.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}"><script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script>{% endblock %}
+{% block content %}
+<a href="{{ url_for('admin.supervisors') }}">← Back to supervisors</a>
+<div class="av-header"><div><p class="av-eyebrow">GROW YOUR TEAM</p><h1>Add a supervisor</h1><p>Enter their name and email address. They will choose their own password during account setup.</p></div></div>
+<form method="post" class="av-panel av-form accessible-form" novalidate>
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+{{ summary(errors, 'Please check the supervisor details') }}
+<div><label for="name">Full name *</label><input class="form-control" id="name" name="name" value="{{ values.name }}" maxlength="100" required autocomplete="off" {{ attributes(errors, 'name') }}>{{ inline_error(errors, 'name') }}</div>
+<div><label for="email">Email address *</label><input class="form-control" type="email" id="email" name="email" value="{{ values.email }}" maxlength="120" required autocomplete="off" {{ attributes(errors, 'email') }}>{{ inline_error(errors, 'email') }}</div>
+<p>Account access stays off until this supervisor sets a password.</p>
+<div class="av-actions"><button class="btn av-button" type="submit">Add supervisor</button><a href="{{ url_for('admin.supervisors') }}">Cancel</a></div>
+</form>
+{% endblock %}

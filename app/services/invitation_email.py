@@ -40,17 +40,27 @@ def email_settings(config=None):
 
 
 def send_setup_email(recipient, name, token, expiry, settings):
+    return _send_invitation_email(recipient, name, token, expiry, settings, 'worker')
+
+
+def send_supervisor_setup_email(recipient, name, token, expiry, settings):
+    return _send_invitation_email(recipient, name, token, expiry, settings, 'supervisor')
+
+
+def _send_invitation_email(recipient, name, token, expiry, settings, role):
     sender, credentials, base = settings
     if not valid_email(recipient) or not re.fullmatch(r'[A-Za-z0-9_-]{43}', token):
         raise EmailConfigurationError('The registered recipient or invitation is invalid.')
     # Use only the explicitly configured origin, never a request Host header.
-    link = base + '/auth/worker-setup#' + token
+    link = base + '/auth/' + role + '-setup#' + token
     expiry_eat = (expiry + timedelta(hours=3)).strftime('%d %b %Y at %H:%M EAT')
     message = EmailMessage()
-    message['Subject'] = 'Set up your IntelliTask worker account'
+    message['Subject'] = 'Set up your IntelliTask ' + role + ' account'
     message['From'] = sender
     message['To'] = recipient
-    message.set_content(f"Hello {name},\n\nYour administrator invited you to IntelliTask. "
+    introduction = ('Your administrator invited you to IntelliTask. ' if role == 'worker' else
+                    'Your administrator invited you to IntelliTask as a supervisor. ')
+    message.set_content(f"Hello {name},\n\n{introduction}"
         f"Choose your own password using this one-time link:\n\n{link}\n\n"
         f"Enter your registered email: {recipient}\n"
         f"This invitation expires on {expiry_eat}. A replacement invitation invalidates earlier links.\n\n"

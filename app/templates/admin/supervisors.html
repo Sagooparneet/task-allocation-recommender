@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Supervisors | IntelliTask{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-venues.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/admin-workers.css') }}">{% endblock %}
+{% block content %}
+<div class="aw-directory">
+<div class="av-header"><div><p class="av-eyebrow">YOUR TEAM</p><h1>Supervisors</h1><p>Find a supervisor and review account access and task totals.</p></div><a class="btn av-button" href="{{ url_for('admin.new_supervisor') }}">Add supervisor</a></div>
+<form method="get" action="{{ url_for('admin.supervisors') }}" class="av-filters av-panel aw-filters" role="search">
+    <div><label for="supervisor-search">Name or email</label><input class="form-control" type="search" id="supervisor-search" name="q" value="{{ search }}" maxlength="100"></div>
+    <div><label for="supervisor-status">Account access</label><select class="form-select" id="supervisor-status" name="status"><option value="">All supervisors</option><option value="active" {% if status == 'active' %}selected{% endif %}>Active</option><option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option></select></div>
+    <div class="aw-filter-actions"><button class="btn av-button" type="submit">Apply filters</button><a class="aw-filter-clear" href="{{ url_for('admin.supervisors') }}">Clear</a></div>
+</form>
+<section class="card it-card" aria-labelledby="supervisor-list-title">
+<div class="it-card-heading"><h2 id="supervisor-list-title">Supervisor accounts</h2><span class="badge it-count">{{ page.total }} result{{ '' if page.total == 1 else 's' }}</span></div>
+{% if page.items %}<div class="table-responsive it-table-scroll" tabindex="0" role="region" aria-label="Supervisors table"><table class="table it-table"><caption class="it-sr-only">Supervisor names, email addresses, account access and task totals.</caption>
+<thead><tr><th scope="col">Supervisor</th><th scope="col">Email</th><th scope="col">Account access</th><th scope="col">Tasks</th><th scope="col"><span class="it-sr-only">Actions</span></th></tr></thead><tbody>
+{% for supervisor in page.items %}<tr><th scope="row">{{ supervisor.name }}</th><td>{{ supervisor.email }}</td><td>{{ 'Awaiting password setup' if supervisor.account_disabled and supervisor.password_hash == '!pending-supervisor-setup' else ('Inactive' if supervisor.account_disabled else 'Active') }}</td><td>{{ task_counts.get(supervisor.id, 0) }}</td><td><a href="{{ url_for('admin.edit_supervisor', supervisor_id=supervisor.id) }}">Edit name<span class="it-sr-only"> for {{ supervisor.name }}</span></a>{% if supervisor.account_disabled and supervisor.password_hash == '!pending-supervisor-setup' %} · <a href="{{ url_for('admin.supervisor_setup', supervisor_id=supervisor.id) }}">Create setup link<span class="it-sr-only"> for {{ supervisor.name }}</span></a>{% else %} · <a href="{{ url_for('admin.supervisor_account_status', supervisor_id=supervisor.id) }}">{{ 'Reactivate' if supervisor.account_disabled else 'Deactivate' }}<span class="it-sr-only"> {{ supervisor.name }}</span></a>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<div class="it-empty"><h3>No supervisors found</h3><p>Try another search or clear the filters.</p></div>{% endif %}
+{% if page.pages > 1 %}<nav class="av-pagination" aria-label="Supervisor pages"><ul class="pagination">{% if page.has_prev %}<li class="page-item"><a class="page-link" href="{{ url_for('admin.supervisors', page=page.prev_num, q=search, status=status) }}">← Previous</a></li>{% endif %}<li class="page-item"><span class="page-link it-page-position" aria-current="page">Page {{ page.page }} of {{ page.pages }}</span></li>{% if page.has_next %}<li class="page-item"><a class="page-link" href="{{ url_for('admin.supervisors', page=page.next_num, q=search, status=status) }}">Next →</a></li>{% endif %}</ul></nav>{% endif %}
+</section></div>
+{% endblock %}
