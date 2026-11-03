@@ -9,6 +9,7 @@ from app.models import Administrator, OnboardingAgent, Supervisor, SupervisorSet
 from app.services.supervisor_setup import PENDING_PASSWORD, utcnow
 
 PASSWORD = 'new-supervisor-passphrase-123'
+pytestmark = pytest.mark.usefixtures('legacy_setup_code')
 
 
 @pytest.fixture()
@@ -47,7 +48,8 @@ def setup_form(client, token, **changes):
     with client.session_transaction() as session:
         data = {'csrf_token': session['supervisor_setup_public_csrf'],
                 'setup_token': token, 'email': 'new.supervisor@example.com',
-                'password': PASSWORD, 'password_confirm': PASSWORD}
+                'password': PASSWORD, 'password_confirm': PASSWORD,
+                'action': 'complete', 'verification_code': '123456'}
     data.update(changes)
     return data
 

@@ -7,6 +7,7 @@ import re
 from types import SimpleNamespace
 
 import pytest
+pytestmark = pytest.mark.usefixtures('legacy_setup_code')
 
 from app.extensions import db
 from app.models import Supervisor, SupervisorSetupInvitation, WorkerSetupInvitation

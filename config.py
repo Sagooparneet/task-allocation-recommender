@@ -23,3 +23,9 @@ class Config:
 
     # Restrict sending the login cookie with cross-site requests.
     SESSION_COOKIE_SAMESITE = "Lax"
+
+    # Separate sign-in OAuth client. The Gmail delivery client has different permissions.
+    INTELLITASK_GOOGLE_SIGNIN_CLIENT_FILE = os.environ.get('INTELLITASK_GOOGLE_SIGNIN_CLIENT_FILE')
+    INTELLITASK_GOOGLE_SIGNIN_CLIENT_ID = os.environ.get('INTELLITASK_GOOGLE_SIGNIN_CLIENT_ID')
+    INTELLITASK_GOOGLE_SIGNIN_CLIENT_SECRET = os.environ.get('INTELLITASK_GOOGLE_SIGNIN_CLIENT_SECRET')
+    INTELLITASK_GOOGLE_SIGNIN_REDIRECT_URI = os.environ.get('INTELLITASK_GOOGLE_SIGNIN_REDIRECT_URI')

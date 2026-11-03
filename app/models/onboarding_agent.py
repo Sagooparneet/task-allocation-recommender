@@ -28,7 +28,8 @@ class OnboardingAgent(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     def get_id(self):
-        return f"agent:{self.id}"
+        from app.services.auth_session import session_id_for
+        return session_id_for(self)
 
     @property
     def is_active(self):
