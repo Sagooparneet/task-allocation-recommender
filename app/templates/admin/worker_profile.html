@@ -15,7 +15,7 @@
 <p><strong>Account status:</strong> {{ 'Deactivated' if worker.account_disabled else 'Active' }} · <a href="{{ url_for('admin.worker_account_status', worker_id=worker.id) }}">{{ 'Reactivate account' if worker.account_disabled else 'Deactivate account' }}</a></p>
 <p><strong>New assignments:</strong> {{ 'Available' if worker.availability and not worker.account_disabled else 'Unavailable' }} {% if not worker.account_disabled %}· <a href="{{ url_for('admin.worker_availability', worker_id=worker.id) }}">Change availability</a>{% else %}· Reactivate the account before changing availability.{% endif %}</p>
 {% endif %}
-<p><strong>Services:</strong> {{ services|join(' · ') if services else 'No services recorded' }}</p></section>
+<p><strong>Services:</strong> {{ services|join(' · ') if services else 'No services recorded' }} {% if independent_registration %}· <a href="{{ url_for('admin.edit_worker_services', worker_id=worker.id) }}">Edit services</a>{% endif %}</p></section>
 <section class="it-metrics" aria-label="Worker task totals">
 {% for label,value,note in [('All tasks',total,'Assigned to this worker'),('Assigned',counts.get('Assigned',0),'Not started yet'),('In progress',counts.get('In progress',0),'Work underway'),('Completed',counts.get('Completed',0),'Work finished')] %}
 <article class="it-metric"><span>{{ label }}</span><strong>{{ value }}</strong><small>{{ note }}</small></article>

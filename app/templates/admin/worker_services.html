@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% from 'ui/form_errors.html' import summary, attributes, inline_error %}
+{% block title %}Edit worker services | IntelliTask{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-venues.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/form-errors.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/worker-registration.css') }}"><script src="{{ url_for('static', filename='js/form-errors.js') }}" defer></script>{% endblock %}
+{% block content %}
+<a href="{{ url_for('admin.worker_profile', worker_id=worker.id) }}">← Back to worker profile</a>
+<div class="av-header"><div><p class="av-eyebrow">{{ name }}</p><h1>Edit services</h1><p>Choose the services this worker can take on for future tasks.</p></div></div>
+<form method="post" class="av-panel av-form accessible-form wr-form" novalidate>
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="original_services" value="{{ original }}">
+{{ summary(errors, 'Please check the services before saving') }}
+<fieldset id="services" tabindex="-1" {{ attributes(errors, 'services') }}><legend>Confirmed services *</legend><p>Select at least one service you have verified this worker can perform.</p><div class="wr-services">{% for label in choices %}<label class="wr-check" for="service-{{ loop.index }}"><input type="checkbox" id="service-{{ loop.index }}" name="services" value="{{ label }}" {% if label in selected %}checked{% endif %}> <span>{{ label }}</span></label>{% endfor %}</div>{{ inline_error(errors, 'services') }}</fieldset>
+<div><label class="wr-check" for="confirmed"><input type="checkbox" id="confirmed" name="confirmed" value="yes" required {{ attributes(errors, 'confirmed') }}> <span>I have checked this worker's selected services.</span></label>{{ inline_error(errors, 'confirmed') }}</div>
+<p class="wr-note">This updates which new tasks can match this worker. Tasks already assigned to them remain in place.</p>
+<div class="av-actions"><button class="btn av-button" type="submit">Save services</button><a href="{{ url_for('admin.worker_profile', worker_id=worker.id) }}">Cancel</a></div>
+</form>
+{% endblock %}
